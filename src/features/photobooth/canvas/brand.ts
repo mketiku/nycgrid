@@ -1,0 +1,2 @@
+export const BRAND_DOMAIN = process.env.NEXT_PUBLIC_BRAND_DOMAIN ?? "NYCGRID.VERCEL.APP";
+export const DOT_ATTRIBUTION = "NYC DOT";
