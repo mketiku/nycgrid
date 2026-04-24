@@ -85,7 +85,8 @@ export function FrameDiff({ camera, onDiffResult }: FrameDiffProps) {
     setState("capturing-baseline");
     setError(null);
     try {
-      baselineRef.current = await loadImageData(`${proxiedImageUrl(camera.id)}?t=${Date.now()}`);
+      const t = Math.floor(Date.now() / 10_000) * 10_000;
+      baselineRef.current = await loadImageData(`${proxiedImageUrl(camera.id)}?t=${t}`);
       setBaselineCapturedAt(Date.now());
       setState("ready");
     } catch {
@@ -99,7 +100,8 @@ export function FrameDiff({ camera, onDiffResult }: FrameDiffProps) {
     setState("comparing");
     setError(null);
     try {
-      const current = await loadImageData(`${proxiedImageUrl(camera.id)}?t=${Date.now()}`);
+      const ct = Math.floor(Date.now() / 10_000) * 10_000;
+      const current = await loadImageData(`${proxiedImageUrl(camera.id)}?t=${ct}`);
       const url = diffFrames(baselineRef.current, current);
       onDiffResult({ url, baselineAt: baselineCapturedAt });
       setState("result");
