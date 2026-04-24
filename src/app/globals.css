@@ -33,6 +33,7 @@
   /* Status */
   --color-online: #ffde00;
   --color-offline: #555555;
+  --color-error: #ef4444;
 }
 
 /* ── street (default / primary) ── */
@@ -50,6 +51,7 @@
   --color-border-accent: #ffde00;
   --color-online: #ffde00;
   --color-offline: #555555;
+  --color-error: #ef4444;
 }
 
 /* ── brutalist ── */
@@ -67,6 +69,7 @@
   --color-border-accent: #ffffff;
   --color-online: #ffffff;
   --color-offline: #666666;
+  --color-error: #ef4444;
 }
 
 /* ── light ── */
@@ -84,6 +87,7 @@
   --color-border-accent: #0a0a0a;
   --color-online: #00933c;
   --color-offline: #aaaaaa;
+  --color-error: #dc2626;
 }
 
 /* ── brutalist: all-caps headings ── */

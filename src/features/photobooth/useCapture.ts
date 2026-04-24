@@ -13,13 +13,18 @@ function sleep(ms: number) {
   return new Promise<void>((r) => setTimeout(r, ms));
 }
 
+// Round to 10s windows so all frames in a shoot sequence share the same URL,
+// letting the CDN serve shots 2–N from cache without hitting the rate limiter.
+const CACHE_WINDOW_MS = 10_000;
+
 function fetchCameraImage(cameraId: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
     img.onerror = reject;
-    img.src = `/api/camera-image/${cameraId}?t=${Date.now()}`;
+    const t = Math.floor(Date.now() / CACHE_WINDOW_MS) * CACHE_WINDOW_MS;
+    img.src = `/api/camera-image/${cameraId}?t=${t}`;
   });
 }
 
