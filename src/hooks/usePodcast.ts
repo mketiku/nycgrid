@@ -1,0 +1,80 @@
+"use client";
+
+import { create } from "zustand";
+import { buildSpeakLines } from "@/lib/podcast/script-engine";
+import { cancelSpeech, initVoices, speakLines } from "@/lib/podcast/speech";
+import { DAILY_HONK_SEGMENTS } from "@/lib/podcast/channels/daily-honk";
+import type { CameraContext, ChannelId, SpeakLine } from "@/lib/podcast/types";
+
+export interface PodcastActions {
+  play: () => void;
+  pause: () => void;
+  switchChannel: (channel: ChannelId) => void;
+  setCamera: (camera: CameraContext) => void;
+}
+
+export interface PodcastState {
+  isPlaying: boolean;
+  channel: ChannelId;
+  camera: CameraContext | null;
+}
+
+// _cancelFn is internal — not part of the public interface
+interface InternalState {
+  _cancelFn: (() => void) | null;
+}
+
+type Store = PodcastState & PodcastActions & InternalState;
+
+function getLines(camera: CameraContext | null): SpeakLine[] {
+  const ctx: CameraContext = camera ?? {
+    name: "the city",
+    borough: "New York",
+    isOnline: true,
+    timeOfDay: "evening",
+  };
+  return buildSpeakLines(DAILY_HONK_SEGMENTS, null, ctx);
+}
+
+function startLoop(get: () => Store, set: (partial: Partial<InternalState>) => void): void {
+  const { camera } = get();
+  const lines = getLines(camera);
+  const cancel = speakLines(lines, () => {
+    if (!get().isPlaying) return;
+    const id = setTimeout(() => startLoop(get, set), 1000 + Math.random() * 2000);
+    set({ _cancelFn: () => clearTimeout(id) });
+  });
+  set({ _cancelFn: cancel });
+}
+
+export const usePodcast = create<Store>()((set, get) => ({
+  isPlaying: false,
+  channel: "daily-honk",
+  camera: null,
+  _cancelFn: null,
+
+  play: () => {
+    if (get().isPlaying) return;
+    initVoices();
+    set({ isPlaying: true });
+    startLoop(get, set);
+  },
+
+  pause: () => {
+    get()._cancelFn?.();
+    cancelSpeech();
+    set({ isPlaying: false, _cancelFn: null });
+  },
+
+  switchChannel: (channel) => {
+    const wasPlaying = get().isPlaying;
+    get()._cancelFn?.();
+    cancelSpeech();
+    set({ channel, _cancelFn: null });
+    if (wasPlaying) startLoop(get, set);
+  },
+
+  setCamera: (camera) => {
+    set({ camera });
+  },
+}));
