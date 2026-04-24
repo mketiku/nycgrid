@@ -68,6 +68,8 @@ describe("CameraSpotlight", () => {
   });
 
   it("renders the live nyc grid, weather, and visit CTA for a visitable spotlight", async () => {
+    const dateNowSpy = vi.spyOn(Date, "now").mockReturnValue(0);
+
     mockFeaturedCameras.push({
       id: "cam-1",
       displayName: "Brooklyn Bridge",
@@ -123,6 +125,8 @@ describe("CameraSpotlight", () => {
     expect(screen.getByRole("link", { name: /show me .* instead/i })).toHaveTextContent(
       /another view/i
     );
+
+    dateNowSpy.mockRestore();
   });
 
   it("returns null when there are no eligible cameras", async () => {

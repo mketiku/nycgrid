@@ -1,6 +1,8 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type { Mock } from "vitest";
 import { FrameDiff } from "./FrameDiff";
+import type { DiffResult } from "./FrameDiff";
 import type { Camera } from "@/lib/cameras/types";
 
 const mockCamera: Camera = {
@@ -14,14 +16,16 @@ const mockCamera: Camera = {
 };
 
 describe("FrameDiff", () => {
+  let onDiffResult: Mock<(result: DiffResult | null) => void>;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    onDiffResult = vi.fn();
 
-    // Mock Canvas
     vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
       drawImage: vi.fn(),
       getImageData: vi.fn(() => ({
-        data: new Uint8ClampedArray(400), // small dummy data
+        data: new Uint8ClampedArray(400),
         width: 10,
         height: 10,
       })),
@@ -32,7 +36,6 @@ describe("FrameDiff", () => {
       "data:image/png;base64,stub"
     );
 
-    // Mock ImageData
     global.ImageData = class {
       data: Uint8ClampedArray;
       width: number;
@@ -44,7 +47,6 @@ describe("FrameDiff", () => {
       }
     } as unknown as typeof ImageData;
 
-    // Mock Image
     global.Image = class {
       onload: () => void = () => {};
       onerror: () => void = () => {};
@@ -62,44 +64,79 @@ describe("FrameDiff", () => {
     } as unknown as typeof Image;
   });
 
-  it("renders idle state initially", () => {
-    render(<FrameDiff camera={mockCamera} />);
-    expect(screen.getByText("What changed?")).toBeInTheDocument();
+  it("renders idle state with Set baseline button", () => {
+    render(<FrameDiff camera={mockCamera} onDiffResult={onDiffResult} />);
+    expect(screen.getByText("Set baseline")).toBeInTheDocument();
   });
 
   it("transitions to ready state after capturing baseline", async () => {
-    render(<FrameDiff camera={mockCamera} />);
+    render(<FrameDiff camera={mockCamera} onDiffResult={onDiffResult} />);
 
-    fireEvent.click(screen.getByText("What changed?"));
+    fireEvent.click(screen.getByText("Set baseline"));
 
     expect(await screen.findByText("Compare now")).toBeInTheDocument();
-    expect(screen.getByText(/Baseline:/)).toBeInTheDocument();
+    expect(screen.getByText(/Baseline:.*compare to see what changed/)).toBeInTheDocument();
   });
 
-  it("transitions to result state after comparing", async () => {
-    render(<FrameDiff camera={mockCamera} />);
+  it("shows Cancel (not Reset) in ready state", async () => {
+    render(<FrameDiff camera={mockCamera} onDiffResult={onDiffResult} />);
 
-    // Capture baseline
-    fireEvent.click(screen.getByText("What changed?"));
+    fireEvent.click(screen.getByText("Set baseline"));
     await screen.findByText("Compare now");
 
-    // Compare
+    expect(screen.getByLabelText("Cancel baseline capture")).toBeInTheDocument();
+    expect(screen.queryByText("Reset")).not.toBeInTheDocument();
+  });
+
+  it("Cancel in ready state returns to idle without calling onDiffResult", async () => {
+    render(<FrameDiff camera={mockCamera} onDiffResult={onDiffResult} />);
+
+    fireEvent.click(screen.getByText("Set baseline"));
+    await screen.findByText("Compare now");
+
+    fireEvent.click(screen.getByLabelText("Cancel baseline capture"));
+
+    expect(screen.getByText("Set baseline")).toBeInTheDocument();
+    expect(onDiffResult).not.toHaveBeenCalled();
+  });
+
+  it("transitions to result state and calls onDiffResult after comparing", async () => {
+    render(<FrameDiff camera={mockCamera} onDiffResult={onDiffResult} />);
+
+    fireEvent.click(screen.getByText("Set baseline"));
+    await screen.findByText("Compare now");
+
     fireEvent.click(screen.getByText("Compare now"));
 
     expect(await screen.findByText("Re-compare")).toBeInTheDocument();
-    expect(screen.getByText("Changed pixels highlighted")).toBeInTheDocument();
-    expect(screen.getByAltText(/Frame diff/)).toBeInTheDocument();
+    expect(onDiffResult).toHaveBeenCalledWith(
+      expect.objectContaining({ url: "data:image/png;base64,stub" })
+    );
   });
 
-  it("resets to idle state", async () => {
-    render(<FrameDiff camera={mockCamera} />);
+  it("shows Reset only in result state", async () => {
+    render(<FrameDiff camera={mockCamera} onDiffResult={onDiffResult} />);
 
-    fireEvent.click(screen.getByText("What changed?"));
+    fireEvent.click(screen.getByText("Set baseline"));
     await screen.findByText("Compare now");
+    fireEvent.click(screen.getByText("Compare now"));
+    await screen.findByText("Re-compare");
+
+    expect(screen.getByText("Reset")).toBeInTheDocument();
+  });
+
+  it("Reset returns to idle and calls onDiffResult(null)", async () => {
+    render(<FrameDiff camera={mockCamera} onDiffResult={onDiffResult} />);
+
+    fireEvent.click(screen.getByText("Set baseline"));
+    await screen.findByText("Compare now");
+    fireEvent.click(screen.getByText("Compare now"));
+    await screen.findByText("Re-compare");
 
     fireEvent.click(screen.getByText("Reset"));
 
-    expect(screen.getByText("What changed?")).toBeInTheDocument();
+    expect(screen.getByText("Set baseline")).toBeInTheDocument();
+    expect(onDiffResult).toHaveBeenLastCalledWith(null);
   });
 
   it("handles image loading errors", async () => {
@@ -116,20 +153,19 @@ describe("FrameDiff", () => {
       }
     } as unknown as typeof Image;
 
-    render(<FrameDiff camera={mockCamera} />);
+    render(<FrameDiff camera={mockCamera} onDiffResult={onDiffResult} />);
 
-    fireEvent.click(screen.getByText("What changed?"));
+    fireEvent.click(screen.getByText("Set baseline"));
 
     expect(await screen.findByText(/Could not load frame/i)).toBeInTheDocument();
-    expect(screen.getByText("What changed?")).toBeInTheDocument();
+    expect(screen.getByText("Set baseline")).toBeInTheDocument();
   });
 
   it("handles motion detection (diff threshold exceeded)", async () => {
-    // Mock getImageData to return data with big difference
     const getImageData = vi.fn();
     getImageData
-      .mockReturnValueOnce({ data: new Uint8ClampedArray(400).fill(0), width: 10, height: 10 }) // baseline
-      .mockReturnValueOnce({ data: new Uint8ClampedArray(400).fill(255), width: 10, height: 10 }); // current
+      .mockReturnValueOnce({ data: new Uint8ClampedArray(400).fill(0), width: 10, height: 10 })
+      .mockReturnValueOnce({ data: new Uint8ClampedArray(400).fill(255), width: 10, height: 10 });
 
     vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
       drawImage: vi.fn(),
@@ -137,8 +173,8 @@ describe("FrameDiff", () => {
       putImageData: vi.fn(),
     } as unknown as CanvasRenderingContext2D);
 
-    render(<FrameDiff camera={mockCamera} />);
-    fireEvent.click(screen.getByText("What changed?"));
+    render(<FrameDiff camera={mockCamera} onDiffResult={onDiffResult} />);
+    fireEvent.click(screen.getByText("Set baseline"));
     await screen.findByText("Compare now");
     fireEvent.click(screen.getByText("Compare now"));
     expect(await screen.findByText("Re-compare")).toBeInTheDocument();
@@ -151,7 +187,7 @@ describe("FrameDiff", () => {
       _src: string = "";
       crossOrigin: string = "";
       naturalWidth: number = 2001;
-      naturalHeight: number = 2001; // 2001×2001 = ~4 004 001 > 4 000 000
+      naturalHeight: number = 2001;
       set src(value: string) {
         this._src = value;
         setTimeout(() => this.onload(), 0);
@@ -161,18 +197,17 @@ describe("FrameDiff", () => {
       }
     } as unknown as typeof Image;
 
-    render(<FrameDiff camera={mockCamera} />);
-    fireEvent.click(screen.getByText("What changed?"));
+    render(<FrameDiff camera={mockCamera} onDiffResult={onDiffResult} />);
+    fireEvent.click(screen.getByText("Set baseline"));
 
     expect(await screen.findByText(/Could not load frame/i)).toBeInTheDocument();
-    expect(screen.getByText("What changed?")).toBeInTheDocument();
+    expect(screen.getByText("Set baseline")).toBeInTheDocument();
   });
 
   it("shows error when frame dimensions change between captures", async () => {
     let callCount = 0;
     const getImageData = vi.fn(() => {
       callCount++;
-      // baseline: 10×10, current: 20×20
       return callCount === 1
         ? { data: new Uint8ClampedArray(400), width: 10, height: 10 }
         : { data: new Uint8ClampedArray(1600), width: 20, height: 20 };
@@ -184,8 +219,8 @@ describe("FrameDiff", () => {
       putImageData: vi.fn(),
     } as unknown as CanvasRenderingContext2D);
 
-    render(<FrameDiff camera={mockCamera} />);
-    fireEvent.click(screen.getByText("What changed?"));
+    render(<FrameDiff camera={mockCamera} onDiffResult={onDiffResult} />);
+    fireEvent.click(screen.getByText("Set baseline"));
     await screen.findByText("Compare now");
     fireEvent.click(screen.getByText("Compare now"));
 
@@ -193,11 +228,10 @@ describe("FrameDiff", () => {
   });
 
   it("handles error during comparison", async () => {
-    render(<FrameDiff camera={mockCamera} />);
-    fireEvent.click(screen.getByText("What changed?"));
+    render(<FrameDiff camera={mockCamera} onDiffResult={onDiffResult} />);
+    fireEvent.click(screen.getByText("Set baseline"));
     await screen.findByText("Compare now");
 
-    // Fail subsequent loads
     global.Image = class {
       onerror: () => void = () => {};
       set src(v: string) {

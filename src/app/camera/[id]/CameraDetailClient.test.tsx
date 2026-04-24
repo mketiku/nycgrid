@@ -9,6 +9,10 @@ const getFrames = vi.fn(() => []);
 const getCount = vi.fn(() => 3);
 const exportGif = vi.fn();
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
 vi.mock("next/link", () => ({
   default: ({ href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
     <a href={typeof href === "string" ? href : ""} {...props}>

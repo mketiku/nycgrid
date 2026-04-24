@@ -10,6 +10,10 @@ vi.mock("next/cache", () => ({
   unstable_cache: (fn: () => unknown) => fn,
 }));
 
+vi.mock("@/lib/citibike/nearby-cameras", () => ({
+  findCamerasNearCitibike: vi.fn().mockResolvedValue(new Set()),
+}));
+
 describe("ExplorePage", () => {
   it("renders the map view", async () => {
     const searchParams = Promise.resolve({});
