@@ -7,8 +7,14 @@ import { proxiedImageUrl } from "@/lib/cameras/types";
 
 const DIFF_THRESHOLD = 40; // per-channel delta sum to flag a pixel as changed
 
+export interface DiffResult {
+  url: string;
+  baselineAt: number;
+}
+
 interface FrameDiffProps {
   camera: Camera;
+  onDiffResult: (result: DiffResult | null) => void;
 }
 
 type DiffState = "idle" | "capturing-baseline" | "ready" | "comparing" | "result";
@@ -69,10 +75,9 @@ function diffFrames(baseline: ImageData, current: ImageData): string {
   return canvas.toDataURL("image/png");
 }
 
-export function FrameDiff({ camera }: FrameDiffProps) {
+export function FrameDiff({ camera, onDiffResult }: FrameDiffProps) {
   const [state, setState] = useState<DiffState>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [diffUrl, setDiffUrl] = useState<string | null>(null);
   const [baselineCapturedAt, setBaselineCapturedAt] = useState<number | null>(null);
   const baselineRef = useRef<ImageData | null>(null);
 
@@ -90,22 +95,30 @@ export function FrameDiff({ camera }: FrameDiffProps) {
   }, [camera.id]);
 
   const compare = useCallback(async () => {
-    if (!baselineRef.current) return;
+    if (!baselineRef.current || !baselineCapturedAt) return;
     setState("comparing");
     setError(null);
     try {
       const current = await loadImageData(`${proxiedImageUrl(camera.id)}?t=${Date.now()}`);
-      setDiffUrl(diffFrames(baselineRef.current, current));
+      const url = diffFrames(baselineRef.current, current);
+      onDiffResult({ url, baselineAt: baselineCapturedAt });
       setState("result");
     } catch {
       setError("Could not load frame for comparison.");
       setState("ready");
     }
-  }, [camera.id]);
+  }, [camera.id, baselineCapturedAt, onDiffResult]);
 
   const reset = useCallback(() => {
     baselineRef.current = null;
-    setDiffUrl(null);
+    setBaselineCapturedAt(null);
+    setError(null);
+    setState("idle");
+    onDiffResult(null);
+  }, [onDiffResult]);
+
+  const cancel = useCallback(() => {
+    baselineRef.current = null;
     setBaselineCapturedAt(null);
     setError(null);
     setState("idle");
@@ -116,7 +129,7 @@ export function FrameDiff({ camera }: FrameDiffProps) {
 
   if (state === "idle") {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <button
           onClick={captureBaseline}
           className={`${btnBase} hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]`}
@@ -124,7 +137,7 @@ export function FrameDiff({ camera }: FrameDiffProps) {
           title="Capture a baseline frame to compare against later"
         >
           <Diff className="w-3.5 h-3.5" />
-          What changed?
+          Set baseline
         </button>
         {error && <p className="font-mono text-xs text-[var(--color-offline)]">{error}</p>}
       </div>
@@ -145,53 +158,51 @@ export function FrameDiff({ camera }: FrameDiffProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-2">
-        {(state === "ready" || state === "result") && (
+        <button
+          onClick={compare}
+          className={`${btnBase} hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]`}
+          style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
+        >
+          <ScanSearch className="w-3.5 h-3.5" />
+          {state === "result" ? "Re-compare" : "Compare now"}
+        </button>
+
+        {state === "result" ? (
           <button
-            onClick={compare}
-            className={`${btnBase} hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]`}
-            style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
+            onClick={reset}
+            className={`${btnBase} hover:border-[var(--color-offline)] hover:text-[var(--color-offline)]`}
+            style={{ borderColor: "var(--color-border)", color: "var(--color-text-muted)" }}
           >
-            <ScanSearch className="w-3.5 h-3.5" />
-            {state === "result" ? "Re-compare" : "Compare now"}
+            <X className="w-3.5 h-3.5" />
+            Reset
+          </button>
+        ) : (
+          <button
+            onClick={cancel}
+            className="inline-flex items-center gap-1 font-mono text-xs min-h-[44px] px-2 transition-colors"
+            style={{ color: "var(--color-text-muted)" }}
+            aria-label="Cancel baseline capture"
+          >
+            <X className="w-3 h-3" />
+            Cancel
           </button>
         )}
-        <button
-          onClick={reset}
-          className={`${btnBase} hover:border-[var(--color-offline)] hover:text-[var(--color-offline)]`}
-          style={{ borderColor: "var(--color-border)", color: "var(--color-text-muted)" }}
-        >
-          <X className="w-3.5 h-3.5" />
-          Reset
-        </button>
       </div>
-      {baselineCapturedAt && (
+
+      {state === "ready" && baselineCapturedAt && (
         <span className="font-mono text-[10px] text-[var(--color-text-muted)]">
           Baseline:{" "}
           {new Date(baselineCapturedAt).toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
-          })}
-          {" · keep tab open to compare later"}
+          })}{" "}
+          · compare to see what changed
         </span>
       )}
 
       {error && <p className="font-mono text-xs text-[var(--color-offline)]">{error}</p>}
-
-      {diffUrl && (
-        <div className="flex flex-col gap-1.5">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-muted)]">
-            Changed pixels highlighted
-          </p>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={diffUrl}
-            alt="Frame diff — changed pixels highlighted in amber"
-            className="w-full rounded-lg border border-[var(--color-border)]"
-          />
-        </div>
-      )}
     </div>
   );
 }

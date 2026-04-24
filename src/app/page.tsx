@@ -25,12 +25,8 @@ export default function LandingPage() {
 
       <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-6xl grid-cols-1 items-center gap-8 py-14 pt-20 lg:grid-cols-[minmax(0,0.9fr)_minmax(440px,1.1fr)] lg:gap-12 lg:py-16">
         <section className="flex flex-col items-center text-center lg:items-start lg:text-left">
-          <div className="flex items-center gap-2 font-mono text-xs text-[var(--color-text-muted)] tracking-widest uppercase">
-            <span
-              className="inline-block w-1.5 h-1.5 rounded-full animate-pulse"
-              style={{ backgroundColor: "var(--color-online)" }}
-            />
-            publicly funded · open access · live
+          <div className="font-mono text-xs text-[var(--color-text-muted)] tracking-widest uppercase">
+            public infrastructure · open access · live
           </div>
 
           <h1 className="mt-8 font-mono text-5xl font-bold leading-none tracking-tighter text-[var(--color-text-primary)] sm:text-7xl md:text-8xl lg:text-7xl xl:text-8xl">
@@ -127,10 +123,10 @@ export default function LandingPage() {
             The network
           </p>
           <p className="text-[var(--color-text-secondary)] leading-relaxed">
-            Publicly funded and covering more of the city than you&apos;d expect — tunnels, bridges,
-            parkways, greenways, and the roads that run through every borough&apos;s parks. Prospect
-            Park Drive, the FDR, Riverside Drive, the Staten Island Expressway. The whole city, not
-            just downtown.
+            NYC DOT&apos;s publicly funded camera network covers more of the city than you&apos;d
+            expect — tunnels, bridges, parkways, greenways, and the roads that run through every
+            borough&apos;s parks. Prospect Park Drive, the FDR, Riverside Drive, the Staten Island
+            Expressway. The whole city, not just downtown.
           </p>
           <Link
             href="/stats"

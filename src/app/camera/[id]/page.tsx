@@ -121,6 +121,8 @@ export default async function CameraDetailPage({ params }: PageProps) {
               camera={camera}
               displayName={featuredCamera?.displayName ?? camera.name}
               showRawName={!!(featuredCamera && featuredCamera.displayName !== camera.name)}
+              prevCameraId={prevCamera?.id}
+              nextCameraId={nextCamera?.id}
             />
           </div>
 
@@ -165,7 +167,7 @@ export default async function CameraDetailPage({ params }: PageProps) {
               rel="noopener noreferrer"
               className="font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
             >
-              Data: NYC DOT ↗
+              Data: NYC Department of Transportation ↗
             </a>
           </div>
         </footer>

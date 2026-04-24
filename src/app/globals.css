@@ -12,79 +12,78 @@
   --font-mono: var(--font-mono);
 
   /* Surfaces */
-  --color-base:     #0f0f0f;
-  --color-surface:  #1a1a1a;
+  --color-base: #0f0f0f;
+  --color-surface: #1a1a1a;
   --color-elevated: #242424;
 
   /* Text */
-  --color-text-primary:   #ffffff;
+  --color-text-primary: #ffffff;
   --color-text-secondary: #999999;
-  --color-text-muted:     #555555;
+  --color-text-muted: #555555;
 
   /* Accent */
-  --color-accent:     #ffde00;
+  --color-accent: #ffde00;
   --color-accent-dim: #7a6a00;
-  --color-on-accent:  #0a0a0a;
+  --color-on-accent: #0a0a0a;
 
   /* Borders */
-  --color-border:        #2e2e2e;
+  --color-border: #2e2e2e;
   --color-border-accent: #ffde00;
 
   /* Status */
-  --color-online:  #ffde00;
+  --color-online: #ffde00;
   --color-offline: #555555;
-
 }
 
 /* ── street (default / primary) ── */
 [data-theme="street"] {
-  --color-base:          #0f0f0f;
-  --color-surface:       #1a1a1a;
-  --color-elevated:      #242424;
-  --color-text-primary:  #ffffff;
-  --color-text-secondary:#999999;
-  --color-text-muted:    #555555;
-  --color-accent:        #ffde00;
-  --color-accent-dim:    #7a6a00;
-  --color-on-accent:     #0a0a0a;
-  --color-border:        #2e2e2e;
+  --color-base: #0f0f0f;
+  --color-surface: #1a1a1a;
+  --color-elevated: #242424;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #999999;
+  --color-text-muted: #555555;
+  --color-accent: #ffde00;
+  --color-accent-dim: #7a6a00;
+  --color-on-accent: #0a0a0a;
+  --color-border: #2e2e2e;
   --color-border-accent: #ffde00;
-  --color-online:        #ffde00;
-  --color-offline:       #555555;
+  --color-online: #ffde00;
+  --color-offline: #555555;
 }
 
 /* ── brutalist ── */
 [data-theme="brutalist"] {
-  --color-base:          #1c1c1c;
-  --color-surface:       #2a2a2a;
-  --color-elevated:      #363636;
-  --color-text-primary:  #ffffff;
-  --color-text-secondary:#aaaaaa;
-  --color-text-muted:    #666666;
-  --color-accent:        #ffffff;
-  --color-accent-dim:    #666666;
-  --color-on-accent:     #0a0a0a;
-  --color-border:        #444444;
+  --color-base: #1c1c1c;
+  --color-surface: #2a2a2a;
+  --color-elevated: #363636;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #aaaaaa;
+  --color-text-muted: #666666;
+  --color-accent: #ffffff;
+  --color-accent-dim: #666666;
+  --color-on-accent: #0a0a0a;
+  --color-border: #444444;
   --color-border-accent: #ffffff;
-  --color-online:        #ffffff;
-  --color-offline:       #666666;
+  --color-online: #ffffff;
+  --color-offline: #666666;
 }
 
 /* ── light ── */
 [data-theme="light"] {
-  --color-base:          #f5f5f5;
-  --color-surface:       #ffffff;
-  --color-elevated:      #ebebeb;
-  --color-text-primary:  #0a0a0a;
-  --color-text-secondary:#444444;
-  --color-text-muted:    #888888;
-  --color-accent:        #0a0a0a;
-  --color-accent-dim:    #444444;
-  --color-on-accent:     #ffffff;
-  --color-border:        #dddddd;
+  --color-base: #f5f5f5;
+  --color-surface: #ffffff;
+  --color-elevated: #ebebeb;
+  --color-text-primary: #0a0a0a;
+  --color-text-secondary: #444444;
+  --color-text-muted: #888888;
+  --color-accent: #0a0a0a;
+  --color-accent-dim: #444444;
+  --color-on-accent: #ffffff;
+  --color-border: #dddddd;
   --color-border-accent: #0a0a0a;
-  --color-online:        #00933c;
-  --color-offline:       #aaaaaa;
+  --color-online: #00933c;
+  --color-offline: #aaaaaa;
 }
 
 /* ── brutalist: all-caps headings ── */
@@ -98,9 +97,17 @@
 /* ─────────────────────────────────────────────
    BASE RESET
    ───────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; }
-html { height: 100%; }
-body { min-height: 100%; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  height: 100%;
+}
+body {
+  min-height: 100%;
+}
 
 body {
   background-color: var(--color-base);
@@ -115,7 +122,9 @@ body {
     scroll-behavior: auto;
   }
 
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
@@ -128,8 +137,12 @@ body {
 }
 
 @keyframes page-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Smooth theme token transitions on all elements.
@@ -219,22 +232,40 @@ body {
 /* ─────────────────────────────────────────────
    MAPLIBRE RESET
    ───────────────────────────────────────────── */
-.maplibregl-map { font-family: var(--font-mono), monospace; }
-.maplibregl-ctrl-attrib { font-size: 10px; opacity: 0.5; }
+.maplibregl-map {
+  font-family: var(--font-mono), monospace;
+}
+.maplibregl-ctrl-attrib {
+  font-size: 10px;
+  opacity: 0.5;
+}
 
 /* Push top controls below the fixed desktop navbar (h-12 = 48px) */
 @media (min-width: 768px) {
-  .maplibregl-ctrl-top-right { top: 60px; }
-  .maplibregl-ctrl-top-left  { top: 60px; }
+  .maplibregl-ctrl-top-right {
+    top: 60px;
+  }
+  .maplibregl-ctrl-top-left {
+    top: 60px;
+  }
 }
 
 /* ─────────────────────────────────────────────
    SCROLLBAR
    ───────────────────────────────────────────── */
-::-webkit-scrollbar       { width: 6px; }
-::-webkit-scrollbar-track { background: var(--color-base); }
-::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-accent); }
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-base);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent);
+}
 
 /* ─────────────────────────────────────────────
    AMBIENT MODE — KEN BURNS ANIMATIONS
@@ -244,40 +275,56 @@ body {
    ───────────────────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
   @keyframes kb-zoom-in {
-    from { transform: scale(1)    translate(0, 0); }
-    to   { transform: scale(1.07) translate(-1%, -1%); }
+    from {
+      transform: scale(1) translate(0, 0);
+    }
+    to {
+      transform: scale(1.07) translate(-1%, -1%);
+    }
   }
   @keyframes kb-zoom-out {
-    from { transform: scale(1.07) translate(1%, 1%); }
-    to   { transform: scale(1)    translate(0, 0); }
+    from {
+      transform: scale(1.07) translate(1%, 1%);
+    }
+    to {
+      transform: scale(1) translate(0, 0);
+    }
   }
   @keyframes kb-pan-left {
-    from { transform: scale(1.05) translateX(2%); }
-    to   { transform: scale(1.05) translateX(-2%); }
+    from {
+      transform: scale(1.05) translateX(2%);
+    }
+    to {
+      transform: scale(1.05) translateX(-2%);
+    }
   }
   @keyframes kb-pan-right {
-    from { transform: scale(1.05) translateX(-2%); }
-    to   { transform: scale(1.05) translateX(2%); }
+    from {
+      transform: scale(1.05) translateX(-2%);
+    }
+    to {
+      transform: scale(1.05) translateX(2%);
+    }
   }
-}
-
-/* ─────────────────────────────────────────────
-   HOME — SCANLINE SWEEP
-   ───────────────────────────────────────────── */
-@keyframes scanline {
-  from { transform: translateY(0); }
-  to   { transform: translateY(100vh); }
 }
 
 /* ─────────────────────────────────────────────
    PODCAST — TICKER SCROLL
    ───────────────────────────────────────────── */
 @keyframes podcast-ticker {
-  0%   { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
 @keyframes eq-bar {
-  from { height: 3px; }
-  to   { height: 14px; }
+  from {
+    height: 3px;
+  }
+  to {
+    height: 14px;
+  }
 }

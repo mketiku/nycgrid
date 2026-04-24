@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { MapPin, Camera as CameraIcon } from "lucide-react";
 import Link from "next/link";
 import { CameraImage } from "@/features/camera-feed/CameraImage";
 import { GifExportButton } from "@/features/camera-feed/GifExportButton";
 import { FrameDiff } from "@/features/camera-feed/FrameDiff";
+import type { DiffResult } from "@/features/camera-feed/FrameDiff";
 import { useFrameBuffer } from "@/features/camera-feed/useFrameBuffer";
 import { useGifExport } from "@/features/camera-feed/useGifExport";
 import { trackCameraView, trackGifExport } from "@/lib/analytics/session";
@@ -15,12 +17,32 @@ interface CameraDetailClientProps {
   camera: Camera;
   displayName: string;
   showRawName: boolean;
+  prevCameraId?: string;
+  nextCameraId?: string;
 }
 
-export function CameraDetailClient({ camera, displayName, showRawName }: CameraDetailClientProps) {
+export function CameraDetailClient({
+  camera,
+  displayName,
+  showRawName,
+  prevCameraId,
+  nextCameraId,
+}: CameraDetailClientProps) {
+  const router = useRouter();
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === "ArrowLeft" && prevCameraId) router.push(`/camera/${prevCameraId}`);
+      if (e.key === "ArrowRight" && nextCameraId) router.push(`/camera/${nextCameraId}`);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [prevCameraId, nextCameraId, router]);
 
   useEffect(() => {
     trackCameraView(camera.id, camera.area);
@@ -28,6 +50,7 @@ export function CameraDetailClient({ camera, displayName, showRawName }: CameraD
 
   const { captureFrame, getFrames, getCount, minFrames } = useFrameBuffer();
   const [frameCount, setFrameCount] = useState(0);
+  const [diffResult, setDiffResult] = useState<DiffResult | null>(null);
 
   const handleFrameLoad = useCallback(
     (img: HTMLImageElement) => {
@@ -76,12 +99,40 @@ export function CameraDetailClient({ camera, displayName, showRawName }: CameraD
         </div>
       </div>
 
-      <CameraImage
-        camera={camera}
-        refreshInterval={15_000}
-        className="w-full aspect-video rounded-lg"
-        onFrameLoad={handleFrameLoad}
-      />
+      {/* Image slot: live feed or diff overlay */}
+      <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+        <CameraImage
+          camera={camera}
+          refreshInterval={15_000}
+          className="absolute inset-0 w-full h-full"
+          onFrameLoad={handleFrameLoad}
+        />
+        {diffResult && (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={diffResult.url}
+              alt="Frame diff — changed pixels highlighted in amber"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-black/70 flex items-center justify-between">
+              <span
+                className="font-mono text-[10px] uppercase tracking-widest opacity-80"
+                style={{ color: "var(--color-accent)" }}
+              >
+                Changed pixels highlighted
+              </span>
+              <span className="font-mono text-[10px] text-[var(--color-text-muted)]">
+                Baseline{" "}
+                {new Date(diffResult.baselineAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
+          </>
+        )}
+      </div>
 
       <div className="flex items-center gap-2 flex-wrap">
         {camera.isOnline && (
@@ -104,7 +155,7 @@ export function CameraDetailClient({ camera, displayName, showRawName }: CameraD
           <CameraIcon className="w-3.5 h-3.5" />
           Photobooth
         </Link>
-        {camera.isOnline && <FrameDiff camera={camera} />}
+        {camera.isOnline && <FrameDiff camera={camera} onDiffResult={setDiffResult} />}
       </div>
 
       <p className="font-mono text-[10px] text-[var(--color-text-muted)]">

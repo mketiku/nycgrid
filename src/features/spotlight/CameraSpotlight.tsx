@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Shuffle, Navigation } from "lucide-react";
+import { ArrowRight, Shuffle, Navigation, Info } from "lucide-react";
 import { FEATURED_CAMERAS } from "@/features/context/lib/featured-cameras";
 import { fetchCameraContext } from "@/features/context/lib/fetch-context";
 import { computeScore } from "@/features/context/lib/score";
@@ -64,9 +64,14 @@ export async function CameraSpotlight() {
         {/* Text */}
         <div className="p-5 flex flex-col gap-4">
           <div>
-            <h2 className="font-mono text-lg font-bold text-[var(--color-text-primary)] leading-tight">
-              {spotlight.displayName}
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-mono text-lg font-bold text-[var(--color-text-primary)] leading-tight">
+                {spotlight.displayName}
+              </h2>
+              <span title={`score: ${spotlight.score}`} aria-hidden>
+                <Info className="w-3.5 h-3.5 shrink-0 text-[var(--color-text-muted)] opacity-50" />
+              </span>
+            </div>
             <div className="flex items-center gap-3 mt-1 flex-wrap">
               <span className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-muted)]">
                 {spotlight.area}
