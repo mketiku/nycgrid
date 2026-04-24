@@ -47,27 +47,27 @@ graph TD
 
 ## Route Map
 
-| Route                        | Type              | Rendering        | Description                                      |
-| ---------------------------- | ----------------- | ---------------- | ------------------------------------------------ |
-| `/`                          | Page              | Server + ISR     | Landing page with top-scored camera spotlight    |
-| `/explore`                   | Page              | Server (map island client) | Full-screen MapLibre camera map         |
-| `/ambient`                   | Page              | Client           | Ken Burns camera drift with audio                |
-| `/camera/[id]`               | Page              | Server           | Full-screen live feed + context panel            |
-| `/photobooth/[id]`           | Page              | Client           | Canvas photobooth with 5 frame styles            |
-| `/gallery`                   | Page              | Client           | localStorage shot gallery                        |
-| `/collections`               | Page              | Server           | Curated collection index                         |
-| `/collections/[slug]`        | Page              | Server           | Named collection grid (up to 9 cameras)          |
-| `/collections/build`         | Page              | Client           | Custom collection builder                        |
-| `/collections/custom`        | Page              | Server + Client  | Custom collection view via `?c=` param           |
-| `/stats`                     | Page              | Server           | Per-borough camera count and online % dashboard  |
-| `/about`                     | Page              | Server           | Project info                                     |
-| `/legal/privacy`             | Page              | Server           | Privacy policy                                   |
-| `/legal/terms`               | Page              | Server           | Terms of service                                 |
-| `/api/camera-image/[id]`     | Route Handler     | Edge/Server      | Same-origin JPEG proxy for canvas capture        |
-| `/api/context/weather`       | Route Handler     | Server           | NWS weather by lat/lng                           |
-| `/api/context/transit`       | Route Handler     | Server           | 511NY subway alerts by lines                     |
-| `/api/context/citibike`      | Route Handler     | Server           | Citibike station availability by lat/lng         |
-| `/api/context/events`        | Route Handler     | Server           | NYC Open Data permitted events by borough        |
+| Route                    | Type          | Rendering                  | Description                                     |
+| ------------------------ | ------------- | -------------------------- | ----------------------------------------------- |
+| `/`                      | Page          | Server + ISR               | Landing page with top-scored camera spotlight   |
+| `/explore`               | Page          | Server (map island client) | Full-screen MapLibre camera map                 |
+| `/ambient`               | Page          | Client                     | Ken Burns camera drift with audio               |
+| `/camera/[id]`           | Page          | Server                     | Full-screen live feed + context panel           |
+| `/photobooth/[id]`       | Page          | Client                     | Canvas photobooth with 5 frame styles           |
+| `/gallery`               | Page          | Client                     | localStorage shot gallery                       |
+| `/collections`           | Page          | Server                     | Curated collection index                        |
+| `/collections/[slug]`    | Page          | Server                     | Named collection grid (up to 9 cameras)         |
+| `/collections/build`     | Page          | Client                     | Custom collection builder                       |
+| `/collections/custom`    | Page          | Server + Client            | Custom collection view via `?c=` param          |
+| `/stats`                 | Page          | Server                     | Per-borough camera count and online % dashboard |
+| `/about`                 | Page          | Server                     | Project info                                    |
+| `/legal/privacy`         | Page          | Server                     | Privacy policy                                  |
+| `/legal/terms`           | Page          | Server                     | Terms of service                                |
+| `/api/camera-image/[id]` | Route Handler | Edge/Server                | Same-origin JPEG proxy for canvas capture       |
+| `/api/context/weather`   | Route Handler | Server                     | NWS weather by lat/lng                          |
+| `/api/context/transit`   | Route Handler | Server                     | 511NY subway alerts by lines                    |
+| `/api/context/citibike`  | Route Handler | Server                     | Citibike station availability by lat/lng        |
+| `/api/context/events`    | Route Handler | Server                     | NYC Open Data permitted events by borough       |
 
 ---
 
@@ -175,13 +175,13 @@ graph TD
 
 **Rate limits per route:**
 
-| Route                    | Limit        | Window  |
-| ------------------------ | ------------ | ------- |
-| `/api/camera-image/[id]` | 60 req/IP    | 1 min   |
-| `/api/context/weather`   | 30 req/IP    | 1 min   |
-| `/api/context/citibike`  | 30 req/IP    | 1 min   |
-| `/api/context/events`    | 30 req/IP    | 1 min   |
-| `/api/context/transit`   | 20 req/IP    | 1 min   |
+| Route                    | Limit     | Window |
+| ------------------------ | --------- | ------ |
+| `/api/camera-image/[id]` | 60 req/IP | 1 min  |
+| `/api/context/weather`   | 30 req/IP | 1 min  |
+| `/api/context/citibike`  | 30 req/IP | 1 min  |
+| `/api/context/events`    | 30 req/IP | 1 min  |
+| `/api/context/transit`   | 20 req/IP | 1 min  |
 
 ---
 
@@ -199,6 +199,21 @@ Proxy URL:   /api/camera-image/{id}?t={timestamp}
 ```
 
 Rule: if an `<img>` will ever be passed to `ctx.drawImage()`, it **must** go through the proxy. Use `proxiedImageUrl(id)` from `src/lib/cameras/types.ts`.
+
+### Component audit — why every proxy usage is load-bearing
+
+All proxy usages were audited in April 2026. None can be switched to direct DOT URLs.
+
+| Component                                             | Proxy needed?       | Reason                                                                                                                              |
+| ----------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `FrameDiff`                                           | Yes — CORS          | Calls `ctx.getImageData()` on canvas                                                                                                |
+| `CameraImage`                                         | Yes — CORS          | Looks display-only, but `onFrameLoad` → `useFrameBuffer.captureFrame()` → `drawImage()` + `getImageData()` (GIF export)             |
+| `PhotoboothClient`                                    | Yes — CORS          | `useCapture` draws images to canvas + `toDataURL()`                                                                                 |
+| `AmbientPlayer` (`windowedProxiedImageUrl`, line 393) | Yes — rate limiting | Display-only (no CORS issue), but the windowed URL collapses all user requests within a 10s window into a single upstream DOT fetch |
+
+`CameraImage` is the non-obvious one: it only renders `<img>` tags, but its `onFrameLoad` callback passes the `HTMLImageElement` to `useFrameBuffer`, which draws it to a canvas for GIF export. Switching it to a direct URL would taint that canvas.
+
+`AmbientPlayer`'s windowed proxy is not a CORS fix — it's a responsible API usage optimization. Removing it would increase fan-out to DOT with no UX benefit.
 
 ---
 
