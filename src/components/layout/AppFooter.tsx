@@ -35,9 +35,14 @@ export function AppFooter() {
             Terms
           </Link>
         </div>
-        <span className="font-mono text-xs text-[var(--color-text-muted)]">
-          Data: NYC Department of Transportation
-        </span>
+        <a
+          href="https://webcams.nyctmc.org"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+        >
+          Data: NYC Department of Transportation ↗
+        </a>
       </div>
     </footer>
   );

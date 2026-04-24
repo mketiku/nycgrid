@@ -233,6 +233,16 @@ export default function AboutPage() {
               url: "https://data.cityofnewyork.us",
             },
             { source: "511NY", use: "MTA transit alerts", url: "https://511ny.org" },
+            {
+              source: "MTA BusTime",
+              use: "Real-time bus locations",
+              url: "https://bustime.mta.info",
+            },
+            {
+              source: "NOAA Tides & Currents",
+              use: "Tide predictions for waterfront cameras",
+              url: "https://tidesandcurrents.noaa.gov",
+            },
           ].map(({ source, use, url }) => (
             <div key={source} className="flex items-center justify-between px-4 py-3 gap-4">
               <div className="flex flex-col gap-0.5 min-w-0">

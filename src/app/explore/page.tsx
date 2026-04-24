@@ -47,7 +47,7 @@ export default async function ExplorePage({ searchParams }: Props) {
           rel="noopener noreferrer"
           className="pointer-events-auto font-mono text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
         >
-          Data: NYC DOT ↗
+          Data: NYC Department of Transportation ↗
         </a>
         <Link
           href="/about"
