@@ -1,0 +1,64 @@
+name: Refresh camera list
+
+on:
+  schedule:
+    - cron: "0 9 * * 3" # Every Wednesday at 9 AM UTC
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+jobs:
+  refresh:
+    name: Fetch and update camera list
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Fetch camera list
+        timeout-minutes: 1
+        run: node scripts/fetch-cameras.mjs
+
+      - name: Check for changes
+        id: diff
+        run: |
+          if git diff --quiet src/lib/cameras/data.ts; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes detected — camera list is up to date."
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            OLD=$(git show HEAD:src/lib/cameras/data.ts | grep -o 'cameras — [0-9]* total' | grep -o '[0-9]*')
+            NEW=$(grep -o 'cameras — [0-9]* total' src/lib/cameras/data.ts | grep -o '[0-9]*')
+            DELTA=$((NEW - OLD))
+            DELTA_STR=$([ $DELTA -ge 0 ] && echo "+$DELTA" || echo "$DELTA")
+            echo "old_count=$OLD" >> $GITHUB_OUTPUT
+            echo "new_count=$NEW" >> $GITHUB_OUTPUT
+            echo "delta=$DELTA_STR" >> $GITHUB_OUTPUT
+            echo "Changes detected: $OLD → $NEW ($DELTA_STR)"
+          fi
+
+      - name: Open pull request
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: chore/refresh-camera-list
+          commit-message: "chore(cameras): refresh DOT camera list [skip ci]"
+          title: "chore(cameras): refresh DOT camera list (${{ steps.diff.outputs.old_count }} → ${{ steps.diff.outputs.new_count }})"
+          body: |
+            Automated weekly refresh of the NYC DOT camera list.
+
+            | | Count |
+            |---|---|
+            | Previous | ${{ steps.diff.outputs.old_count }} |
+            | New | ${{ steps.diff.outputs.new_count }} |
+            | Delta | ${{ steps.diff.outputs.delta }} |
+
+            Review the diff in `src/lib/cameras/data.ts` before merging to confirm the changes look reasonable. A large drop may indicate a DOT API issue even if it passed the safety floor.
+          delete-branch: true
