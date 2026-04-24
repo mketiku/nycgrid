@@ -1,0 +1,128 @@
+# Platform Constraints
+
+## Responsible API Usage
+
+NycGrid is a guest on every external service it calls. The following rules apply to all external APIs — existing and future:
+
+- **Never hammer**: Always impose a minimum interval between calls to any given endpoint. Prefer the most conservative refresh rate that still meets the UX goal.
+- **Cache aggressively**: Cache responses at the appropriate layer (in-memory, TanStack Query, CDN) before adding a new call. A cached response is always cheaper than a fresh one.
+- **Scope requests**: Fetch only what the current view needs. Don't prefetch speculatively or fan out to endpoints the user hasn't requested.
+- **Respect stated limits**: If a service documents a rate limit, treat it as a hard cap, not a target. Aim for well under the limit.
+- **Degrade gracefully**: When a request fails or is rate-limited, show a fallback — never retry in a tight loop. Use exponential back-off with jitter if retries are warranted.
+- **No undocumented endpoints**: Only call endpoints that are publicly documented or explicitly approved. Don't reverse-engineer or scrape.
+- **Review before scaling**: Any new periodic call (interval, cron, background fetch) must be costed against monthly limits before merging. Document the math in this file.
+
+---
+
+## Vercel (Hobby Plan)
+
+- **Bandwidth**: 100 GB/month
+- **Serverless Functions**: 100 GB-hrs/month execution
+- **Build minutes**: 6,000/month
+- **Function timeout**: 300s default (all plans)
+- **Cron jobs**: 1 per project (use carefully for Phase 3 CV)
+- **Image optimization**: 1,000 source images/month (use `next/image` judiciously)
+
+---
+
+## Client Storage (Browser)
+
+NycGrid relies on `localStorage` and `sessionStorage` for persistence. To prevent performance degradation and storage bloat, the following limits apply:
+
+- **Cameras explored (lifetime)**: Capped at **500 unique IDs**. When the limit is reached, new cameras are not added to the lifetime history to preserve `localStorage` space.
+- **Photobooth gallery**: Capped at **12 saved shots**. Oldest shots are automatically pruned when a new one is saved.
+- **Favourites**: No hard cap, but expected to stay under 100 for UX reasons.
+- **Ambient heartbeat**: Increments the timer every **60s**. Frequent writes are avoided to minimize overhead.
+- **Theme/Settings**: Persisted as small strings/booleans.
+
+**Constraint**: All data is bound to the specific browser and device. Clearing browser data wipes all NycGrid history.
+
+---
+
+## NYC DOT Camera API
+
+- **Endpoint**: `https://webcams.nyctmc.org/api/cameras/{id}/image` — returns a JPEG snapshot
+- **Auth**: None required — public API
+- **Rate limit**: Not formally documented, but the DOT integration guide requires a **minimum 15s refresh interval per camera**. Treat this as a hard floor, not a suggestion.
+- **CORS**: No CORS headers — direct URLs taint the canvas. Always proxy through `/api/camera-image/[id]` for any canvas operation (GIF export, photobooth capture).
+- **Offline cameras**: Common — always render a graceful offline state, never blank
+
+---
+
+## NWS (National Weather Service) — api.weather.gov
+
+- **Auth**: None required — public API
+- **Rate limit**: Not formally documented; be conservative
+- **Critical**: The API **requires a custom `User-Agent` header** — requests without it return 403. Format: `nycgrid/1.0 (github.com/mketiku/nycgrid/issues)`
+- **Caching**: Points endpoint cached 24h (`revalidate: 86400`); forecast cached 10 min (`revalidate: 600`)
+- **Timeout**: 1.5s per request (`AbortSignal.timeout(1500)`)
+- **Failure mode**: Returns `null` — context panel renders without weather rather than erroring
+
+---
+
+## Open-Meteo
+
+- **Used for**: Ambient mode only — single NYC-wide weather code polled every 30 minutes for soundscape mixing
+- **Auth**: None required — free, no key
+- **Rate limit**: Not formally documented; one call per 30 min per session is well within limits
+- **Failure mode**: Silent — ambient audio mixing falls back to defaults if fetch fails
+
+---
+
+## 511 NY API (MTA Transit Alerts)
+
+- **Auth**: Requires `NYC_511_API_KEY` env var — returns `[]` gracefully if missing
+- **Caching**: 2 min (`revalidate: 120`)
+- **Timeout**: 2s
+- **Failure mode**: Returns `[]` — context panel renders without transit alerts
+
+---
+
+## MTA BusTime API
+
+- **Auth**: Requires `MTA_BUS_TIME_KEY` env var — returns `[]` gracefully if missing
+- **Endpoints**: `stops-for-location.json` (stops near camera, cached 24h) + `stop-monitoring.json` (arrivals, cached 30s)
+- **Scope**: Checks up to 2 nearest stops within ~330m, returns up to 4 arrivals
+- **Timeout**: 2s per request
+- **Failure mode**: Returns `[]` — context panel renders without bus arrivals
+
+---
+
+## Citibike GBFS
+
+- **Auth**: None required — open GBFS feed
+- **Endpoints**: `station_information.json` (cached 24h) + `station_status.json` (cached 2 min)
+- **Scope**: Nearest station within 600m of the camera
+- **Timeout**: 2s per request
+- **Failure mode**: Returns `null` — context panel renders without Citibike data
+
+---
+
+## NYC Open Data (Socrata) — Permitted Events
+
+- **Auth**: Optional `NYC_OPEN_DATA_APP_TOKEN` env var — unauthenticated requests are rate-limited to ~1,000 req/day per IP; app token raises this significantly
+- **Caching**: 1h (`revalidate: 3600`)
+- **Scope**: Up to 3 events per borough, today + tomorrow window
+- **Timeout**: 2s
+- **Failure mode**: Returns `[]` — context panel renders without event data
+
+---
+
+## NOAA CO-OPS API (Tides)
+
+- **Auth**: None required — public API
+- **Used for**: Waterfront and beach cameras only
+- **Stations**: The Battery, Kings Point, Sandy Hook — nearest to camera coordinates
+- **Caching**: Water level cached 6 min (`revalidate: 360`); tide predictions cached 30 min (`revalidate: 1800`)
+- **Timeout**: 2s per request
+- **Failure mode**: Returns `null` — context panel renders without tide data
+
+---
+
+## ArcGIS (NYC Community Districts GeoJSON)
+
+- **Auth**: None required — public ArcGIS REST service
+- **Used for**: Coverage gap analysis map layer
+- **Endpoint**: `services5.arcgis.com` — NYC Community Districts FeatureServer
+- **Caching**: 7 days (`revalidate: 604800`) — district boundaries are stable
+- **Failure mode**: Coverage gap layer unavailable; map renders without it
