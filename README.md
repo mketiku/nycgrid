@@ -8,7 +8,14 @@ Built with Next.js 16, React 19, and MapLibre GL.
 
 ## Prerequisites
 
-- **Bun** — `curl -fsSL https://bun.sh/install | bash`
+- **Bun** — this project uses Bun exclusively. If you don't have it yet:
+
+  ```bash
+  npm install -g bun   # the last npm command you'll ever need
+  ```
+
+  Or install directly: `curl -fsSL https://bun.sh/install | bash`
+  Full options: [bun.com/docs/installation](https://bun.com/docs/installation)
 
 ---
 
