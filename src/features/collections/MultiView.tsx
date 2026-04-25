@@ -81,9 +81,10 @@ export function MultiView({ cameras, title, description, isCustom, shareUrl }: M
       {/* Grid */}
       <div className={`grid ${gridClass(cameras.length)} gap-2 flex-1`}>
         {cameras.map((camera) => (
-          <div
+          <Link
             key={camera.id}
-            className="relative rounded-lg overflow-hidden min-h-0"
+            href={`/camera/${camera.id}`}
+            className="relative rounded-lg overflow-hidden min-h-0 block group"
             style={{ border: "1px solid var(--color-border)" }}
           >
             <CameraImage camera={camera} refreshInterval={30_000} className="w-full h-full" />
@@ -96,14 +97,11 @@ export function MultiView({ cameras, title, description, isCustom, shareUrl }: M
                 {camera.area}
               </p>
             </div>
-            {/* Open link */}
-            <Link
-              href={`/camera/${camera.id}`}
-              className="absolute top-1.5 right-1.5 font-mono text-[9px] uppercase tracking-widest px-1.5 py-1 rounded bg-black/60 text-white/80 hover:text-white transition-colors"
-            >
+            {/* Open badge — visual cue only, card is the tap target */}
+            <span className="absolute top-1.5 right-1.5 font-mono text-[9px] uppercase tracking-widest px-1.5 py-1 rounded bg-black/60 text-white/80 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
               Open
-            </Link>
-          </div>
+            </span>
+          </Link>
         ))}
       </div>
     </div>

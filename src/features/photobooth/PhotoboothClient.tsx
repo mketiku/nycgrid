@@ -255,7 +255,7 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
             className="flex items-center gap-2 font-mono text-sm px-6 py-2.5 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
               backgroundColor: "var(--color-accent)",
-              color: "#000000",
+              color: "var(--color-on-accent)",
             }}
           >
             <Camera className="w-4 h-4" />
@@ -268,7 +268,7 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
             <button
               onClick={handleDownload}
               className="flex items-center gap-2 font-mono text-sm px-6 py-2.5 rounded transition-colors"
-              style={{ backgroundColor: "var(--color-accent)", color: "#000000" }}
+              style={{ backgroundColor: "var(--color-accent)", color: "var(--color-on-accent)" }}
             >
               <Download className="w-4 h-4" />
               Save
