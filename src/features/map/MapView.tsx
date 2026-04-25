@@ -91,7 +91,6 @@ export function MapView({
   initialType,
   citibikeCameraIds,
 }: MapViewProps) {
-  const router = useRouter();
   const initialResolved = useRef(false);
   const favouritesApi = useFavourites() as ReturnType<typeof useFavourites> & {
     addMany?: (ids: string[]) => void;
@@ -147,9 +146,12 @@ export function MapView({
       if ("borough" in overrides) setOrDelete("borough", overrides.borough ?? null);
       if ("type" in overrides)
         setOrDelete("type", overrides.type === "all" ? null : (overrides.type ?? null));
-      router.replace(url.pathname + url.search, { scroll: false });
+      // Use history.replaceState instead of router.replace — the URL update is a
+      // permalink only; all state is local. router.replace triggers a full App Router
+      // navigation cycle (~600ms), history.replaceState is instant.
+      window.history.replaceState(null, "", url.pathname + url.search);
     },
-    [router]
+    []
   );
 
   const selectCamera = useCallback(
@@ -218,6 +220,20 @@ export function MapView({
     window.addEventListener("map:openBrowser", handler);
     return () => window.removeEventListener("map:openBrowser", handler);
   }, []);
+
+  // Deep-link from PersistentMap: fired when user navigates to /explore with a
+  // camera param while the map is already mounted (initialResolved is already true).
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { cameraId } = (e as CustomEvent<{ cameraId: string }>).detail;
+      const cam = cameras.find((c) => c.id === cameraId);
+      if (!cam) return;
+      selectCamera(cam);
+      flyTo([cam.longitude, cam.latitude], 15);
+    };
+    window.addEventListener("map:selectCamera", handler);
+    return () => window.removeEventListener("map:selectCamera", handler);
+  }, [cameras, selectCamera, flyTo]);
 
   // Cmd/Ctrl+K or "/" focuses the search input
   useEffect(() => {
@@ -719,18 +735,12 @@ export function CameraBrowsePanel({
   return (
     <>
       {isMobileOpen ? (
-        <button
-          type="button"
-          aria-label="Close camera browser"
-          onClick={onCloseMobile}
-          className="md:hidden absolute inset-0 z-55 bg-black/50"
-        />
-      ) : null}
-
-      {isMobileOpen ? (
         <motion.section
           aria-label="Browse cameras"
-          className="absolute z-60 flex flex-col border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-base)_90%,transparent)] shadow-xl backdrop-blur-sm left-2 right-2 bottom-14 top-4 rounded-2xl"
+          className="absolute z-60 flex flex-col bg-[var(--color-base)] left-0 right-0 top-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))]"
+          initial={shouldReduceMotion ? { opacity: 0 } : { y: "100%" }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={shouldReduceMotion ? { opacity: 0 } : { y: "100%", opacity: 1 }}
           drag={shouldReduceMotion ? false : "y"}
           dragControls={dragControls}
           dragListener={false}

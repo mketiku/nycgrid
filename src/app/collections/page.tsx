@@ -12,7 +12,10 @@ export const metadata: Metadata = {
 
 export default function CollectionsPage() {
   return (
-    <main className="max-w-4xl mx-auto px-6 py-12 flex flex-col gap-10">
+    <main
+      data-testid="collections-page"
+      className="mx-auto flex max-w-4xl flex-col gap-10 px-6 py-12 pb-10 sm:pb-14"
+    >
       {/* Hero */}
       <section className="flex flex-col gap-3">
         <div className="flex items-center gap-2 font-mono text-xs text-[var(--color-text-muted)] tracking-widest uppercase">
@@ -105,7 +108,7 @@ export default function CollectionsPage() {
       </section>
 
       {/* Build your own */}
-      <section className="flex flex-col gap-4">
+      <section data-testid="collections-build-section" className="flex flex-col gap-4 pb-2 sm:pb-4">
         <h2 className="font-mono text-xs uppercase tracking-widest text-[var(--color-text-muted)]">
           Build your own
         </h2>

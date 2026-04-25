@@ -30,7 +30,7 @@ export function CameraPanel({ camera, onClose }: CameraPanelProps) {
             key="mobile-card"
             role="dialog"
             aria-label="Selected camera details"
-            className="lg:hidden fixed bottom-14 md:bottom-2 left-2 right-2 z-60 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden shadow-2xl"
+            className="lg:hidden fixed bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] left-2 right-2 z-60 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl md:bottom-3"
             initial={shouldReduceMotion ? { opacity: 0 } : { y: 12, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={shouldReduceMotion ? { opacity: 0 } : { y: 12, opacity: 0 }}
@@ -94,75 +94,72 @@ function MobileCardContent({ camera, onClose }: { camera: CameraType; onClose: (
   const favourited = isFavourite(camera.id);
 
   return (
-    <div className="flex gap-3 p-3">
-      {/* Thumbnail */}
-      <div className="shrink-0 w-[120px] rounded-lg overflow-hidden">
+    <div className="flex flex-col gap-3 p-3">
+      {/* Header: name + close */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <h2 className="font-mono text-sm font-semibold leading-tight text-[var(--color-text-primary)] line-clamp-2">
+            {camera.name}
+          </h2>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <MapPin className="w-3 h-3 text-[var(--color-text-secondary)] shrink-0" />
+            <span className="font-mono text-[10px] text-[var(--color-text-secondary)]">
+              {camera.area}
+            </span>
+            <span
+              className="inline-flex items-center gap-1 font-mono text-[10px]"
+              style={{ color: camera.isOnline ? "var(--color-online)" : "var(--color-offline)" }}
+            >
+              <span
+                className="w-1.5 h-1.5 rounded-full shrink-0"
+                style={{
+                  backgroundColor: camera.isOnline ? "var(--color-online)" : "var(--color-offline)",
+                }}
+              />
+              {camera.isOnline ? "Online" : "Offline"}
+            </span>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          aria-label="Close camera panel"
+          className="shrink-0 rounded-lg p-1 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-elevated)] hover:text-[var(--color-text-primary)]"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* Full-width preview */}
+      <div className="rounded-xl overflow-hidden border border-[var(--color-border)]">
         <CameraImage camera={camera} refreshInterval={20_000} className="aspect-video w-full" />
       </div>
 
-      {/* Info + actions */}
-      <div className="flex flex-col flex-1 min-w-0 gap-1.5">
-        {/* Name + close */}
-        <div className="flex items-start justify-between gap-1">
-          <h2 className="font-mono text-xs font-semibold text-[var(--color-text-primary)] leading-tight line-clamp-2 flex-1 min-w-0">
-            {camera.name}
-          </h2>
-          <button
-            onClick={onClose}
-            aria-label="Close camera panel"
-            className="shrink-0 p-0.5 rounded text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Location + status */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <MapPin className="w-3 h-3 text-[var(--color-text-secondary)] shrink-0" />
-          <span className="font-mono text-[10px] text-[var(--color-text-secondary)]">
-            {camera.area}
-          </span>
-          <span
-            className="inline-flex items-center gap-1 font-mono text-[10px]"
-            style={{ color: camera.isOnline ? "var(--color-online)" : "var(--color-offline)" }}
-          >
-            <span
-              className="w-1.5 h-1.5 rounded-full shrink-0"
-              style={{
-                backgroundColor: camera.isOnline ? "var(--color-online)" : "var(--color-offline)",
-              }}
-            />
-            {camera.isOnline ? "Online" : "Offline"}
-          </span>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-1.5 mt-auto">
-          <Link href={`/camera/${camera.id}`} className="flex-1">
-            <Button variant="secondary" size="sm" className="w-full gap-1">
-              <ArrowRight className="w-3 h-3" />
-              View feed
-            </Button>
-          </Link>
-          <Link href={`/photobooth/${camera.id}`} className="flex-1">
-            <Button variant="primary" size="sm" className="w-full gap-1">
-              <Camera className="w-3 h-3" />
-              Photobooth
-            </Button>
-          </Link>
-          <button
-            onClick={() => toggle(camera.id)}
-            aria-label={favourited ? "Remove from favourites" : "Add to favourites"}
-            className="shrink-0 p-1 rounded-lg transition-colors hover:bg-[var(--color-elevated)]"
-            style={{ color: favourited ? "var(--color-accent)" : "var(--color-text-secondary)" }}
-          >
-            <Star
-              className="w-4 h-4"
-              fill={favourited ? "var(--color-accent)" : "none"}
-              stroke="currentColor"
-            />
-          </button>
-        </div>
+      {/* Actions */}
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_2.75rem] items-center gap-2">
+        <Link href={`/camera/${camera.id}`} className="flex-1">
+          <Button variant="secondary" size="sm" className="h-9 w-full gap-1 rounded-xl px-2">
+            <ArrowRight className="w-3 h-3" />
+            View
+          </Button>
+        </Link>
+        <Link href={`/photobooth/${camera.id}`} className="flex-1">
+          <Button variant="primary" size="sm" className="h-9 w-full gap-1 rounded-xl px-2">
+            <Camera className="w-3 h-3" />
+            Photobooth
+          </Button>
+        </Link>
+        <button
+          onClick={() => toggle(camera.id)}
+          aria-label={favourited ? "Remove from favourites" : "Add to favourites"}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--color-border)] p-0 transition-colors hover:bg-[var(--color-elevated)]"
+          style={{ color: favourited ? "var(--color-accent)" : "var(--color-text-secondary)" }}
+        >
+          <Star
+            className="w-4 h-4"
+            fill={favourited ? "var(--color-accent)" : "none"}
+            stroke="currentColor"
+          />
+        </button>
       </div>
     </div>
   );

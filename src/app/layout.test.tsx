@@ -15,8 +15,16 @@ vi.mock("@/components/layout/AppNav", () => ({
   AppNav: () => <nav data-testid="app-nav" />,
 }));
 
+vi.mock("@/components/layout/mobileNav", () => ({
+  MOBILE_NAV_CLEARANCE_CLASS: "pb-[calc(3.5rem+env(safe-area-inset-bottom))]",
+}));
+
+vi.mock("@/components/layout/AppFooter", () => ({
+  AppFooter: () => <footer data-testid="app-footer">Footer</footer>,
+}));
+
 describe("RootLayout", () => {
-  it("renders navigation, skip link, and children inside main content", () => {
+  it("renders navigation, skip link, footer, and shell clearance around route content", () => {
     render(
       <RootLayout>
         <div>Child content</div>
@@ -28,5 +36,10 @@ describe("RootLayout", () => {
     expect(screen.getByTestId("app-nav")).toBeInTheDocument();
     expect(screen.getByText("Child content")).toBeInTheDocument();
     expect(document.getElementById("main-content")).toBeTruthy();
+    expect(screen.getByTestId("app-shell-footer")).toHaveClass(
+      "pb-[calc(3.5rem+env(safe-area-inset-bottom))]",
+      "empty:hidden"
+    );
+    expect(screen.getByTestId("app-footer")).toBeInTheDocument();
   });
 });

@@ -19,7 +19,7 @@ describe("security headers", () => {
   });
 
   it("pins media-src CDN to the versioned nycgrid-assets tag", () => {
-    expect(CONTENT_SECURITY_POLICY).toContain("cdn.jsdelivr.net/gh/mketiku/nycgrid-assets@v1.1.0/");
+    expect(CONTENT_SECURITY_POLICY).toContain("cdn.jsdelivr.net/gh/mketiku/nycgrid-assets@v1.3.0/");
     // must not allow arbitrary paths under the account
     expect(CONTENT_SECURITY_POLICY).not.toContain('cdn.jsdelivr.net/gh/mketiku/"');
   });

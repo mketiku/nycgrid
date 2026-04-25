@@ -1,23 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import ExplorePage from "./page";
-import { describe, it, expect, vi } from "vitest";
-
-vi.mock("@/features/map/MapView", () => ({
-  MapView: () => <div data-testid="map-view" />,
-}));
-
-vi.mock("next/cache", () => ({
-  unstable_cache: (fn: () => unknown) => fn,
-}));
-
-vi.mock("@/lib/citibike/nearby-cameras", () => ({
-  findCamerasNearCitibike: vi.fn().mockResolvedValue(new Set()),
-}));
+import { describe, it, expect } from "vitest";
 
 describe("ExplorePage", () => {
-  it("renders the map view", async () => {
-    const searchParams = Promise.resolve({});
-    render(await ExplorePage({ searchParams }));
-    expect(screen.getByTestId("map-view")).toBeDefined();
+  it("renders legal attribution links", () => {
+    render(<ExplorePage />);
+    expect(screen.getByLabelText("Explore legal links")).toBeDefined();
+  });
+
+  it("keeps legal links off the mobile map surface", () => {
+    render(<ExplorePage />);
+    const legalRegion = screen.getByLabelText("Explore legal links");
+    expect(legalRegion.className).toContain("hidden");
+    expect(legalRegion.className).toContain("md:flex");
   });
 });

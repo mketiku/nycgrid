@@ -3,9 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 import { AppNav } from "./AppNav";
 
 const mockUsePathname = vi.fn();
+const mockPush = vi.fn();
 
 vi.mock("next/navigation", () => ({
   usePathname: () => mockUsePathname(),
+  useRouter: () => ({ push: mockPush }),
 }));
 
 describe("AppNav", () => {
@@ -30,13 +32,25 @@ describe("AppNav", () => {
 
     expect(container).toBeEmptyDOMElement();
   });
-  it("dispatches map:openBrowser event when Browse button is clicked", () => {
+
+  it("uses a mobile-safe height contract for the persistent bottom nav", () => {
+    mockUsePathname.mockReturnValue("/collections");
+
+    render(<AppNav />);
+
+    expect(screen.getByTestId("mobile-nav")).toHaveClass(
+      "h-[calc(3.5rem+env(safe-area-inset-bottom))]",
+      "pb-[env(safe-area-inset-bottom)]"
+    );
+  });
+
+  it("dispatches map:openBrowser event when Search button is clicked on /explore", () => {
     mockUsePathname.mockReturnValue("/explore");
     const dispatchSpy = vi.spyOn(window, "dispatchEvent");
 
     render(<AppNav />);
 
-    const browseButton = screen.getByRole("button", { name: /Browse/i });
+    const browseButton = screen.getByRole("button", { name: /Search/i });
     fireEvent.click(browseButton);
 
     expect(dispatchSpy).toHaveBeenCalledWith(expect.any(CustomEvent));

@@ -143,4 +143,33 @@ describe("/api/coverage-gap", () => {
     expect(body.features[0].properties.borough).toBe("Manhattan");
     expect(body.features[0].properties.densityRank).toBe(1);
   });
+
+  it("uses fallbacks for unknown boroughs and neighborhoods", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          features: [
+            {
+              type: "Feature",
+              geometry: { type: "Point", coordinates: [0, 0] },
+              properties: { BoroCD: 601 }, // Unknown boro (6) and valid district (01)
+            },
+          ],
+        }),
+      } as Response)
+    );
+
+    const response = await GET(
+      new NextRequest("http://localhost/api/coverage-gap", {
+        headers: { "x-real-ip": "203.0.113.60" },
+      })
+    );
+    const body = await response.json();
+    expect(body.features[0].properties.borough).toBe("Unknown");
+    expect(body.features[0].properties.neighborhood).toBe("");
+    // 1 is the rank as it's the only feature
+    expect(body.features[0].properties.densityRank).toBe(1);
+  });
 });

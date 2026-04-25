@@ -98,7 +98,7 @@ describe("CameraPanel", () => {
       "href",
       "/photobooth/cam-1"
     );
-    expect(screen.getAllByRole("link", { name: /View live feed/i })[0]).toHaveAttribute(
+    expect(screen.getAllByRole("link", { name: /View/i })[0]).toHaveAttribute(
       "href",
       "/camera/cam-1"
     );
@@ -130,6 +130,25 @@ describe("CameraPanel", () => {
 
     expect(screen.getAllByText("Queens Midtown")).not.toHaveLength(0);
     expect(recordView).toHaveBeenCalledWith("cam-2");
+  });
+
+  it("keeps the mobile card clear of the fixed bottom navigation", () => {
+    render(<CameraPanel camera={camera} onClose={onClose} />);
+
+    const mobilePanel = screen
+      .getAllByRole("dialog", { name: "Selected camera details" })
+      .find((node) => node.className.includes("lg:hidden"));
+
+    expect(mobilePanel?.className).toContain(
+      "bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]"
+    );
+  });
+
+  it("uses the shorter mobile CTA label to protect the action row width", () => {
+    render(<CameraPanel camera={camera} onClose={onClose} />);
+
+    const viewButtons = screen.getAllByRole("button", { name: /View/i });
+    expect(viewButtons[0]).toHaveAccessibleName("View");
   });
 
   it("dismisses the panel when the Escape key is pressed", () => {

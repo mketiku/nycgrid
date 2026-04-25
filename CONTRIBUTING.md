@@ -74,6 +74,47 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
 - Update relevant docs if behavior changes
 - The PR template has a checklist — fill it in
 
+## Adding ambient music tracks
+
+Ambient music lives in the separate [`mketiku/nycgrid-assets`](https://github.com/mketiku/nycgrid-assets) repo and is served via jsDelivr CDN. To add a track:
+
+**1. Add the file to `nycgrid-assets`**
+
+Drop your `.mp3` into `audio/ambient/` and push to `main`. File names should be lowercase with underscores (`lofi_mytrack.mp3`).
+
+**2. Cut a new semver tag**
+
+```bash
+git tag v1.x.0
+git push origin v1.x.0
+```
+
+jsDelivr serves tagged releases. Never reference `@main` — it isn't cached and may be rate-limited.
+
+**3. Update the CDN constant in this repo**
+
+In `src/features/ambient/AmbientPlayer.tsx`, bump the `CDN` constant:
+
+```ts
+const CDN = "https://cdn.jsdelivr.net/gh/mketiku/nycgrid-assets@v1.x.0";
+```
+
+**4. Add the track to `LOFI_TRACKS`**
+
+In the same file, add an entry to the `LOFI_TRACKS` array:
+
+```ts
+{ url: `${CDN}/audio/ambient/lofi_mytrack.mp3`, minPlays: 2, maxPlays: 4 },
+```
+
+`minPlays`/`maxPlays` controls how many times the track loops before the player crossfades to the next one. Longer or more atmospheric tracks suit higher values (3–6); shorter or punchier tracks suit lower ones (1–3).
+
+**5. Open a PR**
+
+Commit the CDN bump and `LOFI_TRACKS` entry together. The PR description should name the track and note the source/license.
+
+---
+
 ## What we're not looking for
 
 - Changing the tech stack

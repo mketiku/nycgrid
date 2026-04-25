@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Map, LayoutGrid, Tv2, Search } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Home, Map, LayoutGrid, Tv2, Search } from "lucide-react";
 import { ThemeToggle } from "@/features/theme/ThemeToggle";
+import { MOBILE_NAV_SAFE_HEIGHT_CLASS } from "@/components/layout/mobileNav";
 
 const NAV_LINKS = [
   { href: "/explore", label: "Explore" },
@@ -13,6 +14,7 @@ const NAV_LINKS = [
 
 export function AppNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const isLanding = pathname === "/";
   const isAmbient = pathname === "/ambient";
 
@@ -52,9 +54,18 @@ export function AppNav() {
 
       {/* ── Mobile bottom nav ── */}
       <nav
+        data-testid="mobile-nav"
         aria-label="Primary"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-14 flex items-center justify-around border-t border-[var(--color-border)] bg-[var(--color-base)]/95 backdrop-blur-sm"
+        className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-[var(--color-border)] bg-[var(--color-base)]/95 backdrop-blur-sm ${MOBILE_NAV_SAFE_HEIGHT_CLASS} pb-[env(safe-area-inset-bottom)]`}
       >
+        <Link
+          href="/"
+          aria-label="Go to homepage"
+          className="flex flex-col items-center justify-center gap-0.5 px-4 min-h-[44px] flex-1 transition-colors text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+        >
+          <Home className="w-5 h-5" />
+          <span className="font-mono text-[9px] uppercase tracking-widest">Home</span>
+        </Link>
         <MobileNavItem href="/explore" icon={<Map className="w-5 h-5" />} label="Map" />
         <MobileNavItem
           href="/collections"
@@ -62,16 +73,20 @@ export function AppNav() {
           label="Collections"
         />
         <MobileNavItem href="/ambient" icon={<Tv2 className="w-5 h-5" />} label="Ambient" />
-        {pathname.startsWith("/explore") && (
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent("map:openBrowser"))}
-            className="flex flex-col items-center justify-center gap-0.5 px-4 min-h-[44px] flex-1 transition-colors text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
-          >
-            <Search className="w-5 h-5" />
-            <span className="font-mono text-[9px] uppercase tracking-widest">Browse</span>
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => {
+            if (pathname.startsWith("/explore")) {
+              window.dispatchEvent(new CustomEvent("map:openBrowser"));
+            } else {
+              router.push("/explore");
+            }
+          }}
+          className="flex flex-col items-center justify-center gap-0.5 px-4 min-h-[44px] flex-1 transition-colors text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+        >
+          <Search className="w-5 h-5" />
+          <span className="font-mono text-[9px] uppercase tracking-widest">Search</span>
+        </button>
       </nav>
 
       {/* Spacer so content isn't hidden behind desktop nav */}

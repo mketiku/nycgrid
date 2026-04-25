@@ -75,9 +75,12 @@ export default function LandingPage() {
         </div>
       </div>
       {/* Below the fold — what you can do */}
-      <div className="relative z-10 mx-auto max-w-6xl w-full px-0 pb-20 flex flex-col gap-16">
+      <div
+        data-testid="landing-lower-sections"
+        className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-12 px-0 pb-16 sm:gap-16 sm:pb-20"
+      >
         {/* Three pillars */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[
             {
               label: "Watch",
@@ -118,35 +121,43 @@ export default function LandingPage() {
         </div>
 
         {/* Network reach */}
-        <div className="border-t border-[var(--color-border)] pt-10 flex flex-col gap-4 max-w-2xl">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-muted)]">
-            The network
-          </p>
-          <p className="text-[var(--color-text-secondary)] leading-relaxed">
-            NYC DOT&apos;s publicly funded camera network covers more of the city than you&apos;d
-            expect — tunnels, bridges, parkways, greenways, and the roads that run through every
-            borough&apos;s parks. Prospect Park Drive, the FDR, Riverside Drive, the Staten Island
-            Expressway. The whole city, not just downtown.
-          </p>
-          <Link
-            href="/stats"
-            className="font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors self-start"
-          >
-            View network stats →
-          </Link>
+        <div className="max-w-2xl border-t border-[var(--color-border)] pt-10">
+          <div className="flex flex-col gap-4">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--color-text-muted)]">
+              The network
+            </p>
+            <p className="text-[var(--color-text-secondary)] leading-relaxed">
+              NYC DOT&apos;s publicly funded camera network covers more of the city than you&apos;d
+              expect — tunnels, bridges, parkways, greenways, and the roads that run through every
+              borough&apos;s parks. Prospect Park Drive, the FDR, Riverside Drive, the Staten Island
+              Expressway. The whole city, not just downtown.
+            </p>
+            <Link
+              href="/stats"
+              className="self-start font-mono text-xs text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-accent)]"
+            >
+              View network stats →
+            </Link>
+          </div>
         </div>
       </div>
 
-      <footer className="relative z-10 mx-auto max-w-6xl w-full px-0 pb-10 flex flex-col items-center gap-2 text-center border-t border-[var(--color-border)] pt-8">
+      <footer
+        data-testid="landing-page-ending"
+        className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center gap-4 rounded-2xl border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_88%,transparent)] p-6 text-center sm:p-8"
+      >
+        <p className="max-w-2xl font-mono text-[10px] uppercase tracking-[0.3em] text-[var(--color-text-muted)]">
+          Camera feeds from the NYC Department of Transportation
+        </p>
         <a
           href="https://webcams.nyctmc.org"
           target="_blank"
           rel="noopener noreferrer"
-          className="font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+          className="font-mono text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors"
         >
-          Camera feeds from the NYC Department of Transportation ↗
+          Visit the source ↗
         </a>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <Link
             href="/about"
             className="font-mono text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"

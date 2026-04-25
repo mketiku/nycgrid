@@ -11,6 +11,26 @@ const OFM_GLYPHS = "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf"
 const NYC_CENTER: [number, number] = [-73.9857, 40.7484];
 const NYC_ZOOM = 11;
 
+// Pre-fetch and patch a Carto style JSON: replace the glyphs URL with OFM's and
+// remap every symbol layer's text-font so MapLibre never requests Carto's font CDN
+// (which has no CORS headers). Doing this before map init avoids the race between
+// styledata firing and the first font fetch.
+async function fetchPatchedStyle(url: string): Promise<maplibregl.StyleSpecification> {
+  const res = await fetch(url);
+  const style = (await res.json()) as maplibregl.StyleSpecification;
+  (style as Record<string, unknown>).glyphs = OFM_GLYPHS;
+  for (const layer of style.layers) {
+    if (layer.type !== "symbol") continue;
+    const layout = (layer as { layout?: Record<string, unknown> }).layout;
+    if (!layout) continue;
+    const fonts = layout["text-font"];
+    if (!fonts) continue;
+    const isBold = Array.isArray(fonts) && fonts.some((f: unknown) => /bold/i.test(String(f)));
+    layout["text-font"] = isBold ? ["Noto Sans Bold"] : ["Noto Sans Regular"];
+  }
+  return style;
+}
+
 export interface UseMapSetupOptions {
   cameras: Camera[];
   featuredIds: Set<string>;
@@ -41,47 +61,38 @@ export function useMapSetup({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: isLight ? CARTO_LIGHT : CARTO_DARK,
-      center: NYC_CENTER,
-      zoom: NYC_ZOOM,
-      minZoom: 9,
-      maxZoom: 18,
-      attributionControl: false,
+    let cancelled = false;
+    fetchPatchedStyle(isLight ? CARTO_LIGHT : CARTO_DARK).then((patchedStyle) => {
+      if (cancelled || !containerRef.current) return;
+
+      const map = new maplibregl.Map({
+        container: containerRef.current,
+        style: patchedStyle,
+        center: NYC_CENTER,
+        zoom: NYC_ZOOM,
+        minZoom: 9,
+        maxZoom: 18,
+        attributionControl: false,
+      });
+
+      map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
+
+      map.on("load", () => {
+        const color = accentColorRef.current;
+        if (!color) return;
+        addCameraLayers(map, cameras, featuredIds, color);
+        bindLayerEvents(map, cameras, onCameraSelect);
+      });
+
+      mapRef.current = map;
     });
-
-    map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
-
-    map.once("styledata", () => {
-      // Carto's glyph CDN is unreliable — use OpenFreeMap's instead (no key required).
-      // OFM only hosts Noto Sans, so remap every symbol layer's text-font to avoid 404s.
-      map.setGlyphs(OFM_GLYPHS);
-      for (const layer of map.getStyle().layers) {
-        if (layer.type !== "symbol") continue;
-        const fonts = (layer.layout as Record<string, unknown> | undefined)?.["text-font"];
-        if (!fonts) continue;
-        const isBold = Array.isArray(fonts) && fonts.some((f: unknown) => /bold/i.test(String(f)));
-        map.setLayoutProperty(
-          layer.id,
-          "text-font",
-          isBold ? ["Noto Sans Bold"] : ["Noto Sans Regular"]
-        );
-      }
-    });
-
-    map.on("load", () => {
-      const color = accentColorRef.current;
-      if (!color) return;
-      addCameraLayers(map, cameras, featuredIds, color);
-      bindLayerEvents(map, cameras, onCameraSelect);
-    });
-
-    mapRef.current = map;
 
     return () => {
-      map.remove();
-      mapRef.current = null;
+      cancelled = true;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
       isLightInitialized.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -103,26 +114,14 @@ export function useMapSetup({
     }
     const map = mapRef.current;
     if (!map) return;
-    const newStyle = isLight ? CARTO_LIGHT : CARTO_DARK;
-    map.setStyle(newStyle);
-    map.once("styledata", () => {
-      map.setGlyphs(OFM_GLYPHS);
-      for (const layer of map.getStyle().layers) {
-        if (layer.type !== "symbol") continue;
-        const fonts = (layer.layout as Record<string, unknown> | undefined)?.["text-font"];
-        if (!fonts) continue;
-        const isBold = Array.isArray(fonts) && fonts.some((f: unknown) => /bold/i.test(String(f)));
-        map.setLayoutProperty(
-          layer.id,
-          "text-font",
-          isBold ? ["Noto Sans Bold"] : ["Noto Sans Regular"]
-        );
-      }
-    });
-    map.once("style.load", () => {
-      if (!accentColor) return;
-      addCameraLayers(map, cameras, featuredIds, accentColor);
-      bindLayerEvents(map, cameras, onCameraSelect);
+    fetchPatchedStyle(isLight ? CARTO_LIGHT : CARTO_DARK).then((patchedStyle) => {
+      if (!mapRef.current) return;
+      map.setStyle(patchedStyle);
+      map.once("style.load", () => {
+        if (!accentColor) return;
+        addCameraLayers(map, cameras, featuredIds, accentColor);
+        bindLayerEvents(map, cameras, onCameraSelect);
+      });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLight]);

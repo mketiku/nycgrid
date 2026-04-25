@@ -27,6 +27,13 @@ describe("LandingPage", () => {
     expect(screen.getByText("Boroughs")).toBeDefined();
     expect(screen.getByText("Feeds")).toBeDefined();
     expect(screen.getByTestId("camera-spotlight")).toBeDefined();
+    expect(screen.getByTestId("landing-lower-sections")).toHaveClass("gap-12", "sm:gap-16");
+    expect(screen.getByTestId("landing-page-ending")).toHaveClass(
+      "rounded-2xl",
+      "border",
+      "p-6",
+      "sm:p-8"
+    );
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/legal/privacy");
     expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("href", "/legal/terms");
   });

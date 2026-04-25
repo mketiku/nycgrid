@@ -5,6 +5,8 @@ import { ThemeProvider } from "@/features/theme/ThemeProvider";
 import { QueryProvider } from "@/components/QueryProvider";
 import { AppNav } from "@/components/layout/AppNav";
 import { AppFooter } from "@/components/layout/AppFooter";
+import { MOBILE_NAV_CLEARANCE_CLASS } from "@/components/layout/mobileNav";
+import { PersistentMap } from "@/features/map/PersistentMap";
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
@@ -60,11 +62,17 @@ export default function RootLayout({
         </a>
         <QueryProvider>
           <ThemeProvider>
+            <PersistentMap />
             <AppNav />
             <div id="main-content" tabIndex={-1} className="flex-1 outline-none">
               {children}
             </div>
-            <AppFooter />
+            <div
+              data-testid="app-shell-footer"
+              className={`empty:hidden md:pb-0 ${MOBILE_NAV_CLEARANCE_CLASS}`}
+            >
+              <AppFooter />
+            </div>
           </ThemeProvider>
         </QueryProvider>
       </body>

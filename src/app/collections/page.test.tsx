@@ -40,6 +40,7 @@ describe("CollectionsPage", () => {
   it("renders featured collections with live previews and build link", () => {
     render(<CollectionsPage />);
 
+    expect(screen.getByTestId("collections-page")).toHaveClass("pb-10", "sm:pb-14");
     expect(screen.getByRole("heading", { name: /multiple cameras, one view/i })).toBeDefined();
     expect(screen.getByRole("link", { name: /featured one/i })).toHaveAttribute(
       "href",
@@ -59,5 +60,6 @@ describe("CollectionsPage", () => {
       "href",
       "/collections/build"
     );
+    expect(screen.getByTestId("collections-build-section")).toHaveClass("pb-2", "sm:pb-4");
   });
 });
