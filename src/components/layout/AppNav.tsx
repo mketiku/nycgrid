@@ -20,7 +20,7 @@ import { MOBILE_NAV_SAFE_HEIGHT_CLASS } from "@/components/layout/mobileNav";
 const NAV_LINKS = [
   { href: "/explore", label: "Explore" },
   { href: "/collections", label: "Collections" },
-  { href: "/gallery", label: "Selfies" },
+  { href: "/gallery", label: "Gallery" },
   { href: "/ambient", label: "Ambient" },
 ];
 
@@ -35,7 +35,6 @@ export function AppNav() {
   if (isLanding || isAmbient) return null;
 
   const handleCameraSearch = () => {
-    setMoreOpen(false);
     if (pathname.startsWith("/explore")) {
       window.dispatchEvent(new CustomEvent("map:openBrowser"));
     } else {
@@ -86,12 +85,16 @@ export function AppNav() {
           icon={<LayoutGrid className="w-5 h-5" />}
           label="Collections"
         />
-        <MobileNavItem
-          href="/gallery"
-          icon={<GalleryHorizontal className="w-5 h-5" />}
-          label="Selfies"
-        />
         <MobileNavItem href="/ambient" icon={<Tv2 className="w-5 h-5" />} label="Ambient" />
+        <button
+          type="button"
+          onClick={handleCameraSearch}
+          aria-label="Search cameras"
+          className="flex flex-col items-center justify-center gap-0.5 px-4 min-h-[44px] flex-1 transition-colors text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+        >
+          <Search className="w-5 h-5" />
+          <span className="font-mono text-[9px] uppercase tracking-widest">Search</span>
+        </button>
         <button
           type="button"
           aria-expanded={moreOpen}
@@ -142,14 +145,14 @@ export function AppNav() {
                   <Home className="w-5 h-5 text-[var(--color-text-muted)]" />
                   <span>Home</span>
                 </Link>
-                <button
-                  type="button"
-                  onClick={handleCameraSearch}
+                <Link
+                  href="/gallery"
+                  onClick={() => setMoreOpen(false)}
                   className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-surface)]"
                 >
-                  <Search className="w-5 h-5 text-[var(--color-text-muted)]" />
-                  <span>Search cameras</span>
-                </button>
+                  <GalleryHorizontal className="w-5 h-5 text-[var(--color-text-muted)]" />
+                  <span>Gallery</span>
+                </Link>
               </div>
             </motion.div>
           </>
