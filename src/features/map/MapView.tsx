@@ -65,6 +65,9 @@ const BOROUGH_CENTER: Record<CameraArea, [number, number]> = {
 };
 
 const VALID_TYPES = new Set<CameraType>(["all", "street", "bridge", "highway", "tunnel"]);
+
+const attrLinkCls =
+  "pointer-events-auto font-mono text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors";
 const VALID_BOROUGHS = new Set<CameraArea>([
   "Manhattan",
   "Brooklyn",
@@ -573,6 +576,48 @@ export function MapView({
       </div>
 
       <CameraPanel camera={selectedCamera} onClose={() => selectCamera(null)} />
+
+      {/* Attribution — lives here so it layers below camera panels (z-50/60) and can
+          shift left on desktop when the camera panel is open */}
+      <div
+        aria-label="Map attribution and legal links"
+        className={`pointer-events-none absolute z-10 flex items-center gap-2 rounded px-2 py-1 backdrop-blur-sm bottom-[calc(3.5rem+env(safe-area-inset-bottom)+0.5rem)] right-3 md:bottom-3 md:gap-3 transition-[right] duration-300 ${selectedCamera ? "md:right-[456px] xl:right-[496px]" : "md:right-4"}`}
+        style={{ backgroundColor: "color-mix(in srgb, var(--color-base) 75%, transparent)" }}
+      >
+        <a
+          href="https://carto.com/attributions"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={attrLinkCls}
+        >
+          © Carto
+        </a>
+        <a
+          href="https://www.openstreetmap.org/copyright"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={attrLinkCls}
+        >
+          © OpenStreetMap
+        </a>
+        <a
+          href="https://webcams.nyctmc.org"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={attrLinkCls}
+        >
+          © NYC DOT ↗
+        </a>
+        <Link href="/about" className={`${attrLinkCls} hidden md:inline`}>
+          About
+        </Link>
+        <Link href="/legal/terms" className={`${attrLinkCls} hidden md:inline`}>
+          Terms
+        </Link>
+        <Link href="/legal/privacy" className={`${attrLinkCls} hidden md:inline`}>
+          Privacy
+        </Link>
+      </div>
     </div>
   );
 }
