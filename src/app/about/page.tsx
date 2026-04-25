@@ -29,13 +29,13 @@ export default function AboutPage() {
         </h1>
 
         <p className="text-[var(--color-text-secondary)] leading-relaxed">
-          New York City&apos;s DOT operates {CAMERA_COUNT} public traffic cameras across every
-          borough. NycGrid puts them on a map — with a photobooth, ambient screensaver, and live
-          context like weather, transit alerts, and Citibike availability layered on top. See the
-          bridges, tunnels, and intersections that keep 8 million people moving, with context for
-          what you&apos;re looking at.
+          {`New York City's DOT operates ${CAMERA_COUNT} public traffic cameras across every borough.`}{" "}
+          NycGrid puts them on a map — with a photobooth, ambient screensaver, and live context like
+          weather, transit alerts, and Citibike availability layered on top. The focus is awareness
+          and education: see the bridges, tunnels, and intersections that keep 8 million people
+          moving, with context for what you&apos;re looking at.
         </p>
-        <p className="text-[var(--color-text-secondary)] leading-relaxed text-sm">
+        <p className="text-[var(--color-text-secondary)] leading-relaxed">
           NycGrid will always be NYC-only. It&apos;s built around this city&apos;s specific
           infrastructure, data sources, and character — and that focus is intentional. If you want
           to do something like this for another city, the code is open source: fork it and build
@@ -342,6 +342,7 @@ export default function AboutPage() {
                 anything — I&apos;d love to hear about it.
               </>,
               "Suggest something — if you see a tech problem in the city worth solving, let me know.",
+              "Volunteer — give time to clean parks, streets, and community spaces. The city is only as good as the people who show up for it.",
               "Leave it better — please don't use this to do anything that could harm the city or its people.",
               "Register to vote. Contact your representatives. Run for office if you see something broken.",
               "Be a good citizen.",
