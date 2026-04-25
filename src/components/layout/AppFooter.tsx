@@ -34,6 +34,14 @@ export function AppFooter() {
           >
             Terms
           </Link>
+          <a
+            href="https://www.buymeacoffee.com/mketiku"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+          >
+            Buy me a coffee ☕
+          </a>
         </div>
         <a
           href="https://webcams.nyctmc.org"

@@ -55,6 +55,10 @@ vi.mock("@/features/camera-feed/CameraInfoCard", () => ({
   ),
 }));
 
+vi.mock("@/features/camera-feed/RecommendationsCard", () => ({
+  RecommendationsCard: () => <div data-testid="recommendations-card" />,
+}));
+
 vi.mock("@/features/context/ContextPanel", () => ({
   ContextPanel: ({
     camera,

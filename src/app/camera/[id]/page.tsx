@@ -9,6 +9,8 @@ import { FEATURED_CAMERAS } from "@/features/context/lib/featured-cameras";
 import { fetchCameraContext } from "@/features/context/lib/fetch-context";
 import { ContextPanel } from "@/features/context/ContextPanel";
 import { CameraInfoCard } from "@/features/camera-feed/CameraInfoCard";
+import { RecommendationsCard } from "@/features/camera-feed/RecommendationsCard";
+import { getRecommendationsForCamera } from "@/lib/recommendations";
 import { CameraDetailClient } from "./CameraDetailClient";
 
 interface PageProps {
@@ -45,6 +47,8 @@ export default async function CameraDetailPage({ params }: PageProps) {
       : null;
 
   const context = featuredCamera ? await fetchCameraContext(featuredCamera) : null;
+
+  const recommendations = getRecommendationsForCamera(camera);
 
   const nearbyCameras = CAMERAS.filter((c) => c.id !== camera.id && c.isOnline)
     .map((c) => ({
@@ -116,7 +120,7 @@ export default async function CameraDetailPage({ params }: PageProps) {
         {/* Main content */}
         <div className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 pb-20 md:pb-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Feed column */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 flex flex-col gap-6">
             <CameraDetailClient
               camera={camera}
               displayName={featuredCamera?.displayName ?? camera.name}
@@ -124,6 +128,7 @@ export default async function CameraDetailPage({ params }: PageProps) {
               prevCameraId={prevCamera?.id}
               nextCameraId={nextCamera?.id}
             />
+            <RecommendationsCard recommendations={recommendations} />
           </div>
 
           {/* Context column */}
@@ -141,7 +146,7 @@ export default async function CameraDetailPage({ params }: PageProps) {
 
         <footer className="border-t border-[var(--color-border)] px-4 sm:px-6 py-4 mt-auto">
           <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 max-w-6xl mx-auto">
-            <div className="flex gap-x-6 gap-y-2 flex-wrap">
+            <div className="flex gap-x-6 gap-y-2 flex-wrap items-center">
               <Link
                 href="/about"
                 className="font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
@@ -160,6 +165,54 @@ export default async function CameraDetailPage({ params }: PageProps) {
               >
                 Terms
               </Link>
+              <a
+                href="https://www.buymeacoffee.com/mketiku"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+              >
+                Buy me a coffee ☕
+              </a>
+              <details className="group relative">
+                <summary className="font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors cursor-pointer list-none">
+                  File a complaint ↓
+                </summary>
+                <div
+                  className="absolute bottom-full mb-2 left-0 z-10 flex flex-col gap-2 p-3 rounded border text-xs min-w-max"
+                  style={{
+                    backgroundColor: "var(--color-elevated)",
+                    borderColor: "var(--color-border)",
+                  }}
+                >
+                  <p className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-muted)] mb-1">
+                    What are we complaining about?
+                  </p>
+                  <a
+                    href="https://github.com/mketiku/nycgrid/issues"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors"
+                  >
+                    This website →
+                  </a>
+                  <a
+                    href="https://www.mygovnyc.org/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors"
+                  >
+                    NYC public services →
+                  </a>
+                  <a
+                    href="https://www.commoncause.org/find-your-representative/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors"
+                  >
+                    Find your rep →
+                  </a>
+                </div>
+              </details>
             </div>
             <a
               href="https://webcams.nyctmc.org"

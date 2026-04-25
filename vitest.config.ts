@@ -94,6 +94,7 @@ export default defineConfig({
         "**/types/**",
         "scripts/**",
         "src/lib/cameras/data.ts",
+        "src/lib/recommendations/data.ts",
         "src/features/coverage-gap/lib/cd-names.ts",
         "src/features/context/index.ts",
         "src/features/context/types.ts",
