@@ -1,6 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import { Film, MapPin, BookOpen, Globe, ExternalLink } from "lucide-react";
-import Image from "next/image";
 import type { Recommendation, RecommendationType } from "@/lib/recommendations/types";
+
+const INITIAL_VISIBLE = 3;
 
 function TypeIcon({ type }: { type: RecommendationType }) {
   const cls = "w-3 h-3 shrink-0 text-[var(--color-text-muted)]";
@@ -21,7 +25,12 @@ interface RecommendationsCardProps {
 }
 
 export function RecommendationsCard({ recommendations }: RecommendationsCardProps) {
+  const [expanded, setExpanded] = useState(false);
+
   if (recommendations.length === 0) return null;
+
+  const visible = expanded ? recommendations : recommendations.slice(0, INITIAL_VISIBLE);
+  const hiddenCount = recommendations.length - INITIAL_VISIBLE;
 
   return (
     <section aria-label="Recommendations">
@@ -29,7 +38,7 @@ export function RecommendationsCard({ recommendations }: RecommendationsCardProp
         Explore nearby
       </p>
       <ul className="flex flex-col divide-y divide-[var(--color-border)]">
-        {recommendations.map((rec) => (
+        {visible.map((rec) => (
           <li key={rec.id}>
             <a
               href={rec.url}
@@ -37,22 +46,9 @@ export function RecommendationsCard({ recommendations }: RecommendationsCardProp
               rel="noopener noreferrer"
               className="group flex items-start gap-3 py-3"
             >
-              {rec.type === "video" && rec.youtubeId ? (
-                <div className="relative shrink-0 w-20 aspect-video rounded overflow-hidden bg-[var(--color-elevated)]">
-                  <Image
-                    src={`https://img.youtube.com/vi/${rec.youtubeId}/mqdefault.jpg`}
-                    alt=""
-                    fill
-                    sizes="80px"
-                    className="object-cover"
-                    unoptimized
-                  />
-                </div>
-              ) : (
-                <div className="shrink-0 w-5 pt-0.5 flex justify-center">
-                  <TypeIcon type={rec.type} />
-                </div>
-              )}
+              <div className="shrink-0 w-5 pt-0.5 flex justify-center">
+                <TypeIcon type={rec.type} />
+              </div>
               <div className="flex flex-col gap-0.5 min-w-0 flex-1">
                 <span className="font-mono text-xs text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)] transition-colors leading-snug flex items-center gap-1">
                   {rec.title}
@@ -69,6 +65,14 @@ export function RecommendationsCard({ recommendations }: RecommendationsCardProp
           </li>
         ))}
       </ul>
+      {!expanded && hiddenCount > 0 && (
+        <button
+          onClick={() => setExpanded(true)}
+          className="mt-2 font-mono text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+        >
+          Show {hiddenCount} more →
+        </button>
+      )}
     </section>
   );
 }

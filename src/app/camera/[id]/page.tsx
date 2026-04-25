@@ -196,12 +196,12 @@ export default async function CameraDetailPage({ params }: PageProps) {
                     This website →
                   </a>
                   <a
-                    href="https://www.mygovnyc.org/"
+                    href="https://portal.311.nyc.gov/report-problems/"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-mono text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors"
                   >
-                    NYC public services →
+                    NYC 311 →
                   </a>
                   <a
                     href="https://www.commoncause.org/find-your-representative/"

@@ -76,30 +76,31 @@ describe("filterRecommendations", () => {
 });
 
 describe("getRecommendationsForCamera", () => {
-  it("returns at most the requested limit", async () => {
+  it("returns all matching recommendations", async () => {
     const { getRecommendationsForCamera } = await import("./index");
     const camera = makeCamera({ area: "Manhattan" });
-    const result = getRecommendationsForCamera(camera, 2);
-    expect(result.length).toBeLessThanOrEqual(2);
+    const result = getRecommendationsForCamera(camera);
+    expect(result.length).toBeGreaterThan(0);
   });
 
   it("is deterministic for the same camera", async () => {
     const { getRecommendationsForCamera } = await import("./index");
     const camera = makeCamera({ id: "cam-stable", area: "Manhattan" });
-    const a = getRecommendationsForCamera(camera, 5);
-    const b = getRecommendationsForCamera(camera, 5);
+    const a = getRecommendationsForCamera(camera);
+    const b = getRecommendationsForCamera(camera);
     expect(a.map((r) => r.id)).toEqual(b.map((r) => r.id));
   });
 
-  it("does not return more than one item of the same type in the first pass", async () => {
+  it("places type-diverse items first via two-pass ordering", async () => {
     const { getRecommendationsForCamera } = await import("./index");
-    // Manhattan has multiple place items; with limit 4, should see type variety first
     const camera = makeCamera({ area: "Manhattan" });
-    const result = getRecommendationsForCamera(camera, 4);
-    const types = result.map((r) => r.type);
-    const placesShown = types.filter((t) => t === "place").length;
-    // With MAX_PER_TYPE = 1, first pass caps each type at 1
-    expect(placesShown).toBeLessThanOrEqual(2); // second pass may add more if needed
+    const result = getRecommendationsForCamera(camera);
+    // First MAX_PER_TYPE items of each type should appear before any type repeats
+    const firstFour = result.slice(0, 4);
+    const types = firstFour.map((r) => r.type);
+    const uniqueTypes = new Set(types);
+    // With diverse data, first 4 results should contain at least 2 distinct types
+    expect(uniqueTypes.size).toBeGreaterThanOrEqual(2);
   });
 
   it("camera-scoped items are included alongside borough and citywide items", () => {

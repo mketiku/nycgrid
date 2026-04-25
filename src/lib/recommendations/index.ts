@@ -24,40 +24,28 @@ function scopeTier(camera: Camera, rec: Recommendation): number {
 
 const MAX_PER_TYPE = 1;
 
-export function getRecommendationsForCamera(camera: Camera, limit = 5): Recommendation[] {
+export function getRecommendationsForCamera(camera: Camera): Recommendation[] {
   const recs = filterRecommendations(camera, RECOMMENDATIONS);
   const today = new Date().toISOString().slice(0, 10);
   const seed = hashString(camera.id + today);
-  // Primary sort: tier (camera-specific → borough → citywide)
-  // Secondary sort: deterministic shuffle within each tier
   const sorted = [...recs].sort((a, b) => {
     const tierDiff = scopeTier(camera, a) - scopeTier(camera, b);
     if (tierDiff !== 0) return tierDiff;
     return hashString(a.id + seed) - hashString(b.id + seed);
   });
 
-  // First pass: pick at most MAX_PER_TYPE of each type for variety
+  // Reorder so diverse types lead — each type gets one slot before any repeats
   const result: Recommendation[] = [];
   const typeCount: Record<string, number> = {};
   for (const rec of sorted) {
-    if (result.length >= limit) break;
-    const count = typeCount[rec.type] ?? 0;
-    if (count < MAX_PER_TYPE) {
+    if ((typeCount[rec.type] ?? 0) < MAX_PER_TYPE) {
       result.push(rec);
-      typeCount[rec.type] = count + 1;
+      typeCount[rec.type] = (typeCount[rec.type] ?? 0) + 1;
     }
   }
-
-  // Second pass: fill remaining slots with anything not yet picked
-  if (result.length < limit) {
-    const picked = new Set(result.map((r) => r.id));
-    for (const rec of sorted) {
-      if (result.length >= limit) break;
-      if (!picked.has(rec.id)) {
-        result.push(rec);
-        picked.add(rec.id);
-      }
-    }
+  const picked = new Set(result.map((r) => r.id));
+  for (const rec of sorted) {
+    if (!picked.has(rec.id)) result.push(rec);
   }
 
   return result;
