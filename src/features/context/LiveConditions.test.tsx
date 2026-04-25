@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { LiveConditions } from "./LiveConditions";
+import { LiveConditions, LiveConditionsSkeleton } from "./LiveConditions";
 import { describe, it, expect, vi } from "vitest";
 
 vi.mock("./lib/fetch-context", () => ({
@@ -30,5 +30,17 @@ describe("LiveConditions", () => {
 
     const exploreLink = screen.getByText(/All cameras/i);
     expect(exploreLink.getAttribute("href")).toBe("/explore");
+  });
+});
+
+describe("LiveConditionsSkeleton", () => {
+  it("renders the loading skeleton with the section header", () => {
+    render(<LiveConditionsSkeleton />);
+    expect(screen.getByLabelText("Loading conditions")).toBeInTheDocument();
+  });
+
+  it("renders animate-pulse placeholders for each row", () => {
+    const { container } = render(<LiveConditionsSkeleton />);
+    expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
   });
 });

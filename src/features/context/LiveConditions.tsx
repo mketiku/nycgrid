@@ -87,3 +87,28 @@ export async function LiveConditions() {
     </section>
   );
 }
+
+export function LiveConditionsSkeleton() {
+  return (
+    <section className="w-full max-w-2xl mx-auto" aria-label="Loading conditions">
+      <div className="border border-[var(--color-border)] rounded-lg overflow-hidden bg-[var(--color-surface)]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--color-border)]">
+          <div className="h-3 w-36 rounded bg-[var(--color-elevated)] animate-pulse" />
+          <div className="h-3 w-20 rounded bg-[var(--color-elevated)] animate-pulse" />
+        </div>
+        <ul className="divide-y divide-[var(--color-border)]">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <li key={i} className="flex items-center gap-4 px-4 py-3.5">
+              <div className="h-3 w-4 rounded bg-[var(--color-elevated)] animate-pulse shrink-0" />
+              <div className="flex-1 flex flex-col gap-1.5">
+                <div className="h-3 w-36 rounded bg-[var(--color-elevated)] animate-pulse" />
+                <div className="h-2 w-24 rounded bg-[var(--color-elevated)] animate-pulse" />
+              </div>
+              <div className="h-3 w-16 rounded bg-[var(--color-elevated)] animate-pulse shrink-0" />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}

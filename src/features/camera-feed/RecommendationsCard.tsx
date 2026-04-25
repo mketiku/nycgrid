@@ -1,10 +1,7 @@
-"use client";
-
-import { useState } from "react";
 import { Film, MapPin, BookOpen, Globe, ExternalLink } from "lucide-react";
 import type { Recommendation, RecommendationType } from "@/lib/recommendations/types";
 
-const INITIAL_VISIBLE = 3;
+const MAX_VISIBLE = 5;
 
 function TypeIcon({ type }: { type: RecommendationType }) {
   const cls = "w-3 h-3 shrink-0 text-[var(--color-text-muted)]";
@@ -25,12 +22,9 @@ interface RecommendationsCardProps {
 }
 
 export function RecommendationsCard({ recommendations }: RecommendationsCardProps) {
-  const [expanded, setExpanded] = useState(false);
-
   if (recommendations.length === 0) return null;
 
-  const visible = expanded ? recommendations : recommendations.slice(0, INITIAL_VISIBLE);
-  const hiddenCount = recommendations.length - INITIAL_VISIBLE;
+  const visible = recommendations.slice(0, MAX_VISIBLE);
 
   return (
     <section aria-label="Recommendations">
@@ -65,14 +59,6 @@ export function RecommendationsCard({ recommendations }: RecommendationsCardProp
           </li>
         ))}
       </ul>
-      {!expanded && hiddenCount > 0 && (
-        <button
-          onClick={() => setExpanded(true)}
-          className="mt-2 font-mono text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
-        >
-          Show {hiddenCount} more →
-        </button>
-      )}
     </section>
   );
 }
