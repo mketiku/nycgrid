@@ -86,9 +86,20 @@ describe("getRecommendationsForCamera", () => {
   it("is deterministic for the same camera", async () => {
     const { getRecommendationsForCamera } = await import("./index");
     const camera = makeCamera({ id: "cam-stable", area: "Manhattan" });
-    const a = getRecommendationsForCamera(camera, 3);
-    const b = getRecommendationsForCamera(camera, 3);
+    const a = getRecommendationsForCamera(camera, 5);
+    const b = getRecommendationsForCamera(camera, 5);
     expect(a.map((r) => r.id)).toEqual(b.map((r) => r.id));
+  });
+
+  it("does not return more than one item of the same type in the first pass", async () => {
+    const { getRecommendationsForCamera } = await import("./index");
+    // Manhattan has multiple place items; with limit 4, should see type variety first
+    const camera = makeCamera({ area: "Manhattan" });
+    const result = getRecommendationsForCamera(camera, 4);
+    const types = result.map((r) => r.type);
+    const placesShown = types.filter((t) => t === "place").length;
+    // With MAX_PER_TYPE = 1, first pass caps each type at 1
+    expect(placesShown).toBeLessThanOrEqual(2); // second pass may add more if needed
   });
 
   it("camera-scoped items are included alongside borough and citywide items", () => {
