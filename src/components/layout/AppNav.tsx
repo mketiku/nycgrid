@@ -20,7 +20,7 @@ import { MOBILE_NAV_SAFE_HEIGHT_CLASS } from "@/components/layout/mobileNav";
 const NAV_LINKS = [
   { href: "/explore", label: "Explore" },
   { href: "/collections", label: "Collections" },
-  { href: "/gallery", label: "Gallery" },
+  { href: "/gallery", label: "My Gallery" },
   { href: "/ambient", label: "Ambient" },
 ];
 
@@ -151,7 +151,7 @@ export function AppNav() {
                   className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-surface)]"
                 >
                   <GalleryHorizontal className="w-5 h-5 text-[var(--color-text-muted)]" />
-                  <span>Gallery</span>
+                  <span>My Gallery</span>
                 </Link>
               </div>
             </motion.div>
