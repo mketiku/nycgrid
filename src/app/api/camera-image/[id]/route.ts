@@ -26,12 +26,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     });
   }
 
-  // Per-camera cap: 1 req per 10 s per client. Enforces the DOT integration guide
-  // minimum refresh rate and prevents hammering a single feed.
   const perCameraLimit = takeRateLimitToken(req.headers, {
     namespace: `camera-image:${id}`,
-    limit: 1,
-    windowMs: 10_000,
+    limit: 8,
+    windowMs: 30_000,
   });
   if (!perCameraLimit.allowed) {
     return new NextResponse("Rate limit exceeded", {
