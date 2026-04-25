@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { useEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useMapSetup } from "./useMapSetup";
@@ -135,13 +135,17 @@ function Harness({ accentColor, cameras, isLight, onCameraSelect, onReady }: Har
 describe("useMapSetup", () => {
   beforeEach(() => {
     mapInstances.length = 0;
+    vi.spyOn(global, "fetch").mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ version: 8, sources: {}, layers: [], glyphs: "" }),
+    } as Response);
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it("initializes the map, adds layers on load, and exposes map controls", () => {
+  it("initializes the map, adds layers on load, and exposes map controls", async () => {
     const onCameraSelect = vi.fn();
     const onReady = vi.fn();
     const { unmount } = render(
@@ -153,6 +157,7 @@ describe("useMapSetup", () => {
         onReady={onReady}
       />
     );
+    await act(async () => {});
 
     const map = mapInstances.at(-1);
     expect(map).toBeDefined();
@@ -162,9 +167,7 @@ describe("useMapSetup", () => {
     map.trigger("load");
 
     expect(map.addControl).toHaveBeenCalled();
-    expect(map.setGlyphs).toHaveBeenCalledWith(
-      "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf"
-    );
+    // glyphs are patched in the style JSON by fetchPatchedStyle before map init — setGlyphs is not called
     expect(map.addSource).toHaveBeenCalledWith(
       "cameras",
       expect.objectContaining({ type: "geojson", cluster: true })
@@ -197,7 +200,7 @@ describe("useMapSetup", () => {
     expect(map.remove).toHaveBeenCalled();
   });
 
-  it("updates source data, paint properties, and map style when inputs change", () => {
+  it("updates source data, paint properties, and map style when inputs change", async () => {
     const onCameraSelect = vi.fn();
     const onReady = vi.fn();
     const { rerender } = render(
@@ -209,6 +212,7 @@ describe("useMapSetup", () => {
         onReady={onReady}
       />
     );
+    await act(async () => {});
 
     const map = mapInstances.at(-1);
     if (!map) throw new Error("Expected a map instance");
@@ -236,24 +240,24 @@ describe("useMapSetup", () => {
       "#555555",
     ]);
 
-    rerender(
-      <Harness
-        accentColor="#00ffee"
-        cameras={nextCameras}
-        isLight
-        onCameraSelect={onCameraSelect}
-        onReady={onReady}
-      />
-    );
-    expect(map.setStyle).toHaveBeenCalledWith(
-      "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-    );
+    await act(async () => {
+      rerender(
+        <Harness
+          accentColor="#00ffee"
+          cameras={nextCameras}
+          isLight
+          onCameraSelect={onCameraSelect}
+          onReady={onReady}
+        />
+      );
+    });
+    expect(map.setStyle).toHaveBeenCalled();
 
     map.triggerOnce("style.load");
     expect(map.addLayer).toHaveBeenCalled();
   });
 
-  it("updates cluster label contrast when the accent hydrates to light mode black", () => {
+  it("updates cluster label contrast when the accent hydrates to light mode black", async () => {
     const { rerender } = render(
       <Harness
         accentColor="#ffde00"
@@ -263,6 +267,7 @@ describe("useMapSetup", () => {
         onReady={() => {}}
       />
     );
+    await act(async () => {});
 
     const map = mapInstances.at(-1);
     if (!map) throw new Error("Expected a map instance");
@@ -285,7 +290,7 @@ describe("useMapSetup", () => {
     expect(map.setPaintProperty).toHaveBeenCalledWith("cluster-count", "text-color", "#ffffff");
   });
 
-  it("uses contrasting cluster label paint in light mode", () => {
+  it("uses contrasting cluster label paint in light mode", async () => {
     render(
       <Harness
         accentColor="#0a0a0a"
@@ -295,6 +300,7 @@ describe("useMapSetup", () => {
         onReady={() => {}}
       />
     );
+    await act(async () => {});
 
     const map = mapInstances.at(-1);
     if (!map) throw new Error("Expected a map instance");
@@ -320,6 +326,7 @@ describe("useMapSetup", () => {
         onReady={() => {}}
       />
     );
+    await act(async () => {});
 
     const map = mapInstances.at(-1);
     if (!map) throw new Error("Expected a map instance");
