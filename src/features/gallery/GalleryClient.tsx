@@ -29,17 +29,17 @@ export function GalleryClient() {
       <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
         <Images className="w-10 h-10" style={{ color: "var(--color-text-muted)" }} />
         <p className="font-mono text-sm" style={{ color: "var(--color-text-muted)" }}>
-          No shots yet. Head to the photobooth to take some.
+          No shots yet. Head to the map and open the photobooth.
         </p>
         <Link
-          href="/photobooth"
+          href="/explore"
           className="font-mono text-xs px-4 min-h-[44px] flex items-center rounded border transition-colors"
           style={{
             borderColor: "var(--color-accent)",
             color: "var(--color-accent)",
           }}
         >
-          Go to Photobooth
+          Explore the Map
         </Link>
       </div>
     );
@@ -54,7 +54,7 @@ export function GalleryClient() {
             className="font-mono text-xl font-bold tracking-tight"
             style={{ color: "var(--color-text-primary)" }}
           >
-            My Shots
+            My Gallery
           </h1>
           <span className="font-mono text-xs" style={{ color: "var(--color-text-muted)" }}>
             {shots.length} / 12

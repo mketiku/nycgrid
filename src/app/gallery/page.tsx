@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { GalleryClient } from "@/features/gallery/GalleryClient";
 
 export const metadata: Metadata = {
-  title: "My Shots — nycgrid",
+  title: "My Gallery — nycgrid",
   description: "Your saved photobooth captures from NYC traffic cameras.",
   robots: { index: false },
 };

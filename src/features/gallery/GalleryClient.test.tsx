@@ -72,11 +72,11 @@ describe("GalleryClient", () => {
     render(<GalleryClient />);
 
     expect(
-      screen.getByText("No shots yet. Head to the photobooth to take some.")
+      screen.getByText("No shots yet. Head to the map and open the photobooth.")
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Go to Photobooth" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Explore the Map" })).toHaveAttribute(
       "href",
-      "/photobooth"
+      "/explore"
     );
   });
 
@@ -109,7 +109,7 @@ describe("GalleryClient", () => {
 
     render(<GalleryClient />);
 
-    expect(screen.getByRole("heading", { name: "My Shots" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "My Gallery" })).toBeInTheDocument();
     expect(screen.getByText("2 / 12")).toBeInTheDocument();
     expect(screen.getByAltText("single shot of Delancey St")).toHaveAttribute(
       "src",
