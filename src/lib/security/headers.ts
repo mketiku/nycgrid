@@ -21,7 +21,7 @@ export function buildCSP(isProd: boolean): string {
     "font-src 'self' data: https://fonts.gstatic.com",
     "connect-src 'self' https://api.maptiler.com https://*.cartocdn.com https://*.basemaps.cartocdn.com https://tiles.openfreemap.org https://api.open-meteo.com",
     "worker-src blob:",
-    "media-src 'self' blob: https://fm939.wnyc.org https://stream.wqxr.org https://cdn.jsdelivr.net/gh/mketiku/nycgrid-assets@v1.3.0/",
+    "media-src 'self' blob: https://fm939.wnyc.org https://stream.wqxr.org https://cdn.jsdelivr.net/gh/mketiku/nycgrid-assets@*/",
     "frame-src 'none'",
     ...(isProd ? ["upgrade-insecure-requests"] : []),
   ].join("; ");

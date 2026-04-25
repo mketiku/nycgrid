@@ -61,6 +61,19 @@ describe("AmbientPlayer", () => {
     vi.useRealTimers();
   });
 
+  function mockCoarsePointer({ legacy = false }: { legacy?: boolean } = {}) {
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query === "(pointer: coarse)",
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: legacy ? undefined : vi.fn(),
+      removeEventListener: legacy ? undefined : vi.fn(),
+      dispatchEvent: vi.fn(),
+    })) as typeof window.matchMedia;
+  }
+
   it("renders the entry splash screen initially", () => {
     render(<AmbientPlayer cameras={mockCameras} />);
     expect(screen.getByText(/^Ambient mode$/i)).toBeDefined();
@@ -93,6 +106,35 @@ describe("AmbientPlayer", () => {
       "aria-pressed",
       "true"
     );
+  });
+
+  it("opens the mobile info overlay from the Info control on coarse pointers", async () => {
+    mockCoarsePointer();
+
+    render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+    const infoToggle = screen.getByRole("button", { name: /Show location info/i });
+    fireEvent.click(infoToggle);
+
+    expect(await screen.findByRole("link", { name: /View live feed/i })).toHaveAttribute(
+      "href",
+      expect.stringMatching(/^\/camera\/(1|2)$/)
+    );
+    expect(screen.getByRole("button", { name: /Hide location info/i })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+  });
+
+  it("supports legacy MediaQueryList listeners for coarse pointers", async () => {
+    mockCoarsePointer({ legacy: true });
+
+    render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Show location info/i }));
+
+    expect(await screen.findByRole("link", { name: /View live feed/i })).toBeInTheDocument();
   });
 
   it("displays the name of the current camera and handles load", () => {
@@ -128,16 +170,7 @@ describe("AmbientPlayer", () => {
   });
 
   it("shows and dismisses the mobile overlay on coarse pointers", async () => {
-    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-      matches: query === "(pointer: coarse)",
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })) as typeof window.matchMedia;
+    mockCoarsePointer();
 
     render(<AmbientPlayer cameras={mockCameras} />);
 
@@ -157,6 +190,19 @@ describe("AmbientPlayer", () => {
         expect(screen.queryByRole("link", { name: /View live feed/i })).toBeNull();
       },
       { timeout: 2000 }
+    );
+  });
+
+  it("uses a mobile-sized info overlay on coarse pointers", async () => {
+    mockCoarsePointer();
+
+    render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Show location info/i }));
+
+    await screen.findByRole("link", { name: /View live feed/i });
+    expect(screen.getByTestId("ambient-mobile-overlay").className).toContain(
+      "sm:w-[min(calc(100vw-2rem),28rem)]"
     );
   });
 
@@ -203,5 +249,168 @@ describe("AmbientPlayer", () => {
     expect(currentText).not.toBe(initialText);
 
     vi.useRealTimers();
+  });
+
+  it("handles keyboard shortcuts", async () => {
+    const { container } = render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+    // Trigger initial load so text becomes visible
+    container.querySelectorAll("img").forEach((img) => fireEvent.load(img));
+
+    // Space toggles pause
+    fireEvent.keyDown(window, { code: "Space" });
+    expect(screen.getByLabelText(/Resume/i)).toBeDefined();
+    fireEvent.keyDown(window, { code: "Space" });
+    expect(screen.getByLabelText(/Pause/i)).toBeDefined();
+
+    // ArrowRight skips camera
+    const initialCam = screen.getByText(/Cam (1|2)/).textContent;
+    fireEvent.keyDown(window, { code: "ArrowRight" });
+
+    // Must trigger load for the new camera image
+    container.querySelectorAll("img").forEach((img) => fireEvent.load(img));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Cam (1|2)/).textContent).not.toBe(initialCam);
+    });
+
+    // Escape exits to explore
+    fireEvent.keyDown(window, { code: "Escape" });
+    expect(push).toHaveBeenCalledWith("/explore");
+  });
+
+  it("displays correct weather descriptions based on WMO codes", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      json: async () => ({
+        current: { weather_code: 3, temperature_2m: 72 },
+      }),
+    } as Response);
+
+    const { container } = render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+    container.querySelectorAll("img").forEach((img) => fireEvent.load(img));
+
+    expect(await screen.findByText(/72°F · Overcast/i)).toBeDefined();
+  });
+
+  it("switches audio modes", async () => {
+    render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+    const chooseAudio = screen.getByRole("button", { name: /Choose audio/i });
+    fireEvent.click(chooseAudio);
+
+    // Default is "noise"
+    expect(await screen.findByText("Chill background music")).toBeDefined();
+
+    // Switch to radio
+    fireEvent.click(await screen.findByText("WQXR 105.9"));
+    expect(await screen.findByText("Classical")).toBeDefined();
+
+    // Re-open picker to switch to podcast
+    fireEvent.click(screen.getByRole("button", { name: /Choose audio/i }));
+    fireEvent.click(await screen.findByText("The Daily Honk"));
+    expect(await screen.findByText("Jay Johan Jaywalker reports")).toBeDefined();
+  });
+
+  describe("unified pause", () => {
+    it("stops lo-fi music when paused", async () => {
+      const playSpy = vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+      const pauseSpy = vi
+        .spyOn(HTMLMediaElement.prototype, "pause")
+        .mockImplementation(() => undefined);
+
+      render(<AmbientPlayer cameras={mockCameras} />);
+      fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+      // Unmute so music starts
+      fireEvent.click(screen.getByRole("button", { name: /Unmute/i }));
+      await waitFor(() => expect(playSpy).toHaveBeenCalled());
+      playSpy.mockClear();
+      pauseSpy.mockClear();
+
+      // Pause should stop the music and not restart it
+      fireEvent.click(screen.getByRole("button", { name: /Pause/i }));
+      await waitFor(() => expect(pauseSpy).toHaveBeenCalled());
+      expect(playSpy).not.toHaveBeenCalled();
+    });
+
+    it("resumes lo-fi music when unpaused", async () => {
+      const playSpy = vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+
+      render(<AmbientPlayer cameras={mockCameras} />);
+      fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+      fireEvent.click(screen.getByRole("button", { name: /Unmute/i }));
+      await waitFor(() => expect(playSpy).toHaveBeenCalled());
+
+      fireEvent.click(screen.getByRole("button", { name: /Pause/i }));
+      playSpy.mockClear();
+
+      // Resume should restart playback
+      fireEvent.click(screen.getByRole("button", { name: /Resume/i }));
+      await waitFor(() => expect(playSpy).toHaveBeenCalled());
+    });
+
+    it("stops radio stream when paused", async () => {
+      const pauseSpy = vi
+        .spyOn(HTMLMediaElement.prototype, "pause")
+        .mockImplementation(() => undefined);
+
+      render(<AmbientPlayer cameras={mockCameras} />);
+      fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+      // Switch to radio (also unmutes)
+      fireEvent.click(screen.getByRole("button", { name: /Choose audio/i }));
+      fireEvent.click(await screen.findByText("WQXR 105.9"));
+
+      pauseSpy.mockClear();
+
+      // Pause should stop the stream
+      fireEvent.click(screen.getByRole("button", { name: /Pause/i }));
+      await waitFor(() => expect(pauseSpy).toHaveBeenCalled());
+    });
+
+    it("does not start audio when switching modes while paused", async () => {
+      const playSpy = vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+
+      render(<AmbientPlayer cameras={mockCameras} />);
+      fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+      // Pause before any audio starts
+      fireEvent.click(screen.getByRole("button", { name: /Pause/i }));
+      playSpy.mockClear();
+
+      // Switching to radio (which also calls setIsMuted(false)) should not start audio
+      fireEvent.click(screen.getByRole("button", { name: /Choose audio/i }));
+      fireEvent.click(await screen.findByText("WQXR 105.9"));
+
+      // Give effects time to settle
+      await waitFor(() => expect(screen.getByRole("button", { name: /Resume/i })).toBeDefined());
+      expect(playSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  it("handles swipe gestures on mobile", async () => {
+    mockCoarsePointer();
+
+    const { container } = render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+    container.querySelectorAll("img").forEach((img) => fireEvent.load(img));
+
+    const initialCam = screen.getByText(/Cam (1|2)/).textContent;
+
+    // Simulate swipe right (next camera)
+    const screenRoot = screen.getByLabelText(/Ambient camera mode/i);
+    fireEvent.pointerDown(screenRoot, { clientX: 100, clientY: 100 });
+    fireEvent.pointerUp(screenRoot, { clientX: 200, clientY: 110 }); // dx = 100, dy = 10
+
+    // Trigger load for the new camera image
+    container.querySelectorAll("img").forEach((img) => fireEvent.load(img));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Cam (1|2)/).textContent).not.toBe(initialCam);
+    });
   });
 });

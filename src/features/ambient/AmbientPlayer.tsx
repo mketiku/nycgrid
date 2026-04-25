@@ -10,6 +10,7 @@ import {
   Check,
   Headphones,
   Info,
+  Loader2,
   MapPin,
   Mic2,
   Music2,
@@ -40,14 +41,129 @@ type AudioMode = "noise" | "radio" | "podcast";
 
 type AudioStream = { id: string; name: string; desc: string; url: string; loop: boolean };
 
-const CDN = "https://cdn.jsdelivr.net/gh/mketiku/nycgrid-assets@v1.1.0";
-const LOFI_TRACKS = [
-  `${CDN}/audio/ambient/lofi_jazz.mp3`,
-  `${CDN}/audio/ambient/lofi_terminal.mp3`,
-  `${CDN}/audio/ambient/lofi_crosswalk.mp3`,
-  `${CDN}/audio/ambient/lofi_hiphop.mp3`,
-  `${CDN}/audio/ambient/lofi_elevator.mp3`,
+const CDN = "https://cdn.jsdelivr.net/gh/mketiku/nycgrid-assets@v1.3.0";
+
+interface LofiTrack {
+  url: string;
+  minPlays: number;
+  maxPlays: number;
+}
+const LOFI_TRACKS: LofiTrack[] = [
+  { url: `${CDN}/audio/ambient/lofi_jazz.mp3`, minPlays: 2, maxPlays: 4 },
+  { url: `${CDN}/audio/ambient/lofi_jazz_the_last_booth.mp3`, minPlays: 2, maxPlays: 4 },
+  { url: `${CDN}/audio/ambient/lofi_terminal.mp3`, minPlays: 1, maxPlays: 3 },
+  {
+    url: `${CDN}/audio/ambient/lofi_terminal_midnight_water_crossing.mp3`,
+    minPlays: 1,
+    maxPlays: 3,
+  },
+  { url: `${CDN}/audio/ambient/lofi_terminal_after_the_last_train.mp3`, minPlays: 1, maxPlays: 3 },
+  { url: `${CDN}/audio/ambient/lofi_terminal_beneath_the_iron_span.mp3`, minPlays: 1, maxPlays: 3 },
+  { url: `${CDN}/audio/ambient/lofi_terminal_third_avenue_midnight.mp3`, minPlays: 1, maxPlays: 3 },
+  { url: `${CDN}/audio/ambient/lofi_crosswalk.mp3`, minPlays: 2, maxPlays: 5 },
+  { url: `${CDN}/audio/ambient/lofi_crosswalk_sunbeams_on_concrete.mp3`, minPlays: 2, maxPlays: 5 },
+  { url: `${CDN}/audio/ambient/lofi_crosswalk_corners_of_the_block.mp3`, minPlays: 2, maxPlays: 5 },
+  { url: `${CDN}/audio/ambient/lofi_hiphop.mp3`, minPlays: 1, maxPlays: 3 },
+  { url: `${CDN}/audio/ambient/lofi_hiphop_platform_three.mp3`, minPlays: 1, maxPlays: 3 },
+  { url: `${CDN}/audio/ambient/lofi_hiphop_last_cup_before_dawn.mp3`, minPlays: 1, maxPlays: 3 },
+  { url: `${CDN}/audio/ambient/lofi_elevator.mp3`, minPlays: 3, maxPlays: 6 },
+  { url: `${CDN}/audio/ambient/lofi_elevator_winter_at_the_window.mp3`, minPlays: 3, maxPlays: 6 },
 ];
+const CROSSFADE_MS = 2500;
+const MUTE_FADE_MS = 400;
+const LAST_PLAYED_BUFFER = Math.max(1, Math.floor(LOFI_TRACKS.length / 2));
+
+function categoryFromUrl(url: string): string {
+  return /\/lofi_([a-z]+)/.exec(url)?.[1] ?? "other";
+}
+
+function timeWeight(cat: string, h: number): number {
+  // terminal: underground / late-night canyons — strongest at night, suppressed midday
+  if (cat === "terminal") return h < 6 || h >= 22 ? 2.0 : h >= 12 && h < 18 ? 0.5 : 1.0;
+  // elevator: quiet interior anytime, but yields to street energy during core hours
+  if (cat === "elevator") return h < 7 || h >= 21 ? 1.4 : h >= 9 && h < 17 ? 0.8 : 1.0;
+  if (cat === "jazz") return h < 6 || h >= 18 ? 1.8 : 1.0;
+  if (cat === "crosswalk") return h >= 7 && h < 20 ? 1.8 : 0.6;
+  if (cat === "hiphop") return h >= 10 && h < 22 ? 1.8 : 0.6;
+  return 1.0;
+}
+
+function weatherWeight(cat: string, code: number | undefined): number {
+  if (code === undefined) return 1.0;
+  if (code >= 51 && code <= 67) {
+    // rain / drizzle
+    if (cat === "terminal") return 1.5;
+    if (cat === "elevator") return 1.5;
+    if (cat === "jazz") return 1.4;
+    if (cat === "crosswalk") return 0.6;
+    if (cat === "hiphop") return 0.7;
+  } else if (code >= 71 && code <= 77) {
+    // snow — streets empty, indoor tracks dominate
+    if (cat === "elevator") return 2.0;
+    if (cat === "terminal") return 1.4;
+    if (cat === "jazz") return 1.5;
+    if (cat === "crosswalk") return 0.5;
+    if (cat === "hiphop") return 0.6;
+  } else if (code === 0) {
+    // clear sky
+    if (cat === "crosswalk") return 1.5;
+    if (cat === "hiphop") return 1.4;
+    if (cat === "terminal" || cat === "elevator") return 0.8;
+  }
+  return 1.0;
+}
+
+// Shuffle with time-of-day + weather weighting, recency buffer, and category spacing
+function buildMusicQueue(
+  lastPlayed: number[],
+  lastCategory: string | null,
+  hour: number,
+  weatherCode: number | undefined
+): number[] {
+  // Weighted shuffle without replacement
+  const remaining = Array.from({ length: LOFI_TRACKS.length }, (_, i) => i);
+  const weights = remaining.map((i) => {
+    const cat = categoryFromUrl(LOFI_TRACKS[i]!.url);
+    return timeWeight(cat, hour) * weatherWeight(cat, weatherCode);
+  });
+  const shuffled: number[] = [];
+  while (remaining.length > 0) {
+    const wTotal = weights.reduce((s, w) => s + w, 0);
+    let r = Math.random() * wTotal;
+    let chosen = remaining.length - 1;
+    for (let i = 0; i < remaining.length; i++) {
+      r -= weights[i]!;
+      if (r <= 0) {
+        chosen = i;
+        break;
+      }
+    }
+    shuffled.push(remaining.splice(chosen, 1)[0]!);
+    weights.splice(chosen, 1);
+  }
+
+  // Recency buffer: push recently-played tracks away from the front
+  const bufSize = Math.min(LAST_PLAYED_BUFFER, lastPlayed.length);
+  for (let i = 0; i < bufSize && i < shuffled.length; i++) {
+    if (lastPlayed.includes(shuffled[i]!)) {
+      const swapIdx = shuffled.findIndex((v, j) => j >= bufSize && !lastPlayed.includes(v));
+      if (swapIdx !== -1) [shuffled[i], shuffled[swapIdx]] = [shuffled[swapIdx]!, shuffled[i]!];
+    }
+  }
+
+  // Category spacing: don't open with the same category as the last-played track
+  if (lastCategory !== null && shuffled.length > 1) {
+    const firstCat = categoryFromUrl(LOFI_TRACKS[shuffled[0]!]!.url);
+    if (firstCat === lastCategory) {
+      const swapIdx = shuffled.findIndex(
+        (v, j) => j > 0 && categoryFromUrl(LOFI_TRACKS[v]!.url) !== lastCategory
+      );
+      if (swapIdx !== -1) [shuffled[0], shuffled[swapIdx]] = [shuffled[swapIdx]!, shuffled[0]!];
+    }
+  }
+
+  return shuffled;
+}
 
 const STATIONS: AudioStream[] = [
   {
@@ -201,6 +317,7 @@ function EntrySplash({ onEnter, previewSrc }: { onEnter: () => void; previewSrc:
 export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   const router = useRouter();
   const [entered, setEntered] = useState(false);
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
   const [previewCameraId] = useState<string | null>(() => {
     if (FEATURED_CAMERAS.length === 0) return null;
     const dayIndex = Math.floor(Date.now() / 86_400_000) % FEATURED_CAMERAS.length;
@@ -211,17 +328,27 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   const [paused, setPaused] = useState(false);
   const togglePause = useCallback(() => setPaused((p) => !p), []);
   const [streamLoading, setStreamLoading] = useState(false);
+  const [musicLoading, setMusicLoading] = useState(false);
   const [weatherCode, setWeatherCode] = useState<number | undefined>(undefined);
   const [weatherTemp, setWeatherTemp] = useState<number | undefined>(undefined);
   const [audioMode, setAudioMode] = useState<AudioMode>("noise");
   const [stationIndex, setStationIndex] = useState(0);
-  const [lofiTrackIndex, setLofiTrackIndex] = useState(() =>
-    Math.floor(Math.random() * LOFI_TRACKS.length)
-  );
   const [podcastChannelId, setPodcastChannelId] = useState<ChannelId>("daily-honk");
   const [pickerOpen, setPickerOpen] = useState(false);
   const radioRef = useRef<HTMLAudioElement | null>(null);
-  const muzakRef = useRef<HTMLAudioElement | null>(null);
+  // Two audio slots for crossfading
+  const musicRef0 = useRef<HTMLAudioElement | null>(null);
+  const musicRef1 = useRef<HTMLAudioElement | null>(null);
+  const musicActiveSlotRef = useRef<0 | 1>(0);
+  const musicFadeRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const musicQueueRef = useRef<number[]>([]);
+  const musicLastPlayedRef = useRef<number[]>([]);
+  const musicLastCategoryRef = useRef<string | null>(null);
+  const weatherCodeRef = useRef<number | undefined>(undefined);
+  const lofiPlaysRemainingRef = useRef(0);
+  const lofiTrackIdxRef = useRef(-1); // -1 = not yet started
+  const crossfadingRef = useRef(false);
+  const musicShouldPlayRef = useRef(false);
   const podcastPlay = usePodcast((s) => s.play);
   const podcastPause = usePodcast((s) => s.pause);
   const podcastSwitchChannel = usePodcast((s) => s.switchChannel);
@@ -402,6 +529,26 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   }, [armSlotTimeout]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mediaQuery = window.matchMedia("(pointer: coarse)");
+    const syncPointerMode = (matches: boolean) => setIsCoarsePointer(matches);
+
+    syncPointerMode(mediaQuery.matches);
+
+    const handleChange = (event: MediaQueryListEvent) => {
+      syncPointerMode(event.matches);
+    };
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", handleChange);
+      return () => mediaQuery.removeEventListener("change", handleChange);
+    }
+
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
+  }, []);
+
+  useEffect(() => {
     if (cameras.length === 0 || paused) return;
     const timer = setInterval(advanceCamera, CAMERA_DWELL_MS);
     return () => clearInterval(timer);
@@ -443,6 +590,10 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     };
   }, [entered]);
 
+  useEffect(() => {
+    weatherCodeRef.current = weatherCode;
+  }, [weatherCode]);
+
   // Lore: show first fact after a delay then cycle; state resets are handled during render above
   useEffect(() => {
     if (!currentCamera || !entered || !showLore) return;
@@ -479,55 +630,217 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     el.loop = stream.loop;
     el.src = stream.url;
     setStreamLoading(true);
-  }, [stationIndex]);
+  }, [stationIndex, entered]);
 
-  // Play or pause the radio element based on mode and mute (resume without restarting)
+  // Play or pause the radio element based on mode, mute, and pause state
   useEffect(() => {
     const el = radioRef.current;
     if (!el) return;
-    if (audioMode === "radio" && !isMuted) {
-      void el.play().catch((err) => console.warn("[AmbientPlayer] stream playback failed:", err));
+    if (audioMode === "radio" && !isMuted && !paused) {
+      void el.play().catch((err: Error) => {
+        if (err.name !== "AbortError") console.warn("[AmbientPlayer] stream playback failed:", err);
+      });
     } else {
       el.pause();
     }
-  }, [audioMode, stationIndex, isMuted]);
+    return () => {
+      el.pause();
+      setStreamLoading(false);
+    };
+  }, [audioMode, stationIndex, isMuted, entered, paused]);
 
-  // Sync podcast TTS with mode / mute
+  // Sync podcast TTS with mode, mute, and pause state
   useEffect(() => {
-    if (audioMode === "podcast" && !isMuted) {
+    if (audioMode === "podcast" && !isMuted && !paused) {
       podcastPlay();
     } else {
       podcastPause();
     }
-  }, [audioMode, isMuted, podcastPlay, podcastPause]);
+  }, [audioMode, isMuted, podcastPlay, podcastPause, paused]);
 
   // Keep podcast camera context in sync with currently displayed camera
   useEffect(() => {
     if (currentCamera) podcastSetCamera(toCameraContext(currentCamera));
   }, [currentCamera, podcastSetCamera]);
 
-  // Advance to next lo-fi track when the current one ends
-  const handleLofiEnded = useCallback(() => {
-    setLofiTrackIndex((i) => (i + 1) % LOFI_TRACKS.length);
+  // ─── Lo-fi music engine ────────────────────────────────────────────────────
+  const getActiveMusicEl = useCallback(
+    () => (musicActiveSlotRef.current === 0 ? musicRef0.current : musicRef1.current),
+    []
+  );
+  const getInactiveMusicEl = useCallback(
+    () => (musicActiveSlotRef.current === 0 ? musicRef1.current : musicRef0.current),
+    []
+  );
+  const cancelMusicFade = useCallback(() => {
+    if (musicFadeRef.current !== null) {
+      clearInterval(musicFadeRef.current);
+      musicFadeRef.current = null;
+    }
+  }, []);
+  const dequeueTrack = useCallback((): number => {
+    if (musicQueueRef.current.length === 0) {
+      musicQueueRef.current = buildMusicQueue(
+        musicLastPlayedRef.current,
+        musicLastCategoryRef.current,
+        new Date().getHours(),
+        weatherCodeRef.current
+      );
+    }
+    const idx = musicQueueRef.current.shift()!;
+    musicLastPlayedRef.current = [idx, ...musicLastPlayedRef.current].slice(0, LAST_PLAYED_BUFFER);
+    musicLastCategoryRef.current = categoryFromUrl(LOFI_TRACKS[idx]!.url);
+    return idx;
+  }, []);
+  const initTrack = useCallback((idx: number) => {
+    const t = LOFI_TRACKS[idx];
+    lofiTrackIdxRef.current = idx;
+    lofiPlaysRemainingRef.current =
+      t.minPlays + Math.floor(Math.random() * (t.maxPlays - t.minPlays + 1));
   }, []);
 
-  // Update lo-fi src when track index changes
-  useEffect(() => {
-    const el = muzakRef.current;
-    if (!el) return;
-    el.src = LOFI_TRACKS[lofiTrackIndex];
-  }, [lofiTrackIndex]);
+  // Crossfade from the currently-playing slot to a new track on the inactive slot
+  const crossfadeTo = useCallback(
+    (nextIdx: number) => {
+      const fromEl = getActiveMusicEl();
+      const toEl = getInactiveMusicEl();
+      if (!toEl) return;
+      cancelMusicFade();
+      crossfadingRef.current = true;
+      initTrack(nextIdx);
+      toEl.volume = 0;
+      toEl.src = LOFI_TRACKS[nextIdx].url;
+      void toEl.play().catch(() => {});
+      const steps = Math.round(CROSSFADE_MS / 20);
+      let tick = 0;
+      const fromStartVol = fromEl?.volume ?? 0;
+      musicFadeRef.current = setInterval(() => {
+        tick++;
+        const t = tick / steps;
+        if (fromEl) fromEl.volume = Math.max(0, fromStartVol * (1 - t));
+        toEl.volume = Math.min(1, t);
+        if (tick >= steps) {
+          clearInterval(musicFadeRef.current!);
+          musicFadeRef.current = null;
+          if (fromEl) {
+            fromEl.pause();
+            fromEl.volume = 1;
+          }
+          musicActiveSlotRef.current = musicActiveSlotRef.current === 0 ? 1 : 0;
+          crossfadingRef.current = false;
+        }
+      }, 20);
+    },
+    [getActiveMusicEl, getInactiveMusicEl, cancelMusicFade, initTrack]
+  );
 
-  // Sync muzak with mode / mute
-  useEffect(() => {
-    const el = muzakRef.current;
-    if (!el) return;
-    if (audioMode === "noise" && !isMuted) {
-      void el.play().catch((err) => console.warn("[AmbientPlayer] muzak playback failed:", err));
+  const advanceTrack = useCallback(() => crossfadeTo(dequeueTrack()), [crossfadeTo, dequeueTrack]);
+
+  const handleLofiEnded = useCallback(() => {
+    if (crossfadingRef.current) return;
+    lofiPlaysRemainingRef.current -= 1;
+    if (lofiPlaysRemainingRef.current > 0) {
+      const el = getActiveMusicEl();
+      if (!el) return;
+      el.currentTime = 0;
+      void el.play().catch(() => {});
     } else {
-      el.pause();
+      advanceTrack();
     }
-  }, [audioMode, isMuted, lofiTrackIndex]);
+  }, [getActiveMusicEl, advanceTrack]);
+
+  const stopMusic = useCallback(
+    (immediate = false) => {
+      musicShouldPlayRef.current = false;
+      cancelMusicFade();
+      crossfadingRef.current = false;
+      const activeEl = getActiveMusicEl();
+      const inactiveEl = getInactiveMusicEl();
+      // Always immediately stop the inactive slot (may be fading in)
+      if (inactiveEl && !inactiveEl.paused) {
+        inactiveEl.pause();
+        inactiveEl.volume = 1;
+      }
+      if (!activeEl || activeEl.paused) return;
+      if (immediate) {
+        activeEl.pause();
+        activeEl.volume = 1;
+        return;
+      }
+      // Fade out active slot
+      const startVol = activeEl.volume;
+      const steps = Math.round(MUTE_FADE_MS / 20);
+      let tick = 0;
+      musicFadeRef.current = setInterval(() => {
+        tick++;
+        activeEl.volume = Math.max(0, startVol * (1 - tick / steps));
+        if (tick >= steps) {
+          clearInterval(musicFadeRef.current!);
+          musicFadeRef.current = null;
+          activeEl.pause();
+          activeEl.volume = 1;
+        }
+      }, 20);
+    },
+    [getActiveMusicEl, getInactiveMusicEl, cancelMusicFade]
+  );
+
+  const startMusic = useCallback(() => {
+    musicShouldPlayRef.current = true;
+    const el = getActiveMusicEl();
+    if (!el) return;
+    if (lofiTrackIdxRef.current === -1) {
+      const firstIdx = dequeueTrack();
+      initTrack(firstIdx);
+      el.src = LOFI_TRACKS[firstIdx].url;
+      // Preload next track into inactive slot
+      if (musicQueueRef.current.length === 0) {
+        musicQueueRef.current = buildMusicQueue(
+          musicLastPlayedRef.current,
+          musicLastCategoryRef.current,
+          new Date().getHours(),
+          weatherCodeRef.current
+        );
+      }
+      const peekIdx = musicQueueRef.current[0];
+      const inactiveEl = getInactiveMusicEl();
+      if (inactiveEl && peekIdx !== undefined) inactiveEl.src = LOFI_TRACKS[peekIdx].url;
+    }
+    cancelMusicFade();
+    el.volume = 0;
+    setMusicLoading(true);
+    void el
+      .play()
+      .then(() => {
+        setMusicLoading(false);
+        if (!musicShouldPlayRef.current) return;
+        const steps = Math.round(MUTE_FADE_MS / 20);
+        let tick = 0;
+        musicFadeRef.current = setInterval(() => {
+          tick++;
+          el.volume = Math.min(1, tick / steps);
+          if (tick >= steps) {
+            clearInterval(musicFadeRef.current!);
+            musicFadeRef.current = null;
+          }
+        }, 20);
+      })
+      .catch((err: Error) => {
+        setMusicLoading(false);
+        if (err.name !== "AbortError") console.warn("[AmbientPlayer] music playback failed:", err);
+      });
+  }, [getActiveMusicEl, getInactiveMusicEl, cancelMusicFade, dequeueTrack, initTrack]);
+
+  // Drive the music engine from mode, mute, pause, and entered state
+  useEffect(() => {
+    if (!entered) return;
+    if (audioMode === "noise" && !isMuted && !paused) {
+      startMusic();
+    } else {
+      stopMusic();
+    }
+    return () => stopMusic(true);
+  }, [audioMode, isMuted, entered, paused, startMusic, stopMusic]);
 
   // Ambient time tracking — heartbeat every 60 s, only after user has entered
   useEffect(() => {
@@ -540,7 +853,8 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   useEffect(() => {
     if (!entered) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.target as HTMLElement).closest("input, textarea, [contenteditable]")) return;
+      const target = e.target as HTMLElement;
+      if (target?.closest?.("input, textarea, [contenteditable]")) return;
       switch (e.code) {
         case "Space":
           e.preventDefault();
@@ -558,7 +872,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
             setOverlayVisible(false);
             break;
           }
-          router.push("/");
+          router.push("/explore");
           break;
       }
     };
@@ -574,7 +888,8 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   const handlePointerUp = useCallback(
     (e: React.PointerEvent) => {
       if (!window.matchMedia("(pointer: coarse)").matches) return;
-      if ((e.target as HTMLElement).closest("a, button")) return;
+      const target = e.target as HTMLElement;
+      if (target?.closest?.("a, button")) return;
       const dx = e.clientX - swipeStartXRef.current;
       const dy = Math.abs(e.clientY - swipeStartYRef.current);
       if (dx > 60 && dy < 50) {
@@ -587,7 +902,8 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
 
   const handleScreenClick = useCallback(
     (e: React.MouseEvent) => {
-      if ((e.target as HTMLElement).closest("a, button")) return;
+      const target = e.target as HTMLElement;
+      if (target?.closest?.("a, button")) return;
       if (didSwipeRef.current) {
         didSwipeRef.current = false;
         return;
@@ -598,6 +914,18 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     },
     [currentCamera]
   );
+
+  const handleInfoToggle = useCallback(() => {
+    setPickerOpen(false);
+    if (isCoarsePointer) {
+      setOverlayVisible((visible) => !visible);
+      return;
+    }
+    setShowLore((visible) => !visible);
+    setLoreVisible(false);
+  }, [isCoarsePointer]);
+
+  const infoVisible = isCoarsePointer ? overlayVisible : showLore;
 
   if (!entered) {
     return (
@@ -635,7 +963,8 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
         onCanPlay={() => setStreamLoading(false)}
         onPlaying={() => setStreamLoading(false)}
       />
-      <audio ref={muzakRef} preload="none" onEnded={handleLofiEnded} />
+      <audio ref={musicRef0} preload="none" onEnded={handleLofiEnded} />
+      <audio ref={musicRef1} preload="none" onEnded={handleLofiEnded} />
       {/* Per-slot Ken Burns wrappers — each slot animates independently, no cross-slot flicker */}
       {([0, 1] as const).map((slot) => (
         <div
@@ -747,7 +1076,8 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
             transition={{ duration: 0.2 }}
-            className="absolute inset-x-4 bottom-24 rounded-2xl overflow-hidden"
+            data-testid="ambient-mobile-overlay"
+            className="absolute inset-x-4 bottom-20 overflow-hidden rounded-2xl sm:bottom-24 sm:left-1/2 sm:right-auto sm:w-[min(calc(100vw-2rem),28rem)] sm:-translate-x-1/2"
             style={{
               backgroundColor: "rgba(10,10,10,0.85)",
               backdropFilter: "blur(12px)",
@@ -755,7 +1085,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-5 flex flex-col gap-4">
+            <div className="flex flex-col gap-4 p-4 sm:p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-mono text-sm font-bold text-white leading-tight">
@@ -794,7 +1124,9 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                     >
                       {fact.category}
                     </p>
-                    <p className="font-mono text-xs text-white/70 leading-relaxed">{fact.fact}</p>
+                    <p className="max-w-[32ch] font-mono text-xs leading-relaxed text-white/70">
+                      {fact.fact}
+                    </p>
                   </div>
                 ) : null;
               })()}
@@ -843,25 +1175,36 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
             ) : (
               <Radio className="w-4 h-4" />
             )}
-            <span className="hidden sm:inline">
-              {audioMode === "noise"
-                ? "Ambient"
-                : audioMode === "podcast"
-                  ? (PODCAST_CHANNELS.find((c) => c.id === podcastChannelId)?.name ?? "Podcast")
-                  : (ALL_STREAMS[stationIndex]?.name ?? "Radio")}
-            </span>
-            {streamLoading && audioMode === "radio" ? (
-              <span
-                className="w-1.5 h-1.5 rounded-full animate-pulse shrink-0"
-                style={{ backgroundColor: "#39ff14" }}
-              />
-            ) : !isMuted ? (
-              <AudioWaveform
-                className="w-3.5 h-3.5 shrink-0"
-                style={{ color: "#39ff14" }}
-                aria-hidden
-              />
-            ) : null}
+            {(() => {
+              const isLoading =
+                !isMuted &&
+                ((audioMode === "radio" && streamLoading) ||
+                  (audioMode === "noise" && musicLoading));
+              const name =
+                audioMode === "noise"
+                  ? "Ambient"
+                  : audioMode === "podcast"
+                    ? (PODCAST_CHANNELS.find((c) => c.id === podcastChannelId)?.name ?? "Podcast")
+                    : (ALL_STREAMS[stationIndex]?.name ?? "Radio");
+              return (
+                <>
+                  <span className="hidden sm:inline">{isLoading ? "Buffering…" : name}</span>
+                  {isLoading ? (
+                    <Loader2
+                      className="w-3.5 h-3.5 shrink-0 animate-spin"
+                      style={{ color: "#39ff14" }}
+                      aria-hidden
+                    />
+                  ) : !isMuted ? (
+                    <AudioWaveform
+                      className="w-3.5 h-3.5 shrink-0"
+                      style={{ color: "#39ff14" }}
+                      aria-hidden
+                    />
+                  ) : null}
+                </>
+              );
+            })()}
           </button>
 
           {/* Mute / pause-play — episodes behave like podcasts (finite content) */}
@@ -906,25 +1249,22 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
           </button>
 
           <button
-            onClick={() => {
-              setShowLore((v) => !v);
-              setLoreVisible(false);
-            }}
-            aria-label={showLore ? "Hide location info" : "Show location info"}
-            aria-pressed={showLore}
+            onClick={handleInfoToggle}
+            aria-label={infoVisible ? "Hide location info" : "Show location info"}
+            aria-pressed={infoVisible}
             className="flex h-9 items-center gap-1.5 rounded-xl px-3 font-mono text-xs text-white/60 transition-colors hover:bg-white/10 hover:text-white aria-pressed:bg-white/10 aria-pressed:text-white"
           >
             <Info className="h-4 w-4" />
-            Info
+            <span className="hidden sm:inline">Info</span>
           </button>
 
           <Link
-            href="/"
+            href="/explore"
             aria-label="Exit ambient mode"
             className="h-9 flex items-center gap-1.5 px-3 rounded-xl font-mono text-xs text-white/60 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X className="h-4 w-4" />
-            Exit
+            <span className="hidden sm:inline">Exit</span>
           </Link>
         </div>
 
@@ -949,7 +1289,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                   Audio
                 </p>
 
-                {/* Muzak option */}
+                {/* Music option */}
                 <button
                   onClick={() => {
                     setAudioMode("noise");
@@ -963,9 +1303,15 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                     <p className="font-mono text-xs font-medium text-white">Ambient</p>
                     <p className="font-mono text-[10px] text-white/40">Chill background music</p>
                   </div>
-                  {audioMode === "noise" && (
-                    <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#39ff14" }} />
-                  )}
+                  {audioMode === "noise" &&
+                    (musicLoading && !isMuted ? (
+                      <Loader2
+                        className="w-3.5 h-3.5 shrink-0 animate-spin"
+                        style={{ color: "#39ff14" }}
+                      />
+                    ) : (
+                      <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#39ff14" }} />
+                    ))}
                 </button>
 
                 <div className="h-px bg-white/8 mx-3 my-1" />
@@ -997,9 +1343,16 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                       </div>
                       <p className="font-mono text-[10px] text-white/40">{station.desc}</p>
                     </div>
-                    {audioMode === "radio" && stationIndex === i && (
-                      <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#39ff14" }} />
-                    )}
+                    {audioMode === "radio" &&
+                      stationIndex === i &&
+                      (streamLoading && !isMuted ? (
+                        <Loader2
+                          className="w-3.5 h-3.5 shrink-0 animate-spin"
+                          style={{ color: "#39ff14" }}
+                        />
+                      ) : (
+                        <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#39ff14" }} />
+                      ))}
                   </button>
                 ))}
 
@@ -1024,9 +1377,16 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                       <p className="font-mono text-xs font-medium text-white">{ep.name}</p>
                       <p className="font-mono text-[10px] text-white/40">{ep.desc}</p>
                     </div>
-                    {audioMode === "radio" && stationIndex === STATIONS.length + i && (
-                      <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#39ff14" }} />
-                    )}
+                    {audioMode === "radio" &&
+                      stationIndex === STATIONS.length + i &&
+                      (streamLoading && !isMuted ? (
+                        <Loader2
+                          className="w-3.5 h-3.5 shrink-0 animate-spin"
+                          style={{ color: "#39ff14" }}
+                        />
+                      ) : (
+                        <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#39ff14" }} />
+                      ))}
                   </button>
                 ))}
 
