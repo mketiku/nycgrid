@@ -131,7 +131,7 @@ export function FrameDiff({ camera, onDiffResult }: FrameDiffProps) {
 
   if (state === "idle") {
     return (
-      <div className="flex flex-col gap-1.5">
+      <>
         <button
           onClick={captureBaseline}
           className={`${btnBase} hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]`}
@@ -141,8 +141,12 @@ export function FrameDiff({ camera, onDiffResult }: FrameDiffProps) {
           <Diff className="w-3.5 h-3.5" />
           Set baseline
         </button>
-        {error && <p className="font-mono text-xs text-[var(--color-offline)]">{error}</p>}
-      </div>
+        {error && (
+          <div className="w-full">
+            <p className="font-mono text-xs text-[var(--color-offline)]">{error}</p>
+          </div>
+        )}
+      </>
     );
   }
 
@@ -160,38 +164,36 @@ export function FrameDiff({ camera, onDiffResult }: FrameDiffProps) {
   }
 
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-2">
-        <button
-          onClick={compare}
-          className={`${btnBase} hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]`}
-          style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
-        >
-          <ScanSearch className="w-3.5 h-3.5" />
-          {state === "result" ? "Re-compare" : "Compare now"}
-        </button>
+    <>
+      <button
+        onClick={compare}
+        className={`${btnBase} hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]`}
+        style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
+      >
+        <ScanSearch className="w-3.5 h-3.5" />
+        {state === "result" ? "Re-compare" : "Compare now"}
+      </button>
 
-        {state === "result" ? (
-          <button
-            onClick={reset}
-            className={`${btnBase} hover:border-[var(--color-offline)] hover:text-[var(--color-offline)]`}
-            style={{ borderColor: "var(--color-border)", color: "var(--color-text-muted)" }}
-          >
-            <X className="w-3.5 h-3.5" />
-            Reset
-          </button>
-        ) : (
-          <button
-            onClick={cancel}
-            className="inline-flex items-center gap-1 font-mono text-xs min-h-[44px] px-2 transition-colors"
-            style={{ color: "var(--color-text-muted)" }}
-            aria-label="Cancel baseline capture"
-          >
-            <X className="w-3 h-3" />
-            Cancel
-          </button>
-        )}
-      </div>
+      {state === "result" ? (
+        <button
+          onClick={reset}
+          className={`${btnBase} hover:border-[var(--color-offline)] hover:text-[var(--color-offline)]`}
+          style={{ borderColor: "var(--color-border)", color: "var(--color-text-muted)" }}
+        >
+          <X className="w-3.5 h-3.5" />
+          Reset
+        </button>
+      ) : (
+        <button
+          onClick={cancel}
+          className="inline-flex items-center gap-1 font-mono text-xs min-h-[44px] px-2 transition-colors"
+          style={{ color: "var(--color-text-muted)" }}
+          aria-label="Cancel baseline capture"
+        >
+          <X className="w-3 h-3" />
+          Cancel
+        </button>
+      )}
 
       {state === "ready" && baselineCapturedAt && (
         <span className="font-mono text-[10px] text-[var(--color-text-muted)]">
@@ -204,7 +206,11 @@ export function FrameDiff({ camera, onDiffResult }: FrameDiffProps) {
         </span>
       )}
 
-      {error && <p className="font-mono text-xs text-[var(--color-offline)]">{error}</p>}
-    </div>
+      {error && (
+        <div className="w-full">
+          <p className="font-mono text-xs text-[var(--color-offline)]">{error}</p>
+        </div>
+      )}
+    </>
   );
 }
