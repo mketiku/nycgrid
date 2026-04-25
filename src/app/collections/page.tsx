@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { FEATURED_COLLECTIONS, resolveCameras } from "@/lib/collections/data";
-import { proxiedImageUrl } from "@/lib/cameras/types";
+import { CollectionPreviewGrid } from "@/features/collections/CollectionPreviewGrid";
 
 export const metadata: Metadata = {
   title: "Collections — nycgrid",
@@ -51,35 +51,8 @@ export default function CollectionsPage() {
                 className="group flex flex-col gap-3 rounded-xl border border-[var(--color-border)] p-5 transition-colors hover:border-[var(--color-accent)]"
                 style={{ backgroundColor: "var(--color-surface)" }}
               >
-                {/* Mini grid preview — live thumbnails */}
-                <div className="grid grid-cols-3 gap-0.5 aspect-video rounded-lg overflow-hidden bg-[var(--color-border)]">
-                  {cameras.slice(0, 6).map((cam) => (
-                    <div
-                      key={cam.id}
-                      className="relative overflow-hidden bg-[var(--color-elevated)]"
-                    >
-                      {cam.isOnline ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={proxiedImageUrl(cam.id)}
-                          alt={`${collection.name} preview camera ${cam.id}`}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div
-                          className="w-full h-full flex items-center justify-center"
-                          style={{ backgroundColor: "var(--color-border)" }}
-                        >
-                          <span
-                            className="w-1.5 h-1.5 rounded-full"
-                            style={{ backgroundColor: "var(--color-offline)" }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                {/* Mini grid preview — all thumbnails reveal together */}
+                <CollectionPreviewGrid cameras={cameras} collectionName={collection.name} />
 
                 <div className="flex flex-col gap-1">
                   <h3 className="font-mono text-sm font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)] transition-colors">

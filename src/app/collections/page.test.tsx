@@ -28,6 +28,27 @@ vi.mock("@/lib/cameras/types", () => ({
   proxiedImageUrl: vi.fn((id: string) => `/api/camera-image/${id}`),
 }));
 
+vi.mock("@/features/collections/CollectionPreviewGrid", () => ({
+  CollectionPreviewGrid: ({
+    cameras,
+    collectionName,
+  }: {
+    cameras: { id: string; isOnline: boolean }[];
+    collectionName: string;
+  }) =>
+    cameras
+      .slice(0, 6)
+      .filter((c) => c.isOnline)
+      .map((c, i) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={c.id}
+          src={`/api/camera-image/${c.id}`}
+          alt={`${collectionName} preview ${i + 1}`}
+        />
+      )),
+}));
+
 import CollectionsPage, { metadata } from "./page";
 
 describe("CollectionsPage", () => {
@@ -52,7 +73,7 @@ describe("CollectionsPage", () => {
     );
     expect(screen.getByText("2 cameras")).toBeDefined();
     expect(screen.getAllByText("1 online")).toHaveLength(2);
-    expect(screen.getByRole("img", { name: /featured one preview camera cam-1/i })).toHaveAttribute(
+    expect(screen.getByRole("img", { name: /featured one preview 1/i })).toHaveAttribute(
       "src",
       "/api/camera-image/cam-1"
     );
