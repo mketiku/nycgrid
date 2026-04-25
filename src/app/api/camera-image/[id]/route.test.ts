@@ -36,7 +36,7 @@ describe("/api/camera-image/[id]", () => {
     expect(await response.text()).toBe("Invalid camera ID");
   });
 
-  it("allows the first request to a camera and blocks the second within 10 s", async () => {
+  it("allows 8 requests to a camera in 30 s and blocks the 9th", async () => {
     const req = () =>
       GET(
         new NextRequest(`http://localhost/api/camera-image/${cameraId}`, {
@@ -45,7 +45,9 @@ describe("/api/camera-image/[id]", () => {
         { params: Promise.resolve({ id: cameraId }) }
       );
 
-    expect((await req()).status).toBe(200);
+    for (let i = 0; i < 8; i++) {
+      expect((await req()).status).toBe(200);
+    }
     expect((await req()).status).toBe(429);
   });
 
@@ -144,5 +146,59 @@ describe("/api/camera-image/[id]", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
+  });
+
+  it("returns 502 when upstream fetch is not ok", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 404,
+    } as Response);
+
+    const response = await GET(
+      new NextRequest(`http://localhost/api/camera-image/${cameraId}`, {
+        headers: { "x-real-ip": "192.0.2.30" },
+      }),
+      { params: Promise.resolve({ id: cameraId }) }
+    );
+
+    expect(response.status).toBe(502);
+    expect(await response.text()).toBe("Camera unavailable");
+  });
+
+  it("returns 502 when upstream fetch throws", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new Error("Network failure"));
+
+    const response = await GET(
+      new NextRequest(`http://localhost/api/camera-image/${cameraId}`, {
+        headers: { "x-real-ip": "192.0.2.31" },
+      }),
+      { params: Promise.resolve({ id: cameraId }) }
+    );
+
+    expect(response.status).toBe(502);
+    expect(await response.text()).toBe("Upstream error");
+  });
+
+  it("passes the configured User-Agent to upstream", async () => {
+    const originalUA = process.env.NYCGRID_DOT_USER_AGENT;
+    process.env.NYCGRID_DOT_USER_AGENT = "NycGridBot/1.0";
+
+    try {
+      await GET(
+        new NextRequest(`http://localhost/api/camera-image/${cameraId}`, {
+          headers: { "x-real-ip": "192.0.2.32" },
+        }),
+        { params: Promise.resolve({ id: cameraId }) }
+      );
+
+      expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+        expect.stringContaining(cameraId),
+        expect.objectContaining({
+          headers: { "User-Agent": "NycGridBot/1.0" },
+        })
+      );
+    } finally {
+      process.env.NYCGRID_DOT_USER_AGENT = originalUA;
+    }
   });
 });
