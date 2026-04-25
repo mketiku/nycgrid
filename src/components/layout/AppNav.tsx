@@ -19,9 +19,9 @@ import { MOBILE_NAV_SAFE_HEIGHT_CLASS } from "@/components/layout/mobileNav";
 
 const NAV_LINKS = [
   { href: "/explore", label: "Explore" },
-  { href: "/collections", label: "Collections" },
-  { href: "/gallery", label: "My Gallery" },
   { href: "/ambient", label: "Ambient" },
+  { href: "/collections", label: "Collections" },
+  { href: "/gallery", label: "Gallery" },
 ];
 
 export function AppNav() {
