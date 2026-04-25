@@ -17,7 +17,7 @@ export function buildCSP(isProd: boolean): string {
     "object-src 'none'",
     scriptSrc,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https://webcams.nyctmc.org https://api.maptiler.com https://*.cartocdn.com https://*.basemaps.cartocdn.com",
+    "img-src 'self' data: blob: https://webcams.nyctmc.org https://api.maptiler.com https://*.cartocdn.com https://*.basemaps.cartocdn.com https://img.youtube.com",
     "font-src 'self' data: https://fonts.gstatic.com",
     "connect-src 'self' https://api.maptiler.com https://*.cartocdn.com https://*.basemaps.cartocdn.com https://tiles.openfreemap.org https://api.open-meteo.com",
     "worker-src blob:",
