@@ -379,7 +379,7 @@ export function MapView({
       <div ref={containerRef} className="w-full h-full" />
 
       {/* ── Desktop: camera browser fills the full left column ── */}
-      <div className="absolute top-[60px] left-4 bottom-4 z-50 hidden md:flex flex-col w-80 lg:w-96">
+      <div className="absolute top-[60px] left-4 bottom-4 z-50 hidden desktop-layout:flex flex-col w-80 lg:w-96">
         <CameraBrowsePanel
           cameras={filteredCameras}
           starredCameras={starredCameras}
@@ -405,7 +405,7 @@ export function MapView({
 
       {/* ── Desktop: zoom + find-me cluster — bottom-right, steps left when camera panel is open ── */}
       <div
-        className={`absolute bottom-20 z-50 hidden md:flex flex-col items-end gap-1 transition-[right] duration-300 ${selectedCamera ? "right-[456px] xl:right-[496px]" : "right-4"}`}
+        className={`absolute bottom-20 z-50 hidden desktop-layout:flex flex-col items-end gap-1 transition-[right] duration-300 ${selectedCamera ? "right-[456px] xl:right-[496px]" : "right-4"}`}
       >
         <CoverageToggle enabled={coverageEnabled} onToggle={coverageToggle} />
         <button
@@ -460,7 +460,7 @@ export function MapView({
 
       {/* ── Mobile: action buttons top-left ── */}
       <div
-        className={`md:hidden absolute top-4 left-4 z-50 flex flex-col gap-2 ${mobileListOpen || selectedCamera ? "hidden" : ""}`}
+        className={`desktop-layout:hidden absolute top-4 left-4 z-50 flex flex-col gap-2 ${mobileListOpen || selectedCamera ? "hidden" : ""}`}
       >
         <button
           onClick={handleFindMe}
@@ -501,7 +501,7 @@ export function MapView({
 
       {/* Theme toggle + zoom cluster — mobile top-right ── */}
       <div
-        className={`md:hidden absolute top-4 right-4 z-50 flex flex-col items-end gap-2 ${mobileListOpen || selectedCamera ? "hidden" : ""}`}
+        className={`desktop-layout:hidden absolute top-4 right-4 z-50 flex flex-col items-end gap-2 ${mobileListOpen || selectedCamera ? "hidden" : ""}`}
       >
         <ThemeToggle />
         <CoverageToggle enabled={coverageEnabled} onToggle={coverageToggle} showLegend={false} />
@@ -551,7 +551,7 @@ export function MapView({
 
       {/* Borough filter pills — desktop only; mobile boroughs live inside the camera drawer */}
       <div
-        className={`absolute bottom-16 left-1/2 z-50 hidden -translate-x-1/2 gap-2 overflow-x-auto px-2 scrollbar-none md:flex ${selectedCamera ? "md:hidden" : "max-w-[calc(100vw-2rem)]"}`}
+        className={`absolute bottom-16 left-1/2 z-50 hidden -translate-x-1/2 gap-2 overflow-x-auto px-2 scrollbar-none desktop-layout:flex ${selectedCamera ? "desktop-layout:hidden" : "max-w-[calc(100vw-2rem)]"}`}
         role="group"
         aria-label="Filter by borough"
       >
@@ -581,7 +581,7 @@ export function MapView({
           shift left on desktop when the camera panel is open */}
       <div
         aria-label="Map attribution and legal links"
-        className={`pointer-events-none absolute z-10 flex items-center gap-2 rounded px-2 py-1 backdrop-blur-sm bottom-[calc(3.5rem+env(safe-area-inset-bottom)+0.5rem)] right-3 md:bottom-3 md:gap-3 transition-[right] duration-300 ${selectedCamera ? "md:right-[456px] xl:right-[496px]" : "md:right-4"}`}
+        className={`pointer-events-none absolute z-10 flex items-center gap-2 rounded px-2 py-1 backdrop-blur-sm bottom-[calc(3.5rem+env(safe-area-inset-bottom)+0.5rem)] right-3 desktop-layout:bottom-3 desktop-layout:gap-3 transition-[right] duration-300 ${selectedCamera ? "desktop-layout:right-[456px] xl:right-[496px]" : "desktop-layout:right-4"}`}
         style={{ backgroundColor: "color-mix(in srgb, var(--color-base) 75%, transparent)" }}
       >
         <a
@@ -608,13 +608,13 @@ export function MapView({
         >
           © NYC DOT ↗
         </a>
-        <Link href="/about" className={`${attrLinkCls} hidden md:inline`}>
+        <Link href="/about" className={`${attrLinkCls} hidden desktop-layout:inline`}>
           About
         </Link>
-        <Link href="/legal/terms" className={`${attrLinkCls} hidden md:inline`}>
+        <Link href="/legal/terms" className={`${attrLinkCls} hidden desktop-layout:inline`}>
           Terms
         </Link>
-        <Link href="/legal/privacy" className={`${attrLinkCls} hidden md:inline`}>
+        <Link href="/legal/privacy" className={`${attrLinkCls} hidden desktop-layout:inline`}>
           Privacy
         </Link>
       </div>

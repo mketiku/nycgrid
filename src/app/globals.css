@@ -99,6 +99,22 @@
 }
 
 /* ─────────────────────────────────────────────
+   CUSTOM VARIANTS
+   ───────────────────────────────────────────── */
+
+/* True desktop viewport: wide AND tall. Prevents landscape phones
+   (e.g. 844×390) from triggering the desktop sidebar layout. */
+@custom-variant desktop-layout (@media (min-width: 768px) and (min-height: 600px));
+
+/* Short landscape viewport: phones rotated sideways. Used to adapt
+   layouts that would otherwise be too tall for the available height. */
+@custom-variant landscape-mobile (@media (orientation: landscape) and (max-height: 500px));
+
+/* Portrait tablet: sm-breakpoint but explicitly portrait, so landscape
+   overrides don't compete with responsive spacing rules. */
+@custom-variant portrait-tablet (@media (min-width: 640px) and (orientation: portrait));
+
+/* ─────────────────────────────────────────────
    BASE RESET
    ───────────────────────────────────────────── */
 *,
