@@ -1,10 +1,66 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { create } from "zustand";
 
 const STORAGE_KEY = "nycgrid-favourites";
 
-interface UseFavouritesReturn {
+function loadIds(): string[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed: unknown = raw ? JSON.parse(raw) : null;
+    return Array.isArray(parsed) ? (parsed as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveIds(ids: string[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+  } catch {}
+}
+
+interface FavouritesStoreState {
+  ids: string[];
+  hydrated: boolean;
+  hydrate(): void;
+  toggle(id: string): void;
+  addMany(ids: string[]): void;
+  removeMany(ids: string[]): void;
+}
+
+export const useFavouritesStore = create<FavouritesStoreState>()((set, get) => ({
+  ids: [],
+  hydrated: false,
+  hydrate() {
+    if (get().hydrated) return;
+    set({ ids: loadIds(), hydrated: true });
+  },
+  toggle(id) {
+    set((s) => {
+      const ids = s.ids.includes(id) ? s.ids.filter((i) => i !== id) : [...s.ids, id];
+      saveIds(ids);
+      return { ids };
+    });
+  },
+  addMany(newIds) {
+    set((s) => {
+      const ids = [...new Set([...s.ids, ...newIds])];
+      saveIds(ids);
+      return { ids };
+    });
+  },
+  removeMany(toRemove) {
+    set((s) => {
+      const ids = s.ids.filter((i) => !toRemove.includes(i));
+      saveIds(ids);
+      return { ids };
+    });
+  },
+}));
+
+export interface UseFavouritesReturn {
   favourites: Set<string>;
   toggle: (id: string) => void;
   addMany: (ids: string[]) => void;
@@ -13,76 +69,12 @@ interface UseFavouritesReturn {
 }
 
 export function useFavourites(): UseFavouritesReturn {
-  const [favourites, setFavourites] = useState<Set<string>>(new Set());
+  const { ids, toggle, addMany, removeMany, hydrate } = useFavouritesStore();
 
   useEffect(() => {
-    const loadStored = () => {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const parsed: unknown = JSON.parse(stored);
-          if (Array.isArray(parsed)) {
-            setFavourites(new Set(parsed as string[]));
-          }
-        }
-      } catch {
-        // ignore malformed localStorage data
-      }
-    };
-    loadStored();
-  }, []);
+    hydrate();
+  }, [hydrate]);
 
-  function persist(next: Set<string>): void {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(next)));
-    } catch {
-      // ignore write failures (e.g. private browsing quota)
-    }
-  }
-
-  function updateFavourites(updater: (prev: Set<string>) => Set<string>): void {
-    setFavourites((prev) => {
-      const next = updater(prev);
-      persist(next);
-      return next;
-    });
-  }
-
-  function toggle(id: string): void {
-    updateFavourites((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }
-
-  function addMany(ids: string[]): void {
-    updateFavourites((prev) => {
-      const next = new Set(prev);
-      for (const id of ids) {
-        next.add(id);
-      }
-      return next;
-    });
-  }
-
-  function removeMany(ids: string[]): void {
-    updateFavourites((prev) => {
-      const next = new Set(prev);
-      for (const id of ids) {
-        next.delete(id);
-      }
-      return next;
-    });
-  }
-
-  function isFavourite(id: string): boolean {
-    return favourites.has(id);
-  }
-
-  return { favourites, toggle, addMany, removeMany, isFavourite };
+  const favourites = useMemo(() => new Set(ids), [ids]);
+  return { favourites, toggle, addMany, removeMany, isFavourite: (id) => favourites.has(id) };
 }

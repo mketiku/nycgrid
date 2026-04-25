@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useFavourites } from "./useFavourites";
+import { useFavourites, useFavouritesStore } from "./useFavourites";
 
 describe("useFavourites", () => {
   beforeEach(() => {
+    useFavouritesStore.setState({ ids: [], hydrated: false });
     localStorage.clear();
   });
 
@@ -63,6 +64,18 @@ describe("useFavourites", () => {
 
     const stored = JSON.parse(localStorage.getItem("nycgrid-favourites") || "[]");
     expect([...stored].sort()).toEqual(["cam-1", "cam-2", "cam-3"]);
+  });
+
+  it("syncs state across two simultaneously rendered hook instances", () => {
+    const hook1 = renderHook(() => useFavourites());
+    const hook2 = renderHook(() => useFavourites());
+
+    act(() => {
+      hook1.result.current.toggle("cam-sync");
+    });
+
+    // Without Zustand the two useState instances are independent — hook2 stays stale
+    expect(hook2.result.current.isFavourite("cam-sync")).toBe(true);
   });
 
   it("removes many favourites, preserving unrelated ids and toggle compatibility", () => {

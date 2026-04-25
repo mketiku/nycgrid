@@ -16,8 +16,7 @@ import {
   ArrowRight,
   Check,
 } from "lucide-react";
-import { motion, useReducedMotion, useDragControls } from "motion/react";
-import type { PanInfo } from "motion/react";
+import { motion } from "motion/react";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Camera, CameraArea } from "@/lib/cameras/types";
 
@@ -626,8 +625,6 @@ export function CameraBrowsePanel({
   onAddManyFavourites,
 }: CameraBrowsePanelProps) {
   const router = useRouter();
-  const shouldReduceMotion = useReducedMotion();
-  const dragControls = useDragControls();
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedCameraIds, setSelectedCameraIds] = useState<string[]>([]);
 
@@ -669,16 +666,6 @@ export function CameraBrowsePanel({
     const encodedIds = encodeURIComponent(encodeCameraIds(selectedCameraIds));
     router.push(`/collections/build?c=${encodedIds}`);
   }, [router, selectedCameraIds]);
-
-  const handleDragEnd = useCallback(
-    (_: unknown, info: PanInfo) => {
-      const { velocity, offset } = info;
-      if (velocity.y > 400 || offset.y > 80) {
-        onCloseMobile();
-      }
-    },
-    [onCloseMobile]
-  );
 
   useEffect(() => {
     if (!isSelectMode) return;
@@ -738,29 +725,11 @@ export function CameraBrowsePanel({
         <motion.section
           aria-label="Browse cameras"
           className="absolute z-60 flex flex-col bg-[var(--color-base)] left-0 right-0 top-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px))]"
-          initial={shouldReduceMotion ? { opacity: 0 } : { y: "100%" }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={shouldReduceMotion ? { opacity: 0 } : { y: "100%", opacity: 1 }}
-          drag={shouldReduceMotion ? false : "y"}
-          dragControls={dragControls}
-          dragListener={false}
-          dragConstraints={{ top: 0, bottom: 0 }}
-          dragElastic={{ top: 0.05, bottom: 0.3 }}
-          dragMomentum={false}
-          onDragEnd={handleDragEnd}
-          transition={
-            shouldReduceMotion
-              ? { duration: 0.12 }
-              : { type: "spring", damping: 32, stiffness: 300, mass: 0.8 }
-          }
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
         >
-          {/* Drag handle */}
-          <div
-            className="flex justify-center items-center h-6 shrink-0 cursor-grab active:cursor-grabbing touch-none select-none"
-            onPointerDown={(e) => dragControls.start(e)}
-          >
-            <div className="w-9 h-1 rounded-full bg-[var(--color-border)]" />
-          </div>
           <PanelContents
             cameras={cameras}
             starredCameras={starredCameras}

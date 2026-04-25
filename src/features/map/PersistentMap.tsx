@@ -60,7 +60,7 @@ function PersistentMapInner() {
 
   return (
     <div
-      className={`fixed inset-0${isExplore ? "" : " invisible pointer-events-none"}`}
+      className={`fixed inset-0${isExplore ? "" : " opacity-0 pointer-events-none"}`}
       aria-hidden={!isExplore || undefined}
     >
       <MapView

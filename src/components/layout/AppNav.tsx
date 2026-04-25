@@ -1,25 +1,47 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Map, LayoutGrid, Tv2, Search } from "lucide-react";
+import {
+  Home,
+  Map,
+  LayoutGrid,
+  Tv2,
+  GalleryHorizontal,
+  MoreHorizontal,
+  X,
+  Search,
+} from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { ThemeToggle } from "@/features/theme/ThemeToggle";
 import { MOBILE_NAV_SAFE_HEIGHT_CLASS } from "@/components/layout/mobileNav";
 
 const NAV_LINKS = [
   { href: "/explore", label: "Explore" },
   { href: "/collections", label: "Collections" },
+  { href: "/gallery", label: "Selfies" },
   { href: "/ambient", label: "Ambient" },
 ];
 
 export function AppNav() {
   const pathname = usePathname();
   const router = useRouter();
+  const [moreOpen, setMoreOpen] = useState(false);
   const isLanding = pathname === "/";
   const isAmbient = pathname === "/ambient";
 
   // Don't show nav on landing or ambient (both have their own full-screen UI)
   if (isLanding || isAmbient) return null;
+
+  const handleCameraSearch = () => {
+    setMoreOpen(false);
+    if (pathname.startsWith("/explore")) {
+      window.dispatchEvent(new CustomEvent("map:openBrowser"));
+    } else {
+      router.push("/explore");
+    }
+  };
 
   return (
     <>
@@ -58,36 +80,81 @@ export function AppNav() {
         aria-label="Primary"
         className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-[var(--color-border)] bg-[var(--color-base)]/95 backdrop-blur-sm ${MOBILE_NAV_SAFE_HEIGHT_CLASS} pb-[env(safe-area-inset-bottom)]`}
       >
-        <Link
-          href="/"
-          aria-label="Go to homepage"
-          className="flex flex-col items-center justify-center gap-0.5 px-4 min-h-[44px] flex-1 transition-colors text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
-        >
-          <Home className="w-5 h-5" />
-          <span className="font-mono text-[9px] uppercase tracking-widest">Home</span>
-        </Link>
         <MobileNavItem href="/explore" icon={<Map className="w-5 h-5" />} label="Map" />
         <MobileNavItem
           href="/collections"
           icon={<LayoutGrid className="w-5 h-5" />}
           label="Collections"
         />
+        <MobileNavItem
+          href="/gallery"
+          icon={<GalleryHorizontal className="w-5 h-5" />}
+          label="Selfies"
+        />
         <MobileNavItem href="/ambient" icon={<Tv2 className="w-5 h-5" />} label="Ambient" />
         <button
           type="button"
-          onClick={() => {
-            if (pathname.startsWith("/explore")) {
-              window.dispatchEvent(new CustomEvent("map:openBrowser"));
-            } else {
-              router.push("/explore");
-            }
-          }}
-          className="flex flex-col items-center justify-center gap-0.5 px-4 min-h-[44px] flex-1 transition-colors text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+          aria-expanded={moreOpen}
+          aria-label="More options"
+          onClick={() => setMoreOpen((o) => !o)}
+          className={`flex flex-col items-center justify-center gap-0.5 px-4 min-h-[44px] flex-1 transition-colors ${
+            moreOpen
+              ? "text-[var(--color-accent)]"
+              : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+          }`}
         >
-          <Search className="w-5 h-5" />
-          <span className="font-mono text-[9px] uppercase tracking-widest">Search</span>
+          {moreOpen ? <X className="w-5 h-5" /> : <MoreHorizontal className="w-5 h-5" />}
+          <span className="font-mono text-[9px] uppercase tracking-widest">More</span>
         </button>
       </nav>
+
+      {/* ── More sheet (mobile only) ── */}
+      <AnimatePresence>
+        {moreOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              className="md:hidden fixed inset-0 z-30 bg-black/40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              onClick={() => setMoreOpen(false)}
+            />
+            {/* Sheet */}
+            <motion.div
+              className="md:hidden fixed left-0 right-0 z-35 border-t border-[var(--color-border)] bg-[var(--color-base)] px-4 py-3"
+              style={{ bottom: `calc(3.5rem + env(safe-area-inset-bottom, 0px))` }}
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 32, stiffness: 300, mass: 0.8 }}
+            >
+              <p className="mb-3 font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-muted)]">
+                More
+              </p>
+              <div className="flex flex-col gap-1">
+                <Link
+                  href="/"
+                  onClick={() => setMoreOpen(false)}
+                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-surface)]"
+                >
+                  <Home className="w-5 h-5 text-[var(--color-text-muted)]" />
+                  <span>Home</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleCameraSearch}
+                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-surface)]"
+                >
+                  <Search className="w-5 h-5 text-[var(--color-text-muted)]" />
+                  <span>Search cameras</span>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Spacer so content isn't hidden behind desktop nav */}
       <div className="hidden md:block h-12" />

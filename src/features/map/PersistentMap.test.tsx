@@ -59,7 +59,7 @@ describe("PersistentMap", () => {
     expect(screen.getByTestId("map-view")).toBeInTheDocument();
   });
 
-  it("renders MapView wrapper with invisible and pointer-events-none when NOT on /explore", () => {
+  it("renders MapView wrapper with opacity-0 and pointer-events-none when NOT on /explore", () => {
     // Start on explore so MapView mounts
     mockUsePathname.mockReturnValue("/explore");
     const { rerender } = render(<PersistentMap />);
@@ -73,18 +73,18 @@ describe("PersistentMap", () => {
     // MapView is still in the DOM (persistent) but its wrapper hides it
     const mapView = screen.getByTestId("map-view");
     const wrapper = mapView.parentElement!;
-    expect(wrapper.className).toContain("invisible");
+    expect(wrapper.className).toContain("opacity-0");
     expect(wrapper.className).toContain("pointer-events-none");
   });
 
-  it("does NOT have invisible/pointer-events-none classes when on /explore", () => {
+  it("does NOT have opacity-0/pointer-events-none classes when on /explore", () => {
     mockUsePathname.mockReturnValue("/explore");
 
     render(<PersistentMap />);
 
     const mapView = screen.getByTestId("map-view");
     const wrapper = mapView.parentElement!;
-    expect(wrapper.className).not.toContain("invisible");
+    expect(wrapper.className).not.toContain("opacity-0");
     expect(wrapper.className).not.toContain("pointer-events-none");
   });
 });
