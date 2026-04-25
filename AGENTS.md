@@ -9,6 +9,7 @@ Standards for the **nycgrid** repository (Next.js 16, React 19, TypeScript).
 - **Design questions**: Discuss first, don't jump to code.
 - **Consultative**: When asked for feedback, respond with discussion ONLY until explicitly asked to implement.
 - **Bug fixes**: Follow the Debugging Approach in §2. Never weaken tests to pass. Never remove functionality to avoid errors.
+- **TDD gate**: Before writing any implementation code, write and run failing tests first. A detailed spec is not an excuse to skip red — it's a blueprint for the tests. Never touch production code until at least one test is red. Run the failing tests and show the red output as a checkpoint before proceeding.
 
 ## Investigation Style
 
@@ -28,6 +29,7 @@ Standards for the **nycgrid** repository (Next.js 16, React 19, TypeScript).
 - **Dependency Flow**: `src/components/ui` → `src/hooks` → `src/lib` → `src/features`
 - **Strict Typing**: `any` is a lint error. Always run `bun run typecheck` after edits before any git operation. Fix all TypeScript errors before proceeding.
 - **Clean Code**: Prefer small focused functions, explicit intent, straightforward control flow. Eliminate real duplication but avoid premature abstractions.
+- **Persistent map**: `MapView` is mounted once inside `PersistentMap` (`src/features/map/PersistentMap.tsx`), which lives in the root layout. The `/explore` page renders only legal attribution links — do not add `MapView` to the explore page or mount it anywhere else. Duplicating it will create two WebGL contexts and two sets of camera markers.
 
 ## 2. Debugging Approach
 
@@ -47,6 +49,7 @@ Standards for the **nycgrid** repository (Next.js 16, React 19, TypeScript).
 - **Metadata**: Use `generateMetadata` for dynamic routes. Any `generateMetadata` that makes an async call MUST wrap its body in `try/catch` returning `{}` or `{ title: "NycGrid" }` on failure.
 - **Animations**: Import from `motion/react` (v12+ standard, React 19 compatible).
 - **Maps**: MapLibre GL requires `'use client'`. Always initialize the map in a `useEffect` and clean up with `map.remove()` on unmount.
+- **`MapView.pushParams` uses `window.history.replaceState` — do not change this to `router.replace`.** The URL update is a permalink side-effect only; all state is local. `router.replace` triggers a full App Router navigation cycle (~600ms); `replaceState` is instant. This is intentional.
 
 ### Isolating side-effects in route handlers
 
@@ -92,7 +95,7 @@ Two URL strategies exist — pick the right one or the canvas will be tainted:
 
 ## 6. Testing & Quality
 
-- **TDD By Default**: Red-Green-Refactor for every implementation and bug fix. Write a failing test first, confirm it fails, then implement. See `.agents/skills/tdd_workflow.md` for the full workflow.
+- **TDD By Default**: Red-Green-Refactor for every implementation and bug fix. Write a failing test first, run it, and show the red output before writing any implementation. See `.agents/skills/tdd_workflow.md` for the full workflow.
 - **Tiered Test Projects** (`vitest.config.ts`):
   - `bun run test:unit` — pure logic, no DOM, no MSW
   - `bun run test:component` — DOM rendering (happy-dom)
@@ -132,14 +135,14 @@ Agents should use `.agents/skills/` for workflow guidance.
 
 ### Skills (`.agents/skills/`)
 
-| Skill                     | When to use                                     |
-| ------------------------- | ----------------------------------------------- |
-| `commit`                  | Before every `git commit` or `git push`         |
-| `bug_hunt`                | Diagnosing any bug                              |
-| `tdd_workflow`            | Every implementation, feature, or bug fix       |
-| `nextjs_feature_workflow` | Pages, layouts, server actions, component work  |
-| `validation`              | Pre-commit/pre-push checks, hook failures       |
-| `cv_pipeline`             | Adding/upgrading the computer vision pipeline   |
+| Skill                     | When to use                                    |
+| ------------------------- | ---------------------------------------------- |
+| `commit`                  | Before every `git commit` or `git push`        |
+| `bug_hunt`                | Diagnosing any bug                             |
+| `tdd_workflow`            | Every implementation, feature, or bug fix      |
+| `nextjs_feature_workflow` | Pages, layouts, server actions, component work |
+| `validation`              | Pre-commit/pre-push checks, hook failures      |
+| `cv_pipeline`             | Adding/upgrading the computer vision pipeline  |
 
 ## 10. Domain Knowledge
 
