@@ -90,4 +90,16 @@ describe("getRecommendationsForCamera", () => {
     const b = getRecommendationsForCamera(camera, 3);
     expect(a.map((r) => r.id)).toEqual(b.map((r) => r.id));
   });
+
+  it("camera-scoped items are included alongside borough and citywide items", () => {
+    const cameraRec = makeRec({ id: "cam", scope: { kind: "camera", cameraIds: ["cam-x"] } });
+    const areaRec = makeRec({ id: "area", scope: { kind: "area", area: "Manhattan" } });
+    const citywideRec = makeRec({ id: "city", scope: { kind: "area", area: "citywide" } });
+    const camera = makeCamera({ id: "cam-x", area: "Manhattan" });
+    const all = filterRecommendations(camera, [citywideRec, areaRec, cameraRec]);
+    expect(all).toHaveLength(3);
+    expect(all).toContainEqual(cameraRec);
+    expect(all).toContainEqual(areaRec);
+    expect(all).toContainEqual(citywideRec);
+  });
 });

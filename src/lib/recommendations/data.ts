@@ -179,6 +179,17 @@ export const RECOMMENDATIONS: Recommendation[] = [
     scope: { kind: "area", area: "citywide" },
   },
   {
+    id: "housing-segregation-redlining-npr",
+    type: "video",
+    title: "Housing Segregation and Redlining in America",
+    description:
+      "A short history of how deliberate policy decisions shaped which neighborhoods got investment — and which didn't.",
+    url: "https://www.youtube.com/watch?v=O5FBJyqfoLM",
+    source: "NPR Code Switch",
+    youtubeId: "O5FBJyqfoLM",
+    scope: { kind: "area", area: "citywide" },
+  },
+  {
     id: "the-power-broker",
     type: "read",
     title: "The Power Broker — Robert Caro",

@@ -16,11 +16,23 @@ function hashString(str: string): number {
   return Math.abs(h);
 }
 
+function scopeTier(camera: Camera, rec: Recommendation): number {
+  if (rec.scope.kind === "camera") return 0;
+  if (rec.scope.kind === "area" && rec.scope.area === camera.area) return 1;
+  return 2; // citywide
+}
+
 export function getRecommendationsForCamera(camera: Camera, limit = 3): Recommendation[] {
   const recs = filterRecommendations(camera, RECOMMENDATIONS);
   const today = new Date().toISOString().slice(0, 10);
   const seed = hashString(camera.id + today);
-  const shuffled = [...recs].sort((a, b) => hashString(a.id + seed) - hashString(b.id + seed));
+  // Primary sort: tier (camera-specific → borough → citywide)
+  // Secondary sort: deterministic shuffle within each tier
+  const shuffled = [...recs].sort((a, b) => {
+    const tierDiff = scopeTier(camera, a) - scopeTier(camera, b);
+    if (tierDiff !== 0) return tierDiff;
+    return hashString(a.id + seed) - hashString(b.id + seed);
+  });
   return shuffled.slice(0, limit);
 }
 
