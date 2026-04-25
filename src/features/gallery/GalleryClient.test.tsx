@@ -71,6 +71,8 @@ describe("GalleryClient", () => {
 
     render(<GalleryClient />);
 
+    // Header is always visible
+    expect(screen.getByRole("heading", { name: "My Gallery" })).toBeInTheDocument();
     expect(
       screen.getByText("No shots yet. Head to the map and open the photobooth.")
     ).toBeInTheDocument();
@@ -78,6 +80,9 @@ describe("GalleryClient", () => {
       "href",
       "/explore"
     );
+    // Count and Clear all are absent when empty
+    expect(screen.queryByText(/\/ 12/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /clear all/i })).not.toBeInTheDocument();
   });
 
   it("renders multiple saved shots with formatted metadata and supports actions", () => {
