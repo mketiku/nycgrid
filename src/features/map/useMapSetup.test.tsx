@@ -163,11 +163,10 @@ describe("useMapSetup", () => {
     expect(map).toBeDefined();
     if (!map) throw new Error("Expected a map instance");
 
-    map.triggerOnce("styledata");
     map.trigger("load");
 
-    expect(map.addControl).toHaveBeenCalled();
     // glyphs are patched in the style JSON by fetchPatchedStyle before map init — setGlyphs is not called
+    // attribution is React-rendered, not a native MapLibre control — addControl is not called
     expect(map.addSource).toHaveBeenCalledWith(
       "cameras",
       expect.objectContaining({ type: "geojson", cluster: true })

@@ -75,8 +75,6 @@ export function useMapSetup({
         attributionControl: false,
       });
 
-      map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-left");
-
       map.on("load", () => {
         const color = accentColorRef.current;
         if (!color) return;
