@@ -2,8 +2,9 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, Camera as CameraIcon } from "lucide-react";
+import { MapPin, Camera as CameraIcon, Share2, Check } from "lucide-react";
 import Link from "next/link";
+import { useShareUrl } from "@/hooks/useShareUrl";
 import { CameraImage } from "@/features/camera-feed/CameraImage";
 import { GifExportButton } from "@/features/camera-feed/GifExportButton";
 import { FrameDiff } from "@/features/camera-feed/FrameDiff";
@@ -59,6 +60,8 @@ export function CameraDetailClient({
     },
     [captureFrame, getCount]
   );
+
+  const { copied, share } = useShareUrl();
 
   const { exportGif, isExporting, progress } = useGifExport({
     getFrames,
@@ -156,6 +159,17 @@ export function CameraDetailClient({
           Photobooth
         </Link>
         {camera.isOnline && <FrameDiff camera={camera} onDiffResult={setDiffResult} />}
+        <button
+          onClick={() => void share()}
+          className="flex items-center gap-1.5 font-mono text-xs px-3 min-h-[44px] rounded border transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
+          style={{
+            borderColor: "var(--color-border)",
+            color: copied ? "var(--color-online)" : "var(--color-text-secondary)",
+          }}
+        >
+          {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+          {copied ? "Copied!" : "Share"}
+        </button>
       </div>
 
       <p className="font-mono text-[10px] text-[var(--color-text-muted)]">

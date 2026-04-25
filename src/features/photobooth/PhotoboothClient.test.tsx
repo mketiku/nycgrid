@@ -276,6 +276,7 @@ describe("PhotoboothClient", () => {
     const sharePayload = (share.mock.calls[0] as unknown as [unknown] | undefined)?.[0];
     expect(sharePayload).toMatchObject({
       title: "nycgrid — Delancey St",
+      url: expect.stringContaining("/camera/cam-12345678"),
       files: [expect.objectContaining({ name: "nycgrid-filmstrip-cam-1234-1712345678901.png" })],
     });
 

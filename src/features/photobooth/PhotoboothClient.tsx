@@ -112,7 +112,11 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
     const file = new File([blob], filename, { type: "image/png" });
     if (navigator.canShare?.({ files: [file] })) {
       try {
-        await navigator.share({ files: [file], title: `nycgrid — ${camera.name}` });
+        await navigator.share({
+          files: [file],
+          title: `nycgrid — ${camera.name}`,
+          url: `${window.location.origin}/camera/${camera.id}`,
+        });
         trackSelfie();
       } catch {
         // user cancelled share — no-op

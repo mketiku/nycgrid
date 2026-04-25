@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CameraDetailClient } from "./CameraDetailClient";
@@ -60,6 +60,11 @@ vi.mock("@/features/camera-feed/useGifExport", () => ({
   }),
 }));
 
+const mockShare = vi.fn();
+vi.mock("@/hooks/useShareUrl", () => ({
+  useShareUrl: vi.fn(() => ({ copied: false, share: mockShare })),
+}));
+
 const camera: Camera = {
   id: "cam-1",
   name: "Raw camera name",
@@ -93,6 +98,14 @@ describe("CameraDetailClient", () => {
     );
     expect(captureFrame).toHaveBeenCalled();
     expect(window.scrollTo).toHaveBeenCalledWith(0, 0);
+  });
+
+  it("renders a share button that calls share()", async () => {
+    render(<CameraDetailClient camera={camera} displayName="Display Name" showRawName={false} />);
+    const btn = screen.getByRole("button", { name: /share/i });
+    expect(btn).toBeInTheDocument();
+    fireEvent.click(btn);
+    expect(mockShare).toHaveBeenCalledTimes(1);
   });
 
   it("hides optional sections when the camera is offline or has no lore", () => {
