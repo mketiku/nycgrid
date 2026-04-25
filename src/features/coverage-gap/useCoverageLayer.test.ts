@@ -7,6 +7,20 @@ import { http, HttpResponse } from "msw";
 import type { RefObject } from "react";
 import type maplibregl from "maplibre-gl";
 
+vi.mock("maplibre-gl", () => {
+  return {
+    default: {
+      Popup: vi.fn().mockImplementation(function () {
+        return {
+          setLngLat: vi.fn().mockReturnThis(),
+          setHTML: vi.fn().mockReturnThis(),
+          addTo: vi.fn().mockReturnThis(),
+        };
+      }),
+    },
+  };
+});
+
 function makeWrapper() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -21,6 +35,7 @@ function makeMockMap() {
   const listeners: Record<string, Array<(...args: unknown[]) => void>> = {};
   const sources: Record<string, unknown> = {};
   const layers: Record<string, unknown> = {};
+  const canvas = { style: { cursor: "" } };
 
   return {
     isStyleLoaded: vi.fn(() => true),
@@ -45,7 +60,7 @@ function makeMockMap() {
       listeners[event].push(handler);
     }),
     off: vi.fn(),
-    getCanvas: vi.fn(() => ({ style: { cursor: "" } })),
+    getCanvas: vi.fn(() => canvas),
     _listeners: listeners,
     _sources: sources,
     _layers: layers,
@@ -198,5 +213,102 @@ describe("useCoverageLayer", () => {
     const layerIds = mockMap.addLayer.mock.calls.map((call) => (call[0] as { id: string }).id);
     expect(layerIds).toContain("coverage-gap-fill");
     expect(layerIds).toContain("coverage-gap-border");
+  });
+
+  it("cleans up on unmount", async () => {
+    const { default: useCoverageLayer } = await import("./useCoverageLayer");
+    const mockMap = makeMockMap();
+    mockMap.addLayer({ id: "coverage-gap-fill" });
+    mockMap.addLayer({ id: "coverage-gap-border" });
+    mockMap.addSource("coverage-gap", {});
+    const mapRef = { current: mockMap } as unknown as RefObject<maplibregl.Map | null>;
+
+    const { unmount } = renderHook(() => useCoverageLayer(mapRef), { wrapper: makeWrapper() });
+    unmount();
+
+    expect(mockMap.removeLayer).toHaveBeenCalledWith("coverage-gap-fill");
+    expect(mockMap.removeLayer).toHaveBeenCalledWith("coverage-gap-border");
+    expect(mockMap.removeSource).toHaveBeenCalledWith("coverage-gap");
+  });
+
+  it("handles mouseenter and mouseleave on coverage-gap-fill", async () => {
+    const emptyGeoJSON = { type: "FeatureCollection", features: [] };
+    server.use(http.get("/api/coverage-gap", () => HttpResponse.json(emptyGeoJSON)));
+
+    const { default: useCoverageLayer } = await import("./useCoverageLayer");
+    const mockMap = makeMockMap();
+    const mapRef = { current: mockMap } as unknown as RefObject<maplibregl.Map | null>;
+
+    const { result } = renderHook(() => useCoverageLayer(mapRef), { wrapper: makeWrapper() });
+
+    await act(async () => {
+      result.current.toggle();
+    });
+
+    await waitFor(() => {
+      expect(mockMap.on).toHaveBeenCalledWith(
+        "mouseenter",
+        "coverage-gap-fill",
+        expect.any(Function)
+      );
+    });
+
+    const mouseEnterHandler = mockMap.on.mock.calls.find(
+      (c) => c[0] === "mouseenter" && c[1] === "coverage-gap-fill"
+    )?.[2] as () => void;
+    const mouseLeaveHandler = mockMap.on.mock.calls.find(
+      (c) => c[0] === "mouseleave" && c[1] === "coverage-gap-fill"
+    )?.[2] as () => void;
+
+    const canvas = mockMap.getCanvas();
+    mouseEnterHandler();
+    expect(canvas.style.cursor).toBe("pointer");
+    mouseLeaveHandler();
+    expect(canvas.style.cursor).toBe("");
+  });
+
+  it("handles click on coverage-gap-fill and shows popup", async () => {
+    const { default: ml } = await import("maplibre-gl");
+    const emptyGeoJSON = { type: "FeatureCollection", features: [] };
+    server.use(http.get("/api/coverage-gap", () => HttpResponse.json(emptyGeoJSON)));
+
+    const { default: useCoverageLayer } = await import("./useCoverageLayer");
+    const mockMap = makeMockMap();
+    const mapRef = { current: mockMap } as unknown as RefObject<maplibregl.Map | null>;
+
+    const { result } = renderHook(() => useCoverageLayer(mapRef), { wrapper: makeWrapper() });
+
+    await act(async () => {
+      result.current.toggle();
+    });
+
+    await waitFor(() => {
+      expect(mockMap.on).toHaveBeenCalledWith("click", "coverage-gap-fill", expect.any(Function));
+    });
+
+    const clickHandler = mockMap.on.mock.calls.find(
+      (c) => c[0] === "click" && c[1] === "coverage-gap-fill"
+    )?.[2] as (e: unknown) => void;
+
+    const mockEvent = {
+      features: [
+        {
+          properties: {
+            name: "Dist 1",
+            neighborhood: "Hood 1",
+            cameraCount: 5,
+            densityPerSqMile: 10,
+            densityRank: 1,
+          },
+        },
+      ],
+      lngLat: { lng: 0, lat: 0 },
+    };
+
+    await act(async () => {
+      clickHandler(mockEvent);
+    });
+
+    expect(ml.Popup).toHaveBeenCalled();
   });
 });

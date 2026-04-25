@@ -242,4 +242,36 @@ describe("FrameDiff", () => {
     fireEvent.click(screen.getByText("Compare now"));
     expect(await screen.findByText(/Could not load frame for comparison/i)).toBeInTheDocument();
   });
+
+  it("handles missing canvas context during baseline capture", async () => {
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+
+    render(<FrameDiff camera={mockCamera} onDiffResult={onDiffResult} />);
+    fireEvent.click(screen.getByText("Set baseline"));
+
+    expect(await screen.findByText(/Could not load frame/i)).toBeInTheDocument();
+  });
+
+  it("handles missing canvas context during comparison", async () => {
+    let callCount = 0;
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation((id) => {
+      if (id === "2d") {
+        callCount++;
+        if (callCount === 2) return null; // fail on second call (comparison)
+        return {
+          drawImage: vi.fn(),
+          getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(400), width: 10, height: 10 })),
+          putImageData: vi.fn(),
+        } as unknown as CanvasRenderingContext2D;
+      }
+      return null;
+    });
+
+    render(<FrameDiff camera={mockCamera} onDiffResult={onDiffResult} />);
+    fireEvent.click(screen.getByText("Set baseline"));
+    await screen.findByText("Compare now");
+    fireEvent.click(screen.getByText("Compare now"));
+
+    expect(await screen.findByText(/Could not load frame for comparison/i)).toBeInTheDocument();
+  });
 });

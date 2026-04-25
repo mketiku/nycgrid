@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { AppNav } from "./AppNav";
 
@@ -29,5 +29,17 @@ describe("AppNav", () => {
     const { container } = render(<AppNav />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+  it("dispatches map:openBrowser event when Browse button is clicked", () => {
+    mockUsePathname.mockReturnValue("/explore");
+    const dispatchSpy = vi.spyOn(window, "dispatchEvent");
+
+    render(<AppNav />);
+
+    const browseButton = screen.getByRole("button", { name: /Browse/i });
+    fireEvent.click(browseButton);
+
+    expect(dispatchSpy).toHaveBeenCalledWith(expect.any(CustomEvent));
+    expect((dispatchSpy.mock.calls[0][0] as CustomEvent).type).toBe("map:openBrowser");
   });
 });

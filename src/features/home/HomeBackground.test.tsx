@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { HomeBackground } from "./HomeBackground";
 
 describe("HomeBackground", () => {
-  it("updates the grid transform on pointer movement and cleans up on unmount", () => {
+  it("updates the grid transform on pointer movement and cleans up mousemove listener on unmount", () => {
     const addSpy = vi.spyOn(window, "addEventListener");
     const removeSpy = vi.spyOn(window, "removeEventListener");
 
@@ -20,10 +20,41 @@ describe("HomeBackground", () => {
     expect(grid).toHaveStyle({ transform: "translate(-10px, -10px)" });
     expect(addSpy).toHaveBeenCalledWith("mousemove", expect.any(Function), { passive: true });
 
-    const registeredHandler = addSpy.mock.calls.find(([event]) => event === "mousemove")?.[1];
+    const mousemoveHandler = addSpy.mock.calls.find(([e]) => e === "mousemove")?.[1];
 
     unmount();
 
-    expect(removeSpy).toHaveBeenCalledWith("mousemove", registeredHandler);
+    expect(removeSpy).toHaveBeenCalledWith("mousemove", mousemoveHandler);
+  });
+
+  it("renders a canvas and cancels the animation loop on unmount", () => {
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+      clearRect: vi.fn(),
+      beginPath: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
+      stroke: vi.fn(),
+      fillStyle: "",
+      strokeStyle: "",
+      lineWidth: 0,
+    } as unknown as CanvasRenderingContext2D);
+
+    let fired = false;
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
+      if (!fired) {
+        fired = true;
+        cb(0);
+      }
+      return 1;
+    });
+    const cancelSpy = vi.spyOn(window, "cancelAnimationFrame");
+
+    const { container, unmount } = render(<HomeBackground />);
+
+    expect(container.querySelector("canvas")).toBeInTheDocument();
+
+    unmount();
+
+    expect(cancelSpy).toHaveBeenCalledWith(1);
   });
 });
