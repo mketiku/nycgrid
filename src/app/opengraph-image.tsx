@@ -102,7 +102,7 @@ export default function OgImage() {
               lineHeight: 1,
             }}
           >
-            FEED
+            NYC
           </span>
           <span
             style={{
@@ -113,7 +113,7 @@ export default function OgImage() {
               lineHeight: 1,
             }}
           >
-            LINE
+            Grid
           </span>
         </div>
 
