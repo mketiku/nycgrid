@@ -91,15 +91,14 @@ export async function CameraSpotlight() {
           <div className="flex items-center gap-2">
             <Link
               href={`/camera/${spotlight.id}`}
-              aria-label="View live feed"
+              aria-label="View"
               className="flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] rounded-lg font-mono text-sm font-semibold transition-opacity hover:opacity-90"
               style={{
                 backgroundColor: "var(--color-accent)",
                 color: "var(--color-on-accent)",
               }}
             >
-              <span className="sm:hidden">View feed</span>
-              <span className="hidden sm:inline">View live feed</span>
+              <span>View</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
             {isVisitable(spotlight.tags) && (

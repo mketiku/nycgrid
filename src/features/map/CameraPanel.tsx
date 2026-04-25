@@ -302,11 +302,10 @@ function PanelContent({ camera, onClose }: { camera: CameraType; onClose: () => 
             Open photobooth
           </Button>
         </Link>
-        <Link href={`/camera/${camera.id}`} aria-label="View live feed" className="w-full">
+        <Link href={`/camera/${camera.id}`} aria-label="View" className="w-full">
           <Button variant="secondary" size="md" className="w-full gap-2">
             <ArrowRight className="w-4 h-4" />
-            <span className="sm:hidden">View feed</span>
-            <span className="hidden sm:inline">View live feed</span>
+            <span>View</span>
           </Button>
         </Link>
       </div>

@@ -117,7 +117,7 @@ describe("AmbientPlayer", () => {
     const infoToggle = screen.getByRole("button", { name: /Show location info/i });
     fireEvent.click(infoToggle);
 
-    expect(await screen.findByRole("link", { name: /View live feed/i })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: /^View$/i })).toHaveAttribute(
       "href",
       expect.stringMatching(/^\/camera\/(1|2)$/)
     );
@@ -134,7 +134,7 @@ describe("AmbientPlayer", () => {
     fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
     fireEvent.click(screen.getByRole("button", { name: /Show location info/i }));
 
-    expect(await screen.findByRole("link", { name: /View live feed/i })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: /^View$/i })).toBeInTheDocument();
   });
 
   it("displays the name of the current camera and handles load", () => {
@@ -156,7 +156,7 @@ describe("AmbientPlayer", () => {
     expect(screen.getByText(/No cameras available\./i)).toBeDefined();
   });
 
-  it("shows the camera overlay on click and provides a link to the feed", async () => {
+  it("shows the camera overlay on click and provides a link to the camera", async () => {
     render(<AmbientPlayer cameras={mockCameras} />);
 
     fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
@@ -164,8 +164,8 @@ describe("AmbientPlayer", () => {
     const screenRoot = screen.getByLabelText(/Ambient camera mode/i);
     fireEvent.click(screenRoot);
 
-    // Clicking the screen now toggles an overlay with a "View live feed" link
-    const feedLink = await screen.findByRole("link", { name: /View live feed/i });
+    // Clicking the screen now toggles an overlay with a "View" link
+    const feedLink = await screen.findByRole("link", { name: /^View$/i });
     expect(feedLink).toHaveAttribute("href", expect.stringMatching(/^\/camera\/(1|2)$/));
   });
 
@@ -177,7 +177,7 @@ describe("AmbientPlayer", () => {
     fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
     fireEvent.click(screen.getByLabelText(/Ambient camera mode/i));
 
-    expect(await screen.findByRole("link", { name: /View live feed/i })).toHaveAttribute(
+    expect(await screen.findByRole("link", { name: /^View$/i })).toHaveAttribute(
       "href",
       expect.stringMatching(/^\/camera\/(1|2)$/)
     );
@@ -187,7 +187,7 @@ describe("AmbientPlayer", () => {
 
     await waitFor(
       () => {
-        expect(screen.queryByRole("link", { name: /View live feed/i })).toBeNull();
+        expect(screen.queryByRole("link", { name: /^View$/i })).toBeNull();
       },
       { timeout: 2000 }
     );
@@ -200,7 +200,7 @@ describe("AmbientPlayer", () => {
     fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
     fireEvent.click(screen.getByRole("button", { name: /Show location info/i }));
 
-    await screen.findByRole("link", { name: /View live feed/i });
+    await screen.findByRole("link", { name: /^View$/i });
     expect(screen.getByTestId("ambient-mobile-overlay").className).toContain(
       "sm:w-[min(calc(100vw-2rem),28rem)]"
     );

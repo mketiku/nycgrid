@@ -1023,7 +1023,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
               NYC DOT public traffic camera
             </p>
             <p className="hidden [@media(hover:hover)]:block font-mono text-[10px] text-white/30 mt-1 opacity-0 group-hover/screen:opacity-100 transition-opacity duration-300">
-              Click to view feed →
+              Click to view →
             </p>
           </>
         )}
@@ -1137,7 +1137,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                   style={{ backgroundColor: "#39ff14" }}
                 >
                   <ArrowRight className="w-4 h-4" />
-                  View live feed
+                  View
                 </Link>
                 <Link
                   href="/explore"

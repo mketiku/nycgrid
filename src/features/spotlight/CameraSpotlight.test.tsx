@@ -115,10 +115,7 @@ describe("CameraSpotlight", () => {
       "src",
       "/api/camera-image/cam-1"
     );
-    expect(screen.getByRole("link", { name: /View live feed/i })).toHaveAttribute(
-      "href",
-      "/camera/cam-1"
-    );
+    expect(screen.getByRole("link", { name: /^View$/i })).toHaveAttribute("href", "/camera/cam-1");
     expect(
       screen.getByRole("link", { name: "Get transit directions to Brooklyn Bridge" })
     ).toHaveAttribute("href", "https://maps.test/brooklyn-bridge");
