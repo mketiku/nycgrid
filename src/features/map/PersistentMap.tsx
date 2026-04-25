@@ -21,10 +21,10 @@ function PersistentMapInner() {
   // After first init, MapView manages its own URL state via history.replaceState.
   // useState (not useRef) so values are safe to read during render.
   const [initial] = useState(() => ({
-    cameraId: searchParams.get("camera") ?? undefined,
-    query: searchParams.get("q") ?? undefined,
-    borough: searchParams.get("borough") ?? undefined,
-    type: searchParams.get("type") ?? undefined,
+    cameraId: searchParams?.get("camera") ?? undefined,
+    query: searchParams?.get("q") ?? undefined,
+    borough: searchParams?.get("borough") ?? undefined,
+    type: searchParams?.get("type") ?? undefined,
   }));
 
   // Deep-link: when already in-app and user navigates TO /explore with a camera
@@ -38,7 +38,7 @@ function PersistentMapInner() {
     // Skip initial mount (prev === null) and changes within /explore
     if (prev === null || prev === "/explore" || !isExplore) return;
 
-    const cameraId = searchParams.get("camera");
+    const cameraId = searchParams?.get("camera");
     if (!cameraId) return;
 
     window.dispatchEvent(new CustomEvent("map:selectCamera", { detail: { cameraId } }));
