@@ -325,15 +325,29 @@ export default function AboutPage() {
           Thanks for spending time here — it genuinely means a lot. A few things worth doing now:
         </p>
         <ul className="flex flex-col gap-3">
-          {[
-            "Share it — send it to someone curious about how the city works.",
-            "Contribute — the code is open source. If you build something on top of it — a fork for another city, a new feature, anything — I'd love to hear about it.",
-            "Suggest something — if you see a tech problem in the city worth solving, let me know.",
-            "Leave it better — please don't use this to do anything that could harm the city or its people.",
-            "Register to vote. Contact your representatives. Run for office if you see something broken.",
-            "Be a good citizen.",
-          ].map((point) => (
-            <li key={point} className="flex items-start gap-3">
+          {(
+            [
+              "Share it — send it to someone curious about how the city works.",
+              <>
+                Contribute —{" "}
+                <a
+                  href="https://github.com/mketiku/nycgrid"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[var(--color-accent)] hover:underline"
+                >
+                  the code is open source
+                </a>
+                . If you build something on top of it — a fork for another city, a new feature,
+                anything — I&apos;d love to hear about it.
+              </>,
+              "Suggest something — if you see a tech problem in the city worth solving, let me know.",
+              "Leave it better — please don't use this to do anything that could harm the city or its people.",
+              "Register to vote. Contact your representatives. Run for office if you see something broken.",
+              "Be a good citizen.",
+            ] as React.ReactNode[]
+          ).map((point, i) => (
+            <li key={i} className="flex items-start gap-3">
               <span
                 className="mt-1.5 w-1 h-1 rounded-full shrink-0"
                 style={{ backgroundColor: "var(--color-accent)" }}
