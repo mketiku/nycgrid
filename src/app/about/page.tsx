@@ -35,6 +35,12 @@ export default function AboutPage() {
           bridges, tunnels, and intersections that keep 8 million people moving, with context for
           what you&apos;re looking at.
         </p>
+        <p className="text-[var(--color-text-secondary)] leading-relaxed text-sm">
+          NycGrid will always be NYC-only. It&apos;s built around this city&apos;s specific
+          infrastructure, data sources, and character — and that focus is intentional. If you want
+          to do something like this for another city, the code is open source: fork it and build
+          your own thing.
+        </p>
 
         <div className="flex gap-3 pt-2">
           <Link href="/explore" className={buttonClasses({ size: "sm", className: "gap-2" })}>
@@ -322,7 +328,7 @@ export default function AboutPage() {
           {[
             "Share it — send it to someone curious about how the city works.",
             "Learn more — reading about public infrastructure has been genuinely eye-opening. The list below is a good starting point.",
-            "Contribute — the code is open source. If you build something on top of it, I'd love to hear about it.",
+            "Contribute — the code is open source. If you build something on top of it — a fork for another city, a new feature, anything — I'd love to hear about it.",
             "Suggest something — if you see a tech problem in the city worth solving, let me know.",
             "Leave it better — please don't use this to do anything that could harm the city or its people.",
             "Register to vote. Contact your representatives. Run for office if you see something broken.",

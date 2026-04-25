@@ -25,7 +25,7 @@ describe("AboutPage", () => {
     expect(screen.getByText(/how it works/i)).toBeDefined();
     expect(screen.getByText(/what you can do/i)).toBeDefined();
     expect(screen.getByText(/privacy/i)).toBeDefined();
-    expect(screen.getByText(/data sources/i)).toBeDefined();
+    expect(screen.getByRole("heading", { name: /data sources/i })).toBeDefined();
     expect(screen.getByText(/disclaimer/i)).toBeDefined();
     expect(screen.getByText(/built by/i)).toBeDefined();
     expect(screen.getByText(/explore responsibly/i)).toBeDefined();
