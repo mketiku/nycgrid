@@ -45,7 +45,7 @@ export function AppNav() {
   return (
     <>
       {/* ── Desktop top nav ── */}
-      <header className="hidden md:flex fixed top-0 left-0 right-0 z-40 h-12 items-center justify-between px-5 border-b border-[var(--color-border)] bg-[var(--color-base)]/90 backdrop-blur-sm">
+      <header className="hidden desktop-layout:flex fixed top-0 left-0 right-0 z-40 h-12 items-center justify-between px-5 border-b border-[var(--color-border)] bg-[var(--color-base)]/90 backdrop-blur-sm">
         <Link
           href="/"
           className="font-mono text-sm font-bold tracking-tighter text-[var(--color-text-primary)] hover:text-[var(--color-accent)] transition-colors"
@@ -77,7 +77,7 @@ export function AppNav() {
       <nav
         data-testid="mobile-nav"
         aria-label="Primary"
-        className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-[var(--color-border)] bg-[var(--color-base)]/95 backdrop-blur-sm ${MOBILE_NAV_SAFE_HEIGHT_CLASS} pb-[env(safe-area-inset-bottom)]`}
+        className={`desktop-layout:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-[var(--color-border)] bg-[var(--color-base)]/95 backdrop-blur-sm ${MOBILE_NAV_SAFE_HEIGHT_CLASS} pb-[env(safe-area-inset-bottom)]`}
       >
         <MobileNavItem href="/explore" icon={<Map className="w-5 h-5" />} label="Map" />
         <MobileNavItem
@@ -117,7 +117,7 @@ export function AppNav() {
           <>
             {/* Backdrop */}
             <motion.div
-              className="md:hidden fixed inset-0 z-30 bg-black/40"
+              className="desktop-layout:hidden fixed inset-0 z-30 bg-black/40"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -126,7 +126,7 @@ export function AppNav() {
             />
             {/* Sheet */}
             <motion.div
-              className="md:hidden fixed left-0 right-0 z-35 border-t border-[var(--color-border)] bg-[var(--color-base)] px-4 py-3"
+              className="desktop-layout:hidden fixed left-0 right-0 z-35 border-t border-[var(--color-border)] bg-[var(--color-base)] px-4 py-3"
               style={{ bottom: `calc(3.5rem + env(safe-area-inset-bottom, 0px))` }}
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
@@ -160,7 +160,7 @@ export function AppNav() {
       </AnimatePresence>
 
       {/* Spacer so content isn't hidden behind desktop nav */}
-      <div className="hidden md:block h-12" />
+      <div className="hidden desktop-layout:block h-12" />
     </>
   );
 }

@@ -52,7 +52,6 @@ export default function RootLayout({
       className={`${jetbrainsMono.variable} ${inter.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <head />
       <body className="bg-[var(--color-base)] text-[var(--color-text-primary)] min-h-full flex flex-col font-sans">
         <a
           href="#main-content"
@@ -69,7 +68,7 @@ export default function RootLayout({
             </div>
             <div
               data-testid="app-shell-footer"
-              className={`empty:hidden md:pb-0 ${MOBILE_NAV_CLEARANCE_CLASS}`}
+              className={`empty:hidden desktop-layout:pb-0 ${MOBILE_NAV_CLEARANCE_CLASS}`}
             >
               <AppFooter />
             </div>

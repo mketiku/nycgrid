@@ -18,8 +18,8 @@ describe("security headers", () => {
     expect(entries["Referrer-Policy"]).toBe("strict-origin-when-cross-origin");
   });
 
-  it("allows any tagged nycgrid-assets release in media-src", () => {
-    expect(CONTENT_SECURITY_POLICY).toContain("cdn.jsdelivr.net/gh/mketiku/nycgrid-assets@*/");
+  it("allows the pinned nycgrid-assets CDN release in media-src", () => {
+    expect(CONTENT_SECURITY_POLICY).toContain("cdn.jsdelivr.net/gh/mketiku/nycgrid-assets@v1.3.0/");
   });
 
   describe("buildCSP — production", () => {

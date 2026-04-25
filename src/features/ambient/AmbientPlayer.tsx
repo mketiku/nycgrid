@@ -20,6 +20,7 @@ import {
   SkipForward,
   Volume2,
   VolumeX,
+  WifiOff,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -329,6 +330,8 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   const togglePause = useCallback(() => setPaused((p) => !p), []);
   const [streamLoading, setStreamLoading] = useState(false);
   const [musicLoading, setMusicLoading] = useState(false);
+  const [audioLoadStuck, setAudioLoadStuck] = useState(false);
+  const [prevIsAudioLoading, setPrevIsAudioLoading] = useState(false);
   const [weatherCode, setWeatherCode] = useState<number | undefined>(undefined);
   const [weatherTemp, setWeatherTemp] = useState<number | undefined>(undefined);
   const [audioMode, setAudioMode] = useState<AudioMode>("noise");
@@ -880,6 +883,23 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [entered, togglePause, skipCamera, router, pickerOpen, overlayVisible]);
 
+  // Show a stuck indicator if audio has been buffering for more than 8 s.
+  // DSD: reset the stuck flag at the start of each new loading session so a
+  // prior failure doesn't immediately re-show when loading begins again.
+  const isAudioLoading =
+    !isMuted &&
+    ((audioMode === "radio" && streamLoading) || (audioMode === "noise" && musicLoading));
+  if (prevIsAudioLoading !== isAudioLoading) {
+    setPrevIsAudioLoading(isAudioLoading);
+    if (isAudioLoading) setAudioLoadStuck(false);
+  }
+  const showStuck = audioLoadStuck && isAudioLoading;
+  useEffect(() => {
+    if (!isAudioLoading) return;
+    const t = setTimeout(() => setAudioLoadStuck(true), 8_000);
+    return () => clearTimeout(t);
+  }, [isAudioLoading]);
+
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     swipeStartXRef.current = e.clientX;
     swipeStartYRef.current = e.clientY;
@@ -1180,10 +1200,6 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
               <Radio className="w-4 h-4" />
             )}
             {(() => {
-              const isLoading =
-                !isMuted &&
-                ((audioMode === "radio" && streamLoading) ||
-                  (audioMode === "noise" && musicLoading));
               const name =
                 audioMode === "noise"
                   ? "Ambient"
@@ -1192,8 +1208,16 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                     : (ALL_STREAMS[stationIndex]?.name ?? "Radio");
               return (
                 <>
-                  <span className="hidden sm:inline">{isLoading ? "Buffering…" : name}</span>
-                  {isLoading ? (
+                  <span className="hidden sm:inline">
+                    {showStuck ? "Failed" : isAudioLoading ? "Buffering…" : name}
+                  </span>
+                  {showStuck ? (
+                    <WifiOff
+                      className="w-3.5 h-3.5 shrink-0"
+                      style={{ color: "rgba(255,255,255,0.4)" }}
+                      aria-hidden
+                    />
+                  ) : isAudioLoading ? (
                     <Loader2
                       className="w-3.5 h-3.5 shrink-0 animate-spin"
                       style={{ color: "#39ff14" }}
