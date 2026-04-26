@@ -3,11 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 import { CAMERAS } from "@/lib/cameras/data";
 
 vi.mock("@/features/ambient/AmbientPlayer", () => ({
-  AmbientPlayer: ({ cameras }: { cameras: Array<{ id: string; isOnline: boolean }> }) => (
+  AmbientPlayer: ({ cameras }: { cameras: Array<{ id: string }> }) => (
     <div data-testid="ambient-player">
       <span data-testid="ambient-count">{cameras.length}</span>
       <span data-testid="ambient-ids">{cameras.map((camera) => camera.id).join(",")}</span>
-      <span data-testid="ambient-online">{String(cameras.every((camera) => camera.isOnline))}</span>
     </div>
   ),
 }));
@@ -22,16 +21,13 @@ describe("AmbientPage", () => {
     });
   });
 
-  it("renders the ambient player with online cameras only", () => {
-    const onlineCameras = CAMERAS.filter((camera) => camera.isOnline);
-
+  it("renders the ambient player with all cameras", () => {
     render(<AmbientPage />);
 
     expect(screen.getByTestId("ambient-player")).toBeInTheDocument();
-    expect(screen.getByTestId("ambient-count")).toHaveTextContent(String(onlineCameras.length));
-    expect(screen.getByTestId("ambient-online")).toHaveTextContent("true");
+    expect(screen.getByTestId("ambient-count")).toHaveTextContent(String(CAMERAS.length));
     expect(screen.getByTestId("ambient-ids")).toHaveTextContent(
-      onlineCameras.map((camera) => camera.id).join(",")
+      CAMERAS.map((camera) => camera.id).join(",")
     );
   });
 });

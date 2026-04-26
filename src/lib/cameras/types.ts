@@ -1,4 +1,10 @@
-export type CameraArea = "Manhattan" | "Brooklyn" | "Queens" | "Bronx" | "Staten Island";
+export type CameraArea =
+  | "Manhattan"
+  | "Brooklyn"
+  | "Queens"
+  | "Bronx"
+  | "Staten Island"
+  | "Unknown";
 
 export interface Camera {
   id: string;

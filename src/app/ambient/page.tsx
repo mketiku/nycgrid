@@ -8,6 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function AmbientPage() {
-  const onlineCameras = CAMERAS.filter((c) => c.isOnline);
-  return <AmbientPlayer cameras={onlineCameras} />;
+  return <AmbientPlayer cameras={CAMERAS} />;
 }

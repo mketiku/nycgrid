@@ -17,6 +17,7 @@ const AREA_BASE: Record<CameraArea, number> = {
   Queens: 0.14,
   Bronx: 0.16,
   "Staten Island": 0.08,
+  Unknown: 0.14,
 };
 
 function timeMultiplier(hour: number): number {

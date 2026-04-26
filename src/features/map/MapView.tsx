@@ -54,6 +54,7 @@ const BOROUGH_LABEL: Record<CameraArea, string> = {
   Queens: "Queens",
   Bronx: "The Bronx",
   "Staten Island": "Staten Island",
+  Unknown: "Unknown",
 };
 
 const BOROUGH_CENTER: Record<CameraArea, [number, number]> = {
@@ -62,6 +63,7 @@ const BOROUGH_CENTER: Record<CameraArea, [number, number]> = {
   Queens: [-73.7949, 40.7282],
   Bronx: [-73.8648, 40.8448],
   "Staten Island": [-74.1502, 40.5795],
+  Unknown: [-74.006, 40.7128],
 };
 
 const VALID_TYPES = new Set<CameraType>(["all", "street", "bridge", "highway", "tunnel"]);
@@ -551,7 +553,7 @@ export function MapView({
 
       {/* Borough filter pills — desktop only; mobile boroughs live inside the camera drawer */}
       <div
-        className={`absolute bottom-16 left-1/2 z-50 hidden -translate-x-1/2 gap-2 overflow-x-auto px-2 scrollbar-none desktop-layout:flex ${selectedCamera ? "desktop-layout:hidden" : "max-w-[calc(100vw-2rem)]"}`}
+        className={`absolute bottom-16 z-50 hidden gap-2 overflow-x-auto px-2 scrollbar-none desktop-layout:flex ${selectedCamera ? "desktop-layout:hidden" : "max-w-[calc(100vw-336px-2rem)] lg:max-w-[calc(100vw-400px-2rem)]"} left-[calc(50%+168px)] lg:left-[calc(50%+200px)] -translate-x-1/2`}
         role="group"
         aria-label="Filter by borough"
       >

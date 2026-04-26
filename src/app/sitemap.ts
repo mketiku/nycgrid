@@ -26,7 +26,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
           priority: route.priority,
         }) satisfies MetadataRoute.Sitemap[number]
     ),
-    ...CAMERAS.filter((camera) => camera.isOnline).map(
+    ...CAMERAS.map(
       (camera) =>
         ({
           url: `${host}/camera/${camera.id}`,

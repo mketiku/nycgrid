@@ -50,7 +50,7 @@ export default async function CameraDetailPage({ params }: PageProps) {
 
   const recommendations = getRecommendationsForCamera(camera);
 
-  const nearbyCameras = CAMERAS.filter((c) => c.id !== camera.id && c.isOnline)
+  const nearbyCameras = CAMERAS.filter((c) => c.id !== camera.id)
     .map((c) => ({
       camera: c,
       dist: haversineKm(camera.latitude, camera.longitude, c.latitude, c.longitude),
@@ -63,7 +63,7 @@ export default async function CameraDetailPage({ params }: PageProps) {
   return (
     <>
       {/* Server-side preload aligns with the SSR img scan; prevents React 19 generating a duplicate post-hydration preload that Chrome would flag as unused */}
-      {camera.isOnline && <link rel="preload" as="image" href={`/api/camera-image/${camera.id}`} />}
+      <link rel="preload" as="image" href={`/api/camera-image/${camera.id}`} />
       <div className="min-h-screen flex flex-col">
         {/* Top bar */}
         <div className="border-b border-[var(--color-border)] px-4 sm:px-6 py-3 flex items-center justify-between gap-4">

@@ -138,15 +138,13 @@ export function CameraDetailClient({
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">
-        {camera.isOnline && (
-          <GifExportButton
-            frameCount={frameCount}
-            minFrames={minFrames}
-            isExporting={isExporting}
-            progress={progress}
-            onExport={exportGif}
-          />
-        )}
+        <GifExportButton
+          frameCount={frameCount}
+          minFrames={minFrames}
+          isExporting={isExporting}
+          progress={progress}
+          onExport={exportGif}
+        />
         <Link
           href={`/photobooth/${camera.id}`}
           className="flex items-center gap-1.5 font-mono text-xs px-3 min-h-[44px] rounded border transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
@@ -158,7 +156,7 @@ export function CameraDetailClient({
           <CameraIcon className="w-3.5 h-3.5" />
           Photobooth
         </Link>
-        {camera.isOnline && <FrameDiff camera={camera} onDiffResult={setDiffResult} />}
+        <FrameDiff camera={camera} onDiffResult={setDiffResult} />
         <button
           onClick={() => void share()}
           className="flex items-center gap-1.5 font-mono text-xs px-3 min-h-[44px] rounded border transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"

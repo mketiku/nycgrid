@@ -84,7 +84,7 @@ describe("CameraDetailClient", () => {
     vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
   });
 
-  it("renders online camera details, raw name, lore, and gif export", () => {
+  it("renders camera details, raw name, lore, and gif export", () => {
     render(<CameraDetailClient camera={camera} displayName="Display Name" showRawName={true} />);
 
     expect(screen.getByRole("heading", { name: "Display Name" })).toBeInTheDocument();
@@ -108,18 +108,10 @@ describe("CameraDetailClient", () => {
     expect(mockShare).toHaveBeenCalledTimes(1);
   });
 
-  it("hides optional sections when the camera is offline or has no lore", () => {
-    render(
-      <CameraDetailClient
-        camera={{ ...camera, isOnline: false }}
-        displayName="Offline Camera"
-        showRawName={false}
-      />
-    );
+  it("hides raw name when showRawName is false and has no lore", () => {
+    render(<CameraDetailClient camera={camera} displayName="Camera" showRawName={false} />);
 
-    expect(screen.getByText("Offline")).toBeInTheDocument();
     expect(screen.queryByText("Raw camera name")).not.toBeInTheDocument();
     expect(screen.queryByTestId("camera-lore")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Export GIF/i })).not.toBeInTheDocument();
   });
 });
