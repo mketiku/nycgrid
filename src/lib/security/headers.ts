@@ -4,6 +4,8 @@
 // upgrade-insecure-requests is added in prod only: it forces HTTPS and must not be sent on
 // localhost — Safari (unlike Chrome/Edge) persists the upgrade and refuses HTTP even for local dev.
 
+import { ASSETS_CDN } from "@/lib/assets/cdn";
+
 export function buildCSP(isProd: boolean): string {
   const scriptSrc = isProd
     ? "script-src 'self' 'unsafe-inline'"
@@ -21,7 +23,7 @@ export function buildCSP(isProd: boolean): string {
     "font-src 'self' data: https://fonts.gstatic.com",
     "connect-src 'self' https://api.maptiler.com https://*.cartocdn.com https://*.basemaps.cartocdn.com https://tiles.openfreemap.org https://api.open-meteo.com",
     "worker-src blob:",
-    "media-src 'self' blob: https://fm939.wnyc.org https://stream.wqxr.org https://cdn.jsdelivr.net/gh/mketiku/nycgrid-assets@v1.3.0/",
+    `media-src 'self' blob: https://fm939.wnyc.org https://stream.wqxr.org ${ASSETS_CDN}/`,
     "frame-src 'none'",
     ...(isProd ? ["upgrade-insecure-requests"] : []),
   ].join("; ");

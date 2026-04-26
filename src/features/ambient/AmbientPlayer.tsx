@@ -44,7 +44,7 @@ type AudioMode = "noise" | "radio" | "podcast";
 
 type AudioStream = { id: string; name: string; desc: string; url: string; loop: boolean };
 
-const CDN = "https://cdn.jsdelivr.net/gh/mketiku/nycgrid-assets@v1.4.0";
+import { ASSETS_CDN as CDN } from "@/lib/assets/cdn";
 
 interface LofiTrack {
   url: string;

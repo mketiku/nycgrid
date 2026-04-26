@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ASSETS_CDN } from "@/lib/assets/cdn";
 import { buildCSP, CONTENT_SECURITY_POLICY, SECURITY_HEADERS } from "./headers";
 
 describe("security headers", () => {
@@ -18,8 +19,8 @@ describe("security headers", () => {
     expect(entries["Referrer-Policy"]).toBe("strict-origin-when-cross-origin");
   });
 
-  it("allows the pinned nycgrid-assets CDN release in media-src", () => {
-    expect(CONTENT_SECURITY_POLICY).toContain("cdn.jsdelivr.net/gh/mketiku/nycgrid-assets@v1.3.0/");
+  it("media-src allows the same CDN tag used by AmbientPlayer", () => {
+    expect(CONTENT_SECURITY_POLICY).toContain(`${ASSETS_CDN}/`);
   });
 
   describe("buildCSP — production", () => {
