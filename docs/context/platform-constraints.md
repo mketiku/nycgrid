@@ -126,3 +126,17 @@ NycGrid relies on `localStorage` and `sessionStorage` for persistence. To preven
 - **Endpoint**: `services5.arcgis.com` — NYC Community Districts FeatureServer
 - **Caching**: 7 days (`revalidate: 604800`) — district boundaries are stable
 - **Failure mode**: Coverage gap layer unavailable; map renders without it
+
+---
+
+## jsDelivr CDN (Static Audio Assets)
+
+- **Used for**: Ambient mode audio — lofi tracks and podcast episodes hosted in `mketiku/nycgrid-assets`
+- **Auth**: None required — public CDN
+- **Rate limit**: Not formally documented; jsDelivr is a high-capacity public CDN. NycGrid's audio traffic is negligible against its limits.
+- **URL format**: `https://cdn.jsdelivr.net/gh/mketiku/nycgrid-assets@<semver-tag>/...`
+- **Always pin a semver tag** — never `@main`. Tagged URLs are cached by jsDelivr indefinitely; `@main` resolves to HEAD and bypasses the CDN cache.
+- **Old tags remain valid** after a version bump — existing deployments continue to work.
+- **CSP coupling**: The `media-src` directive in `src/lib/security/headers.ts` must match the tag in `src/lib/assets/cdn.ts`. A mismatch silently blocks playback in production. When bumping the CDN tag, update both files in the same commit.
+- **Adding new assets workflow**: (1) push files to `nycgrid-assets`, (2) cut a new semver tag, (3) update `ASSETS_CDN` in `src/lib/assets/cdn.ts`, (4) update `media-src` in `src/lib/security/headers.ts` — see `docs/setup/ambient-audio-episodes.md` for the full episode-specific workflow.
+- **Failure mode**: Audio simply won't load — ambient mode degrades to camera slideshow only, no errors surface to the user.
