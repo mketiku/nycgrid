@@ -18,7 +18,7 @@ How to generate episodes for NycGrid's ambient mode using [NotebookLM](https://n
    {
      id: "<show-slug>-ep<N>",
      name: "<Show Name>",
-     desc: "<Host names or short tagline>",
+     desc: "Ep N · <episode topic (e.g. 'The crosswalk', 'Taxi Medallions')>",
      url: `${CDN}/audio/podcast/<show-slug>-ep<N>-compressed.m4a`,
      loop: true,
    },
