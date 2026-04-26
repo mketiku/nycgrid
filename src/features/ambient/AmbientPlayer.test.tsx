@@ -304,9 +304,9 @@ describe("AmbientPlayer", () => {
     // Default is "noise"
     expect(await screen.findByText("Chill background music")).toBeDefined();
 
-    // Switch to radio
-    fireEvent.click(await screen.findByText("WQXR 105.9"));
-    expect(await screen.findByText("Classical")).toBeDefined();
+    // Switch to radio via episode
+    fireEvent.click(await screen.findByText("The crosswalk"));
+    expect(await screen.findByText("Fresh Asphalt")).toBeDefined();
 
     // Re-open picker to switch to podcast
     fireEvent.click(screen.getByRole("button", { name: /Choose audio/i }));
@@ -361,9 +361,9 @@ describe("AmbientPlayer", () => {
       render(<AmbientPlayer cameras={mockCameras} />);
       fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
 
-      // Switch to radio (also unmutes)
+      // Switch to radio via episode (also unmutes)
       fireEvent.click(screen.getByRole("button", { name: /Choose audio/i }));
-      fireEvent.click(await screen.findByText("WQXR 105.9"));
+      fireEvent.click(await screen.findByText("The crosswalk"));
 
       pauseSpy.mockClear();
 
@@ -382,9 +382,9 @@ describe("AmbientPlayer", () => {
       fireEvent.click(screen.getByRole("button", { name: /Pause/i }));
       playSpy.mockClear();
 
-      // Switching to radio (which also calls setIsMuted(false)) should not start audio
+      // Switching to radio via episode (which also calls setIsMuted(false)) should not start audio
       fireEvent.click(screen.getByRole("button", { name: /Choose audio/i }));
-      fireEvent.click(await screen.findByText("WQXR 105.9"));
+      fireEvent.click(await screen.findByText("The crosswalk"));
 
       // Give effects time to settle
       await waitFor(() => expect(screen.getByRole("button", { name: /Resume/i })).toBeDefined());

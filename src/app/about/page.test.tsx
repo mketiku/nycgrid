@@ -1,13 +1,16 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import AboutPage, { metadata } from "./page";
+import { CAMERA_COUNT } from "@/lib/cameras/data";
 
 describe("AboutPage", () => {
   it("exports metadata for the route", () => {
     expect(metadata).toMatchObject({
       title: "About — nycgrid",
     });
-    expect(metadata.description).toContain("explore NYC through its 959+ public traffic cameras");
+    expect(metadata.description).toContain(
+      `explore NYC through its ${CAMERA_COUNT}+ public traffic cameras`
+    );
   });
 
   it("renders the about page sections and primary actions", () => {
