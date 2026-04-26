@@ -4,7 +4,7 @@
 // upgrade-insecure-requests is added in prod only: it forces HTTPS and must not be sent on
 // localhost — Safari (unlike Chrome/Edge) persists the upgrade and refuses HTTP even for local dev.
 
-import { ASSETS_CDN } from "@/lib/assets/cdn";
+import { ASSETS_CDN } from "../assets/cdn";
 
 export function buildCSP(isProd: boolean): string {
   const scriptSrc = isProd
