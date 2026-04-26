@@ -8,7 +8,6 @@ import {
   ArrowRight,
   AudioWaveform,
   Check,
-  Headphones,
   Info,
   Loader2,
   MapPin,
@@ -42,7 +41,14 @@ const IDLE_MS = 4_000;
 
 type AudioMode = "noise" | "radio" | "podcast";
 
-type AudioStream = { id: string; name: string; desc: string; url: string; loop: boolean };
+type AudioStream = {
+  id: string;
+  name: string;
+  desc: string;
+  duration?: string;
+  url: string;
+  loop: boolean;
+};
 
 import { ASSETS_CDN as CDN } from "@/lib/assets/cdn";
 
@@ -181,7 +187,8 @@ const EPISODES: AudioStream[] = [
   {
     id: "fresh-asphalt-ep1",
     name: "Fresh Asphalt",
-    desc: "Ep 1 · Adam & Barbara",
+    desc: "Ep 1 · The crosswalk",
+    duration: "5m",
     url: `${CDN}/audio/podcast/fresh-asphalt-ep1-compressed.m4a`,
     loop: true,
   },
@@ -189,34 +196,39 @@ const EPISODES: AudioStream[] = [
     id: "fresh-asphalt-ep2",
     name: "Fresh Asphalt",
     desc: "Ep 2 · Taxi Medallions",
+    duration: "6m",
     url: `${CDN}/audio/podcast/fresh-asphalt-ep2-compressed.m4a`,
     loop: true,
   },
   {
     id: "stoop-talk-ep1",
     name: "Stoop Talk",
-    desc: "Ep 1 · Devin & Carmen",
+    desc: "Ep 1 · 311 & stoop culture",
+    duration: "6m",
     url: `${CDN}/audio/podcast/stoop-talk-ep1-compressed.m4a`,
     loop: true,
   },
   {
     id: "7-train-diaries-ep1",
     name: "7 Train Diaries",
-    desc: "Ep 1 · Yolanda & Chen",
+    desc: "Ep 1 · Overheard on the 7",
+    duration: "22m",
     url: `${CDN}/audio/podcast/7-train-diaries-ep1-compressed.m4a`,
     loop: true,
   },
   {
     id: "gridlines-ep1",
     name: "Gridlines",
-    desc: "Ep 1 · The Bureau",
+    desc: "Ep 1 · Anomaly in the grid",
+    duration: "2m",
     url: `${CDN}/audio/podcast/gridlines-ep1-compressed.m4a`,
     loop: true,
   },
   {
     id: "lost-signal-ep1",
     name: "Lost Signal",
-    desc: "Ep 1 · Unknown Caller",
+    desc: "Ep 1 · Late-night broadcast",
+    duration: "2m",
     url: `${CDN}/audio/podcast/lost-signal-ep1-compressed.m4a`,
     loop: true,
   },
@@ -1523,68 +1535,28 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                 border: "1px solid rgba(255,255,255,0.1)",
               }}
             >
-              <div className="p-1.5 flex flex-col gap-0.5 max-h-[min(80vh,420px)] overflow-y-auto">
-                <p className="font-mono text-[10px] uppercase tracking-widest text-white/30 px-3 pt-2 pb-1">
-                  Audio
-                </p>
+              <div className="relative">
+                <div className="p-1.5 flex flex-col gap-0.5 max-h-[min(80vh,420px)] overflow-y-auto">
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-white/30 px-3 pt-2 pb-1">
+                    Audio
+                  </p>
 
-                {/* Music option */}
-                <button
-                  onClick={() => {
-                    setAudioMode("noise");
-                    setIsMuted(false);
-                    setPickerOpen(false);
-                  }}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-left hover:bg-white/8 transition-colors"
-                >
-                  <Music2 className="w-4 h-4 text-white/50 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-mono text-xs font-medium text-white">Ambient</p>
-                    <p className="font-mono text-[10px] text-white/40">Chill background music</p>
-                  </div>
-                  {audioMode === "noise" &&
-                    (musicLoading && !isMuted ? (
-                      <Loader2
-                        className="w-3.5 h-3.5 shrink-0 animate-spin"
-                        style={{ color: "#39ff14" }}
-                      />
-                    ) : (
-                      <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#39ff14" }} />
-                    ))}
-                </button>
-
-                <div className="h-px bg-white/8 mx-3 my-1" />
-                <p className="font-mono text-[10px] uppercase tracking-widest text-white/30 px-3 pb-1">
-                  FM Radio
-                </p>
-
-                {STATIONS.map((station, i) => (
+                  {/* Music option */}
                   <button
-                    key={station.id}
                     onClick={() => {
-                      setAudioMode("radio");
-                      setStationIndex(i);
+                      setAudioMode("noise");
                       setIsMuted(false);
                       setPickerOpen(false);
                     }}
                     className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-left hover:bg-white/8 transition-colors"
                   >
-                    <Radio className="w-4 h-4 text-white/50 shrink-0" />
+                    <Music2 className="w-4 h-4 text-white/50 shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <p className="font-mono text-xs font-medium text-white">{station.name}</p>
-                        <span
-                          className="font-mono text-[8px] uppercase tracking-wider px-1 py-px rounded"
-                          style={{ backgroundColor: "rgba(239,68,68,0.15)", color: "#ef4444" }}
-                        >
-                          Live
-                        </span>
-                      </div>
-                      <p className="font-mono text-[10px] text-white/40">{station.desc}</p>
+                      <p className="font-mono text-xs font-medium text-white">Ambient</p>
+                      <p className="font-mono text-[10px] text-white/40">Chill background music</p>
                     </div>
-                    {audioMode === "radio" &&
-                      stationIndex === i &&
-                      (streamLoading && !isMuted ? (
+                    {audioMode === "noise" &&
+                      (musicLoading && !isMuted ? (
                         <Loader2
                           className="w-3.5 h-3.5 shrink-0 animate-spin"
                           style={{ color: "#39ff14" }}
@@ -1593,83 +1565,136 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                         <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#39ff14" }} />
                       ))}
                   </button>
-                ))}
 
-                <div className="h-px bg-white/8 mx-3 my-1" />
-                <p className="font-mono text-[10px] uppercase tracking-widest text-white/30 px-3 pb-1">
-                  Episodes
-                </p>
+                  <div className="h-px bg-white/8 mx-3 my-1" />
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-white/30 px-3 pb-1">
+                    FM Radio
+                  </p>
 
-                {Object.entries(
-                  EPISODES.reduce<Record<string, { ep: AudioStream; globalIdx: number }[]>>(
-                    (acc, ep, i) => {
-                      (acc[ep.name] ??= []).push({ ep, globalIdx: STATIONS.length + i });
-                      return acc;
-                    },
-                    {}
-                  )
-                ).map(([showName, entries]) => (
-                  <div key={showName}>
-                    <p className="font-mono text-[9px] uppercase tracking-widest text-white/20 px-3 pt-2 pb-0.5">
-                      {showName}
-                    </p>
-                    {entries.map(({ ep, globalIdx }) => (
-                      <button
-                        key={ep.id}
-                        onClick={() => {
-                          setAudioMode("radio");
-                          setStationIndex(globalIdx);
-                          setIsMuted(false);
-                          setPickerOpen(false);
-                        }}
-                        className="flex items-center gap-3 w-full px-3 py-2 rounded-xl text-left hover:bg-white/8 transition-colors"
-                      >
-                        <Headphones className="w-4 h-4 text-white/50 shrink-0" />
-                        <p className="flex-1 min-w-0 font-mono text-[10px] text-white/60 truncate">
-                          {ep.desc}
-                        </p>
-                        {audioMode === "radio" &&
-                          stationIndex === globalIdx &&
-                          (streamLoading && !isMuted ? (
-                            <Loader2
-                              className="w-3.5 h-3.5 shrink-0 animate-spin"
-                              style={{ color: "#39ff14" }}
-                            />
-                          ) : (
-                            <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#39ff14" }} />
-                          ))}
-                      </button>
-                    ))}
-                  </div>
-                ))}
+                  {STATIONS.map((station, i) => (
+                    <button
+                      key={station.id}
+                      onClick={() => {
+                        setAudioMode("radio");
+                        setStationIndex(i);
+                        setIsMuted(false);
+                        setPickerOpen(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-left hover:bg-white/8 transition-colors"
+                    >
+                      <Radio className="w-4 h-4 text-white/50 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-mono text-xs font-medium text-white">{station.name}</p>
+                          <span
+                            className="font-mono text-[8px] uppercase tracking-wider px-1 py-px rounded"
+                            style={{ backgroundColor: "rgba(239,68,68,0.15)", color: "#ef4444" }}
+                          >
+                            Live
+                          </span>
+                        </div>
+                        <p className="font-mono text-[10px] text-white/40">{station.desc}</p>
+                      </div>
+                      {audioMode === "radio" &&
+                        stationIndex === i &&
+                        (streamLoading && !isMuted ? (
+                          <Loader2
+                            className="w-3.5 h-3.5 shrink-0 animate-spin"
+                            style={{ color: "#39ff14" }}
+                          />
+                        ) : (
+                          <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#39ff14" }} />
+                        ))}
+                    </button>
+                  ))}
 
-                <div className="h-px bg-white/8 mx-3 my-1" />
-                <p className="font-mono text-[10px] uppercase tracking-widest text-white/30 px-3 pb-1">
-                  Podcast
-                </p>
+                  <div className="h-px bg-white/8 mx-3 my-1" />
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-white/30 px-3 pb-1">
+                    Episodes
+                  </p>
 
-                {PODCAST_CHANNELS.map((ch) => (
-                  <button
-                    key={ch.id}
-                    onClick={() => {
-                      setPodcastChannelId(ch.id);
-                      podcastSwitchChannel(ch.id);
-                      setAudioMode("podcast");
-                      setIsMuted(false);
-                      setPickerOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-left hover:bg-white/8 transition-colors"
-                  >
-                    <Mic2 className="w-4 h-4 text-white/50 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-mono text-xs font-medium text-white">{ch.name}</p>
-                      <p className="font-mono text-[10px] text-white/40">{ch.desc}</p>
+                  {Object.entries(
+                    EPISODES.reduce<Record<string, { ep: AudioStream; globalIdx: number }[]>>(
+                      (acc, ep, i) => {
+                        (acc[ep.name] ??= []).push({ ep, globalIdx: STATIONS.length + i });
+                        return acc;
+                      },
+                      {}
+                    )
+                  ).map(([showName, entries], groupIdx) => (
+                    <div key={showName} className={groupIdx > 0 ? "mt-3" : ""}>
+                      <p className="font-mono text-[9px] uppercase tracking-widest text-white/20 px-3 pt-1 pb-0.5">
+                        {showName}
+                      </p>
+                      {entries.map(({ ep, globalIdx }) => (
+                        <button
+                          key={ep.id}
+                          onClick={() => {
+                            setAudioMode("radio");
+                            setStationIndex(globalIdx);
+                            setIsMuted(false);
+                            setPickerOpen(false);
+                          }}
+                          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-left hover:bg-white/8 transition-colors"
+                        >
+                          <p className="flex-1 min-w-0 font-mono text-[10px] text-white/60 truncate">
+                            {ep.desc}
+                          </p>
+                          {ep.duration && (
+                            <span className="font-mono text-[9px] text-white/25 shrink-0">
+                              {ep.duration}
+                            </span>
+                          )}
+                          {audioMode === "radio" &&
+                            stationIndex === globalIdx &&
+                            (streamLoading && !isMuted ? (
+                              <Loader2
+                                className="w-3.5 h-3.5 shrink-0 animate-spin"
+                                style={{ color: "#39ff14" }}
+                              />
+                            ) : (
+                              <Check
+                                className="w-3.5 h-3.5 shrink-0"
+                                style={{ color: "#39ff14" }}
+                              />
+                            ))}
+                        </button>
+                      ))}
                     </div>
-                    {audioMode === "podcast" && podcastChannelId === ch.id && (
-                      <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#39ff14" }} />
-                    )}
-                  </button>
-                ))}
+                  ))}
+
+                  <div className="h-px bg-white/8 mx-3 my-1" />
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-white/30 px-3 pb-1">
+                    Podcast
+                  </p>
+
+                  {PODCAST_CHANNELS.map((ch) => (
+                    <button
+                      key={ch.id}
+                      onClick={() => {
+                        setPodcastChannelId(ch.id);
+                        podcastSwitchChannel(ch.id);
+                        setAudioMode("podcast");
+                        setIsMuted(false);
+                        setPickerOpen(false);
+                      }}
+                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-left hover:bg-white/8 transition-colors"
+                    >
+                      <Mic2 className="w-4 h-4 text-white/50 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-mono text-xs font-medium text-white">{ch.name}</p>
+                        <p className="font-mono text-[10px] text-white/40">{ch.desc}</p>
+                      </div>
+                      {audioMode === "podcast" && podcastChannelId === ch.id && (
+                        <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#39ff14" }} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <div
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-8 rounded-b-2xl"
+                  style={{ background: "linear-gradient(to top, rgba(10,10,10,0.9), transparent)" }}
+                />
               </div>
             </motion.div>
           )}
