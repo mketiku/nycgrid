@@ -23,6 +23,10 @@ vi.mock("@/components/layout/AppFooter", () => ({
   AppFooter: () => <footer data-testid="app-footer">Footer</footer>,
 }));
 
+vi.mock("@/features/map/PersistentMap", () => ({
+  PersistentMap: () => null,
+}));
+
 describe("RootLayout", () => {
   it("renders navigation, skip link, footer, and shell clearance around route content", () => {
     render(

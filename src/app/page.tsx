@@ -38,20 +38,25 @@ export default function LandingPage() {
             with live weather, transit, and Citibike layered onto every feed.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
+          <div className="mt-8 flex items-center gap-3">
             <Link
               href="/explore"
-              className={buttonClasses({ size: "lg", className: "gap-3 tracking-wide" })}
+              className={buttonClasses({
+                size: "lg",
+                className: "flex-1 sm:flex-none justify-center gap-3 tracking-wide",
+              })}
             >
               <MapPin className="w-4 h-4" />
-              Explore the map
+              <span className="sm:hidden">Explore map</span>
+              <span className="hidden sm:inline">Explore the map</span>
             </Link>
             <Link
               href="/ambient"
-              className="inline-flex items-center justify-center gap-3 h-11 px-6 font-mono text-base font-medium tracking-wide rounded border border-white/30 bg-transparent text-white/70 hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-3 h-11 px-6 font-mono text-base font-medium tracking-wide rounded border border-white/30 bg-transparent text-white/70 hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
             >
               <Radio className="w-4 h-4" />
-              Watch ambient
+              <span className="sm:hidden">Ambient mode</span>
+              <span className="hidden sm:inline">Watch ambient</span>
             </Link>
           </div>
 

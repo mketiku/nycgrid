@@ -279,6 +279,7 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
             </button>
             <button
               onClick={() => void handleShare()}
+              aria-label="Share"
               className="flex items-center gap-2 font-mono text-sm px-4 py-2.5 rounded border transition-colors"
               style={{
                 borderColor: "var(--color-border)",
@@ -286,10 +287,11 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
               }}
             >
               <Share2 className="w-4 h-4" />
-              Share
+              <span className="hidden sm:inline">Share</span>
             </button>
             <button
               onClick={reset}
+              aria-label="Retake"
               className="flex items-center gap-2 font-mono text-sm px-4 py-2.5 rounded border transition-colors"
               style={{
                 borderColor: "var(--color-border)",
@@ -297,10 +299,11 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
               }}
             >
               <RotateCcw className="w-4 h-4" />
-              Retake
+              <span className="hidden sm:inline">Retake</span>
             </button>
             <Link
               href="/gallery"
+              aria-label="Gallery"
               className="flex items-center gap-2 font-mono text-sm px-4 py-2.5 rounded border transition-colors"
               style={{
                 borderColor: "var(--color-border)",
@@ -308,7 +311,7 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
               }}
             >
               <Images className="w-4 h-4" />
-              Gallery
+              <span className="hidden sm:inline">Gallery</span>
             </Link>
           </>
         )}
