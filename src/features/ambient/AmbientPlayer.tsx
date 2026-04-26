@@ -45,7 +45,8 @@ type AudioMode = "noise" | "radio" | "podcast";
 type AudioStream = {
   id: string;
   name: string;
-  desc: string;
+  ep?: string;
+  title: string;
   duration?: string;
   url: string;
   loop: boolean;
@@ -180,7 +181,8 @@ const EPISODES: AudioStream[] = [
   {
     id: "fresh-asphalt-ep1",
     name: "Fresh Asphalt",
-    desc: "Ep 1 · The crosswalk",
+    ep: "Ep 1",
+    title: "The crosswalk",
     duration: "5m",
     url: `${CDN}/audio/podcast/fresh-asphalt-ep1-compressed.m4a`,
     loop: false,
@@ -188,7 +190,8 @@ const EPISODES: AudioStream[] = [
   {
     id: "fresh-asphalt-ep2",
     name: "Fresh Asphalt",
-    desc: "Ep 2 · Taxi Medallions",
+    ep: "Ep 2",
+    title: "Taxi Medallions",
     duration: "6m",
     url: `${CDN}/audio/podcast/fresh-asphalt-ep2-compressed.m4a`,
     loop: false,
@@ -196,7 +199,8 @@ const EPISODES: AudioStream[] = [
   {
     id: "stoop-talk-ep1",
     name: "Stoop Talk",
-    desc: "Ep 1 · 311 & stoop culture",
+    ep: "Ep 1",
+    title: "311 & stoop culture",
     duration: "6m",
     url: `${CDN}/audio/podcast/stoop-talk-ep1-compressed.m4a`,
     loop: false,
@@ -204,7 +208,8 @@ const EPISODES: AudioStream[] = [
   {
     id: "7-train-diaries-ep1",
     name: "7 Train Diaries",
-    desc: "Ep 1 · Overheard on the 7",
+    ep: "Ep 1",
+    title: "Overheard on the 7",
     duration: "22m",
     url: `${CDN}/audio/podcast/7-train-diaries-ep1-compressed.m4a`,
     loop: false,
@@ -212,7 +217,8 @@ const EPISODES: AudioStream[] = [
   {
     id: "gridlines-ep1",
     name: "Gridlines",
-    desc: "Ep 1 · Anomaly in the grid",
+    ep: "Ep 1",
+    title: "Anomaly in the grid",
     duration: "2m",
     url: `${CDN}/audio/podcast/gridlines-ep1-compressed.m4a`,
     loop: false,
@@ -220,7 +226,8 @@ const EPISODES: AudioStream[] = [
   {
     id: "lost-signal-ep1",
     name: "Lost Signal",
-    desc: "Ep 1 · Late-night broadcast",
+    ep: "Ep 1",
+    title: "Late-night broadcast",
     duration: "2m",
     url: `${CDN}/audio/podcast/lost-signal-ep1-compressed.m4a`,
     loop: false,
@@ -230,7 +237,7 @@ const ALL_STREAMS: AudioStream[] = [...STATIONS, ...EPISODES];
 
 const PODCAST_CHANNELS: { id: ChannelId; name: string; desc: string }[] = [
   { id: "daily-honk", name: "The Daily Honk", desc: "Jay Johan Jaywalker reports" },
-  { id: "lost-signal-numbers", name: "Lost Signal", desc: "Numbers station" },
+  { id: "lost-signal-numbers", name: "Lost Signal", desc: "Intercepted broadcast" },
 ];
 
 const FRAME_REFRESH_MS = 30_000;
@@ -1600,8 +1607,11 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                         >
                           <Headphones className="w-3.5 h-3.5 text-white/40 shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <p className="font-mono text-xs font-medium text-white line-clamp-2">
-                              {ep.desc}
+                            {ep.ep && (
+                              <p className="font-mono text-[10px] text-white/30">{ep.ep}</p>
+                            )}
+                            <p className="font-mono text-xs font-medium text-white truncate">
+                              {ep.title}
                             </p>
                             {ep.duration && (
                               <p className="font-mono text-[10px] text-white/40">{ep.duration}</p>
