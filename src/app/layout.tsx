@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/features/theme/ThemeProvider";
@@ -19,6 +19,12 @@ const inter = Inter({
   subsets: ["latin"],
   display: "optional",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   title: "nycgrid — Explore NYC Through Its Cameras",

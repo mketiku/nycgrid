@@ -413,4 +413,147 @@ describe("AmbientPlayer", () => {
       expect(screen.getByText(/Cam (1|2)/).textContent).not.toBe(initialCam);
     });
   });
+
+  it("does not trigger swipe-to-skip when swipe starts within 30px of left edge", async () => {
+    mockCoarsePointer();
+
+    const { container } = render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+    container.querySelectorAll("img").forEach((img) => fireEvent.load(img));
+
+    const initialCam = screen.getByText(/Cam (1|2)/).textContent;
+
+    const screenRoot = screen.getByLabelText(/Ambient camera mode/i);
+    // Start within the 30px left-edge guard zone
+    fireEvent.pointerDown(screenRoot, { clientX: 20, clientY: 100 });
+    fireEvent.pointerUp(screenRoot, { clientX: 120, clientY: 110 }); // dx = 100, but starts at edge
+
+    container.querySelectorAll("img").forEach((img) => fireEvent.load(img));
+
+    // Camera should not have changed
+    await waitFor(() => {
+      expect(screen.getByText(/Cam (1|2)/).textContent).toBe(initialCam);
+    });
+  });
+
+  describe("idle-hide controls", () => {
+    it("hides controls after IDLE_MS of inactivity", () => {
+      vi.useFakeTimers();
+      render(<AmbientPlayer cameras={mockCameras} />);
+      fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+      const controls = screen.getByTestId("ambient-controls");
+      expect(controls).not.toHaveClass("opacity-0");
+
+      act(() => vi.advanceTimersByTime(4001));
+
+      expect(controls).toHaveClass("opacity-0");
+    });
+
+    it("keeps controls visible after mousemove resets the timer", () => {
+      vi.useFakeTimers();
+      render(<AmbientPlayer cameras={mockCameras} />);
+      fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+      const controls = screen.getByTestId("ambient-controls");
+      const screenRoot = screen.getByLabelText(/Ambient camera mode/i);
+
+      // Advance most of the idle window, then move the mouse
+      act(() => vi.advanceTimersByTime(3000));
+      fireEvent.mouseMove(screenRoot);
+
+      // A full IDLE_MS from the move hasn't passed yet
+      act(() => vi.advanceTimersByTime(3999));
+      expect(controls).not.toHaveClass("opacity-0");
+
+      // Now the full window elapses
+      act(() => vi.advanceTimersByTime(2));
+      expect(controls).toHaveClass("opacity-0");
+    });
+
+    it("keeps controls visible while the audio picker is open", () => {
+      vi.useFakeTimers();
+      render(<AmbientPlayer cameras={mockCameras} />);
+      fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+      const controls = screen.getByTestId("ambient-controls");
+      fireEvent.click(screen.getByRole("button", { name: /Choose audio/i }));
+
+      act(() => vi.advanceTimersByTime(5000));
+
+      expect(controls).not.toHaveClass("opacity-0");
+    });
+
+    it("keeps controls visible while the mobile overlay is open", () => {
+      mockCoarsePointer();
+      vi.useFakeTimers();
+      render(<AmbientPlayer cameras={mockCameras} />);
+      fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+      const controls = screen.getByTestId("ambient-controls");
+      fireEvent.click(screen.getByLabelText(/Ambient camera mode/i));
+
+      act(() => vi.advanceTimersByTime(5000));
+
+      expect(controls).not.toHaveClass("opacity-0");
+    });
+
+    it("shows controls on pointerdown when hidden", () => {
+      vi.useFakeTimers();
+      render(<AmbientPlayer cameras={mockCameras} />);
+      fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+      const controls = screen.getByTestId("ambient-controls");
+      act(() => vi.advanceTimersByTime(4001));
+      expect(controls).toHaveClass("opacity-0");
+
+      fireEvent.pointerDown(screen.getByLabelText(/Ambient camera mode/i), {
+        clientX: 100,
+        clientY: 100,
+      });
+      expect(controls).not.toHaveClass("opacity-0");
+    });
+
+    it("mobile: first tap when hidden shows controls only, does not open overlay", () => {
+      mockCoarsePointer();
+      vi.useFakeTimers();
+      render(<AmbientPlayer cameras={mockCameras} />);
+      fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+      act(() => vi.advanceTimersByTime(4001));
+
+      const controls = screen.getByTestId("ambient-controls");
+      expect(controls).toHaveClass("opacity-0");
+
+      fireEvent.click(screen.getByLabelText(/Ambient camera mode/i));
+
+      expect(controls).not.toHaveClass("opacity-0");
+      expect(screen.queryByRole("link", { name: /^View$/i })).toBeNull();
+    });
+
+    it("Escape shows controls when hidden without triggering exit", () => {
+      vi.useFakeTimers();
+      render(<AmbientPlayer cameras={mockCameras} />);
+      fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+      act(() => vi.advanceTimersByTime(4001));
+
+      const controls = screen.getByTestId("ambient-controls");
+      expect(controls).toHaveClass("opacity-0");
+
+      fireEvent.keyDown(window, { code: "Escape" });
+      expect(controls).not.toHaveClass("opacity-0");
+      expect(push).not.toHaveBeenCalled();
+    });
+
+    it("Escape exits on second press when controls are already visible", () => {
+      vi.useFakeTimers();
+      render(<AmbientPlayer cameras={mockCameras} />);
+      fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+      // Controls already visible — Escape exits immediately
+      fireEvent.keyDown(window, { code: "Escape" });
+      expect(push).toHaveBeenCalledWith("/explore");
+    });
+  });
 });

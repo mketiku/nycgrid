@@ -37,6 +37,7 @@ import { FEATURED_CAMERAS } from "@/features/context/lib/featured-cameras";
 import { CAMERA_COUNT } from "@/lib/cameras/data";
 
 const CAMERA_DWELL_MS = 25_000;
+const IDLE_MS = 4_000;
 
 type AudioMode = "noise" | "radio" | "podcast";
 
@@ -388,6 +389,31 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   const swipeStartYRef = useRef(0);
   const didSwipeRef = useRef(false);
   const [overlayVisible, setOverlayVisible] = useState(false);
+
+  // ─── Idle-hide controls ────────────────────────────────────────────────────
+  const [controlsVisible, setControlsVisibleState] = useState(true);
+  const controlsVisibleRef = useRef(true);
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pickerOpenRef = useRef(false);
+  const overlayVisibleRef = useRef(false);
+
+  const setControlsVisible = useCallback((v: boolean) => {
+    controlsVisibleRef.current = v;
+    setControlsVisibleState(v);
+  }, []);
+
+  const resetIdleTimerRef = useRef<() => void>(() => {});
+  // Defined after pickerOpenRef/overlayVisibleRef are declared so it captures them by ref
+  useEffect(() => {
+    resetIdleTimerRef.current = () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      setControlsVisible(true);
+      if (pickerOpenRef.current || overlayVisibleRef.current) return;
+      idleTimerRef.current = setTimeout(() => setControlsVisible(false), IDLE_MS);
+    };
+  });
+
+  const resetIdleTimer = useCallback(() => resetIdleTimerRef.current(), []);
   const [showLore, setShowLore] = useState(false);
   const [loreFactIndex, setLoreFactIndex] = useState(0);
   const [loreVisible, setLoreVisible] = useState(false);
@@ -399,6 +425,34 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     setLoreFactIndex(0);
     setLoreVisible(false);
   }
+
+  // Keep refs in sync with state so resetIdleTimer reads current values without stale closures
+  useEffect(() => {
+    pickerOpenRef.current = pickerOpen;
+    if (pickerOpen) {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    } else {
+      resetIdleTimer();
+    }
+  }, [pickerOpen, resetIdleTimer]);
+
+  useEffect(() => {
+    overlayVisibleRef.current = overlayVisible;
+    if (overlayVisible) {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    } else {
+      resetIdleTimer();
+    }
+  }, [overlayVisible, resetIdleTimer]);
+
+  // Start idle timer when the player is entered; clean up on unmount
+  useEffect(() => {
+    if (!entered) return;
+    resetIdleTimer();
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, [entered, resetIdleTimer]);
 
   const startKenBurns = useCallback((slot: 0 | 1) => {
     const el = slot === 0 ? kenburnsRef0.current : kenburnsRef1.current;
@@ -563,6 +617,25 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     return () => clearInterval(timer);
   }, [cameras.length, refreshFrame, paused]);
 
+  // Orientation change, foldable fold/unfold, Stage Manager resize:
+  // restart Ken Burns so the animation fits the new viewport geometry
+  useEffect(() => {
+    if (!entered) return;
+    let debounceId: ReturnType<typeof setTimeout> | null = null;
+    const handleResize = () => {
+      if (debounceId) clearTimeout(debounceId);
+      debounceId = setTimeout(() => {
+        startKenBurns(activeSlotRef.current);
+        resetIdleTimer();
+      }, 150);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (debounceId) clearTimeout(debounceId);
+    };
+  }, [entered, startKenBurns, resetIdleTimer]);
+
   // Fetch NYC weather on entry, then refresh every 30 minutes
   useEffect(() => {
     if (!entered) return;
@@ -665,6 +738,34 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   useEffect(() => {
     if (currentCamera) podcastSetCamera(toCameraContext(currentCamera));
   }, [currentCamera, podcastSetCamera]);
+
+  // Media Session API — lock screen / notification controls on Android and iOS 15+
+  useEffect(() => {
+    if (!entered || !("mediaSession" in navigator)) return;
+    const audioPlaying = !isMuted && !paused;
+    navigator.mediaSession.playbackState = audioPlaying ? "playing" : "paused";
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: currentCamera
+        ? (featuredDisplayNames.get(currentCamera.id) ?? currentCamera.name)
+        : "nycgrid ambient",
+      artist: currentCamera?.area ?? "New York City",
+      album: "nycgrid",
+    });
+    navigator.mediaSession.setActionHandler("play", () => {
+      setIsMuted(false);
+      setPaused(false);
+    });
+    navigator.mediaSession.setActionHandler("pause", () => {
+      setIsMuted(true);
+    });
+    navigator.mediaSession.setActionHandler("nexttrack", () => skipCamera());
+    return () => {
+      if (!("mediaSession" in navigator)) return;
+      navigator.mediaSession.setActionHandler("play", null);
+      navigator.mediaSession.setActionHandler("pause", null);
+      navigator.mediaSession.setActionHandler("nexttrack", null);
+    };
+  }, [entered, isMuted, paused, currentCamera, skipCamera]);
 
   // ─── Lo-fi music engine ────────────────────────────────────────────────────
   const getActiveMusicEl = useCallback(
@@ -852,12 +953,46 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     return () => clearInterval(id);
   }, [entered]);
 
+  // iOS audio suspension + bfcache: re-prime audio and show controls when tab/app returns
+  useEffect(() => {
+    if (!entered) return;
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) return;
+      resetIdleTimer();
+      if (isMuted || paused) return;
+      if (audioMode === "noise") {
+        const el = getActiveMusicEl();
+        if (el?.paused) void el.play().catch(() => {});
+      } else if (audioMode === "radio") {
+        const el = radioRef.current;
+        if (el?.paused) void el.play().catch(() => {});
+      }
+    };
+
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (!e.persisted) return;
+      resetIdleTimer();
+      handleVisibilityChange();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pageshow", handlePageShow);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pageshow", handlePageShow);
+    };
+  }, [entered, isMuted, paused, audioMode, resetIdleTimer, getActiveMusicEl]);
+
   // Keyboard shortcuts: Space = pause/resume, → = skip, Escape = exit
   useEffect(() => {
     if (!entered) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (target?.closest?.("input, textarea, [contenteditable]")) return;
+      // Capture visibility before reset so Escape can check the pre-key state
+      const wasControlsVisible = controlsVisibleRef.current;
+      resetIdleTimerRef.current();
       switch (e.code) {
         case "Space":
           e.preventDefault();
@@ -867,6 +1002,8 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
           skipCamera();
           break;
         case "Escape":
+          // If controls were hidden, we just showed them — do nothing else this press
+          if (!wasControlsVisible) break;
           if (pickerOpen) {
             setPickerOpen(false);
             break;
@@ -882,6 +1019,34 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [entered, togglePause, skipCamera, router, pickerOpen, overlayVisible]);
+
+  // Android back gesture: manage a single history entry for the overlay open state.
+  // Push once when an overlay opens; consume it when the overlay closes manually
+  // so the browser's back stack stays clean.
+  const historyEntryPushedRef = useRef(false);
+  useEffect(() => {
+    if (!entered) return;
+    const isOpen = pickerOpen || overlayVisible;
+    if (isOpen && !historyEntryPushedRef.current) {
+      window.history.pushState({ ambientOverlay: true }, "");
+      historyEntryPushedRef.current = true;
+    } else if (!isOpen && historyEntryPushedRef.current) {
+      historyEntryPushedRef.current = false;
+      window.history.back();
+    }
+  }, [entered, pickerOpen, overlayVisible]);
+
+  useEffect(() => {
+    if (!entered) return;
+    const handlePopState = () => {
+      if (!historyEntryPushedRef.current) return;
+      historyEntryPushedRef.current = false;
+      if (pickerOpen) setPickerOpen(false);
+      else if (overlayVisible) setOverlayVisible(false);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [entered, pickerOpen, overlayVisible]);
 
   // Show a stuck indicator if audio has been buffering for more than 8 s.
   // DSD: reset the stuck flag at the start of each new loading session so a
@@ -900,10 +1065,14 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     return () => clearTimeout(t);
   }, [isAudioLoading]);
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    swipeStartXRef.current = e.clientX;
-    swipeStartYRef.current = e.clientY;
-  }, []);
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      swipeStartXRef.current = e.clientX;
+      swipeStartYRef.current = e.clientY;
+      resetIdleTimer();
+    },
+    [resetIdleTimer]
+  );
 
   const handlePointerUp = useCallback(
     (e: React.PointerEvent) => {
@@ -912,7 +1081,8 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
       if (target?.closest?.("a, button")) return;
       const dx = e.clientX - swipeStartXRef.current;
       const dy = Math.abs(e.clientY - swipeStartYRef.current);
-      if (dx > 60 && dy < 50) {
+      // Guard left-edge zone (Android back gesture territory)
+      if (dx > 60 && dy < 50 && swipeStartXRef.current > 30) {
         didSwipeRef.current = true;
         skipCamera();
       }
@@ -920,10 +1090,28 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     [skipCamera]
   );
 
+  const handleMouseMove = useCallback(() => {
+    if (!controlsVisibleRef.current) {
+      // Controls hidden — show them and start the timer
+      resetIdleTimer();
+    } else {
+      // Controls already visible — only reschedule the hide timer, no state update
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+      if (!pickerOpenRef.current && !overlayVisibleRef.current) {
+        idleTimerRef.current = setTimeout(() => setControlsVisible(false), IDLE_MS);
+      }
+    }
+  }, [resetIdleTimer, setControlsVisible]);
+
   const handleScreenClick = useCallback(
     (e: React.MouseEvent) => {
       const target = e.target as HTMLElement;
       if (target?.closest?.("a, button")) return;
+      // First interaction when hidden: show controls only, don't toggle overlay
+      if (!controlsVisibleRef.current) {
+        resetIdleTimer();
+        return;
+      }
       if (didSwipeRef.current) {
         didSwipeRef.current = false;
         return;
@@ -932,7 +1120,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
       if (!currentCamera) return;
       setOverlayVisible((v) => !v);
     },
-    [currentCamera]
+    [currentCamera, resetIdleTimer]
   );
 
   const handleInfoToggle = useCallback(() => {
@@ -969,11 +1157,13 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
 
   return (
     <div
-      className="fixed inset-0 bg-black overflow-hidden cursor-pointer group/screen"
+      className={`fixed inset-0 bg-black overflow-hidden group/screen ${controlsVisible ? "cursor-pointer" : "cursor-none"}`}
+      style={{ touchAction: "manipulation", overscrollBehavior: "none" }}
       aria-label="Ambient camera mode"
       onClick={handleScreenClick}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
+      onMouseMove={handleMouseMove}
     >
       {/* Hidden audio elements */}
       <audio
@@ -1019,6 +1209,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
         style={{
           opacity: textVisible && !overlayVisible ? 1 : 0,
           transition: "opacity 700ms ease-in-out",
+          paddingBottom: "env(safe-area-inset-bottom)",
         }}
         aria-live="polite"
         aria-atomic="true"
@@ -1056,6 +1247,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
           style={{
             opacity: showLore && loreVisible && textVisible && !overlayVisible ? 1 : 0,
             transition: `opacity ${LORE_FADE_MS}ms ease-in-out`,
+            paddingBottom: "env(safe-area-inset-bottom)",
           }}
           aria-live="polite"
         >
@@ -1102,6 +1294,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
               backgroundColor: "rgba(10,10,10,0.85)",
               backdropFilter: "blur(12px)",
               border: "1px solid rgba(255,255,255,0.1)",
+              marginBottom: "env(safe-area-inset-bottom)",
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1177,7 +1370,17 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
       </AnimatePresence>
 
       {/* Controls — top right */}
-      <div className="absolute top-5 right-5" onClick={(e) => e.stopPropagation()}>
+      <div
+        data-testid="ambient-controls"
+        aria-hidden={!controlsVisible}
+        className={`absolute top-5 right-5 transition-opacity duration-200 ${controlsVisible ? "opacity-100" : "opacity-0"}`}
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+        onClick={(e) => e.stopPropagation()}
+        onMouseEnter={() => {
+          if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+        }}
+        onMouseLeave={resetIdleTimer}
+      >
         <div
           className="flex items-center gap-1 px-2 py-2 rounded-2xl"
           style={{
