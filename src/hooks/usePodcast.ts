@@ -5,7 +5,12 @@ import { buildSpeakLines } from "@/lib/podcast/script-engine";
 import { cancelSpeech, initVoices, speakLines } from "@/lib/podcast/speech";
 import { DAILY_HONK_SEGMENTS } from "@/lib/podcast/channels/daily-honk";
 import { LOST_SIGNAL_NUMBERS_SEGMENTS } from "@/lib/podcast/channels/lost-signal-numbers";
-import type { CameraContext, ChannelId, SpeakLine } from "@/lib/podcast/types";
+import type { CameraContext, ChannelId, Segment, SpeakLine } from "@/lib/podcast/types";
+
+const CHANNEL_SEGMENTS: Record<ChannelId, Segment[]> = {
+  "daily-honk": DAILY_HONK_SEGMENTS,
+  "lost-signal-numbers": LOST_SIGNAL_NUMBERS_SEGMENTS,
+};
 
 export interface PodcastActions {
   play: () => void;
@@ -34,9 +39,7 @@ function getLines(camera: CameraContext | null, channel: ChannelId): SpeakLine[]
     isOnline: true,
     timeOfDay: "evening",
   };
-  const segments =
-    channel === "lost-signal-numbers" ? LOST_SIGNAL_NUMBERS_SEGMENTS : DAILY_HONK_SEGMENTS;
-  return buildSpeakLines(segments, null, ctx);
+  return buildSpeakLines(CHANNEL_SEGMENTS[channel], null, ctx);
 }
 
 function startLoop(get: () => Store, set: (partial: Partial<InternalState>) => void): void {

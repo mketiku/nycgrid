@@ -175,15 +175,7 @@ function buildMusicQueue(
   return shuffled;
 }
 
-const STATIONS: AudioStream[] = [
-  {
-    id: "wqxr",
-    name: "WQXR 105.9",
-    desc: "Classical",
-    url: "https://stream.wqxr.org/wqxr.aac",
-    loop: false,
-  },
-];
+const STATIONS: AudioStream[] = [];
 const EPISODES: AudioStream[] = [
   {
     id: "fresh-asphalt-ep1",
@@ -238,7 +230,7 @@ const ALL_STREAMS: AudioStream[] = [...STATIONS, ...EPISODES];
 
 const PODCAST_CHANNELS: { id: ChannelId; name: string; desc: string }[] = [
   { id: "daily-honk", name: "The Daily Honk", desc: "Jay Johan Jaywalker reports" },
-  { id: "lost-signal-numbers", name: "Lost Signal", desc: "Ep 2 · Numbers station" },
+  { id: "lost-signal-numbers", name: "Lost Signal", desc: "Numbers station" },
 ];
 
 const FRAME_REFRESH_MS = 30_000;
@@ -1579,48 +1571,6 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
 
                   <div className="h-px bg-white/8 mx-3 my-1" />
                   <p className="font-mono text-[10px] uppercase tracking-widest text-white/30 px-3 pb-1">
-                    FM Radio
-                  </p>
-
-                  {STATIONS.map((station, i) => (
-                    <button
-                      key={station.id}
-                      onClick={() => {
-                        setAudioMode("radio");
-                        setStationIndex(i);
-                        setIsMuted(false);
-                        setPickerOpen(false);
-                      }}
-                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-left hover:bg-white/8 transition-colors"
-                    >
-                      <Radio className="w-4 h-4 text-white/50 shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className="font-mono text-xs font-medium text-white">{station.name}</p>
-                          <span
-                            className="font-mono text-[8px] uppercase tracking-wider px-1 py-px rounded"
-                            style={{ backgroundColor: "rgba(239,68,68,0.15)", color: "#ef4444" }}
-                          >
-                            Live
-                          </span>
-                        </div>
-                        <p className="font-mono text-[10px] text-white/40">{station.desc}</p>
-                      </div>
-                      {audioMode === "radio" &&
-                        stationIndex === i &&
-                        (streamLoading && !isMuted ? (
-                          <Loader2
-                            className="w-3.5 h-3.5 shrink-0 animate-spin"
-                            style={{ color: "#39ff14" }}
-                          />
-                        ) : (
-                          <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#39ff14" }} />
-                        ))}
-                    </button>
-                  ))}
-
-                  <div className="h-px bg-white/8 mx-3 my-1" />
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-white/30 px-3 pb-1">
                     Episodes
                   </p>
 
@@ -1694,7 +1644,15 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                     >
                       <Mic2 className="w-4 h-4 text-white/50 shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="font-mono text-xs font-medium text-white">{ch.name}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-mono text-xs font-medium text-white">{ch.name}</p>
+                          <span
+                            className="font-mono text-[8px] uppercase tracking-wider px-1 py-px rounded"
+                            style={{ backgroundColor: "rgba(239,68,68,0.15)", color: "#ef4444" }}
+                          >
+                            Live
+                          </span>
+                        </div>
                         <p className="font-mono text-[10px] text-white/40">{ch.desc}</p>
                       </div>
                       {audioMode === "podcast" && podcastChannelId === ch.id && (
