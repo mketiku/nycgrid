@@ -40,19 +40,20 @@ Target **6–7 minutes** for two-speaker episodes (use Deep Dive · Long or Medi
 
 ## Episode inventory
 
-| Episode             | File                                 | Duration | Status         |
-| ------------------- | ------------------------------------ | -------- | -------------- |
-| Fresh Asphalt ep1   | `fresh-asphalt-ep1-compressed.m4a`   | 4m 57s   | ✓ live         |
-| Fresh Asphalt ep2   | `fresh-asphalt-ep2-compressed.m4a`   | 6m 12s   | ✓ live         |
-| Stoop Talk ep1      | `stoop-talk-ep1-compressed.m4a`      | 6m 23s   | ✓ live         |
-| Stoop Talk ep2      | —                                    | —        | → prompt below |
-| 7 Train Diaries ep1 | `7-train-diaries-ep1-compressed.m4a` | 22m 19s  | ✓ live         |
-| Gridlines ep1       | `gridlines-ep1-compressed.m4a`       | 1m 56s   | ✓ live         |
-| Gridlines ep2       | —                                    | —        | → prompt below |
-| Lost Signal ep1     | `lost-signal-ep1-compressed.m4a`     | 1m 55s   | ✓ live         |
-| Lost Signal ep2     | —                                    | —        | → prompt below |
-| Night Dispatch ep1  | —                                    | —        | pending        |
-| Daily Honk ep1      | —                                    | —        | pending        |
+| Episode             | File                                 | Duration | Status                              |
+| ------------------- | ------------------------------------ | -------- | ----------------------------------- |
+| Fresh Asphalt ep1   | `fresh-asphalt-ep1-compressed.m4a`   | 4m 57s   | ✓ live                              |
+| Fresh Asphalt ep2   | `fresh-asphalt-ep2-compressed.m4a`   | 6m 12s   | ✓ live                              |
+| Stoop Talk ep1      | `stoop-talk-ep1-compressed.m4a`      | 6m 23s   | ✓ live                              |
+| Stoop Talk ep2      | —                                    | —        | → prompt below                      |
+| 7 Train Diaries ep1 | `7-train-diaries-ep1-compressed.m4a` | 22m 19s  | ✓ live                              |
+| Gridlines ep1       | `gridlines-ep1-compressed.m4a`       | 1m 56s   | ✓ live                              |
+| Gridlines ep2       | —                                    | —        | → prompt below                      |
+| Lost Signal ep1     | `lost-signal-ep1-compressed.m4a`     | 1m 55s   | ✓ live                              |
+| Lost Signal ep2     | —                                    | —        | ✗ NotebookLM can't execute — tabled |
+| Lost Signal ep3     | —                                    | —        | ✗ NotebookLM can't execute — tabled |
+| Night Dispatch ep1  | —                                    | —        | pending                             |
+| Daily Honk ep1      | —                                    | —        | pending                             |
 
 ---
 
@@ -377,12 +378,69 @@ Constraints:
 
 ---
 
-### Lost Signal ep2 — unknown caller & the listener (two speakers)
+### Lost Signal ep2 — The Reader (single speaker, ~2 min)
 
 **File:** `audio/podcast/lost-signal-ep2-compressed.m4a` _(pending)_
+**NotebookLM settings:** Briefing · Short
+
+**Hidden message:** The three transmission blocks encode `NYC` in 8-bit ASCII binary.
+
+```
+N = 78  → 0 1 0 0 1 1 1 0
+Y = 89  → 0 1 0 1 1 0 0 1
+C = 67  → 0 1 0 0 0 0 1 1
+```
+
+A patient listener who transcribes the blocks across loops will eventually decode it.
+
+**NotebookLM customization prompt:**
+
+```
+Focus: A numbers station transmission. A single voice counts down from a number in the 900s toward 1, periodically interrupted by transmission blocks — eight spoken binary digits, delivered at a slower, deliberate pace before the count resumes.
+
+Host:
+- The Reader: No name, no location, no explanation. Calm, precise, unhurried. They read numbers the way someone reads words they have said ten thousand times. There is no emotion in the voice and no curiosity about the content. We are hearing a fragment of a longer transmission.
+
+Episode Structure:
+- Opening (mid-count): The reader is already mid-count. We join them somewhere in the 900s. No introduction.
+- Count section 1: Count down for several seconds.
+- Transmission block 1 — read slowly, one digit at a time, with a brief pause between digits:
+  "Zero. One. Zero. Zero. One. One. One. Zero."
+  A pause. Then the count resumes without comment.
+- Count section 2: Count down for several seconds.
+- Transmission block 2 — read at the same pace:
+  "Zero. One. Zero. One. One. Zero. Zero. One."
+  A pause. The count resumes.
+- Count section 3: Count down for several seconds.
+- Transmission block 3 — read at the same pace:
+  "Zero. One. Zero. Zero. Zero. Zero. One. One."
+  A long pause. The count resumes briefly.
+- End: The transmission cuts mid-number. No sign-off.
+
+Pacing: The count is steady, roughly one number per second. Transmission blocks are slower — one digit every 1.5 seconds. No music, no ambient sound described. The voice does not acknowledge the blocks. The blocks do not acknowledge the count.
+
+Constraints:
+- No station name, location, or frequency.
+- No identifiable people.
+- The reader never explains the blocks or varies tone during them.
+- Do not add any commentary before, during, or after a block.
+- Occasional numbers in the count may be skipped or slightly out of order — this is normal for the format.
+```
+
+**Sources:**
+
+- https://en.wikipedia.org/wiki/Numbers_station
+- https://en.wikipedia.org/wiki/Pirate_radio_in_North_America
+- https://en.wikipedia.org/wiki/Shortwave_radio
+
+---
+
+### Lost Signal ep3 — unknown caller & the listener (two speakers)
+
+**File:** `audio/podcast/lost-signal-ep3-compressed.m4a` _(pending)_
 **NotebookLM settings:** Deep Dive · Short
 **Target duration:** 6–7 min
-**Note:** ep1 is single-speaker (~2 min by NotebookLM constraint). ep2 introduces a second voice — a listener who has somehow gotten through — to reach the target duration.
+**Note:** ✗ NotebookLM can't execute this format — needs rework.
 
 **NotebookLM customization prompt:**
 

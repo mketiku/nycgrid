@@ -49,3 +49,6 @@ next-env.d.ts
 
 # Marketing assets — regenerate with node scripts/capture-screenshots.mjs / capture-video.mjs
 /scripts/screenshots/
+
+# Launch planning — local only, not tracked in git
+/launch/
