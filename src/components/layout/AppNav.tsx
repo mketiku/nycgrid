@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -28,8 +28,17 @@ export function AppNav() {
   const pathname = usePathname();
   const router = useRouter();
   const [moreOpen, setMoreOpen] = useState(false);
+  const [isBrowserOpen, setIsBrowserOpen] = useState(false);
   const isLanding = pathname === "/";
   const isAmbient = pathname === "/ambient";
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      setIsBrowserOpen((e as CustomEvent<{ open: boolean }>).detail.open);
+    };
+    window.addEventListener("map:browserState", handler);
+    return () => window.removeEventListener("map:browserState", handler);
+  }, []);
 
   // Don't show nav on landing or ambient (both have their own full-screen UI)
   if (isLanding || isAmbient) return null;
@@ -79,7 +88,20 @@ export function AppNav() {
         aria-label="Primary"
         className={`desktop-layout:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-[var(--color-border)] bg-[var(--color-base)]/95 backdrop-blur-sm ${MOBILE_NAV_SAFE_HEIGHT_CLASS} pb-[env(safe-area-inset-bottom)]`}
       >
-        <MobileNavItem href="/explore" icon={<Map className="w-5 h-5" />} label="Map" />
+        {/* MAP tab: closes the camera browser if open, otherwise navigates */}
+        {isBrowserOpen ? (
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("map:closeBrowser"))}
+            aria-label="Back to map"
+            className="flex flex-col items-center justify-center gap-0.5 px-4 min-h-[44px] flex-1 transition-colors text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+          >
+            <Map className="w-5 h-5" />
+            <span className="font-mono text-[9px] uppercase tracking-widest">Map</span>
+          </button>
+        ) : (
+          <MobileNavItem href="/explore" icon={<Map className="w-5 h-5" />} label="Map" />
+        )}
         <MobileNavItem
           href="/collections"
           icon={<LayoutGrid className="w-5 h-5" />}
@@ -90,7 +112,11 @@ export function AppNav() {
           type="button"
           onClick={handleCameraSearch}
           aria-label="Search cameras"
-          className="flex flex-col items-center justify-center gap-0.5 px-4 min-h-[44px] flex-1 transition-colors text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+          className={`flex flex-col items-center justify-center gap-0.5 px-4 min-h-[44px] flex-1 transition-colors ${
+            isBrowserOpen
+              ? "text-[var(--color-accent)]"
+              : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]"
+          }`}
         >
           <Search className="w-5 h-5" />
           <span className="font-mono text-[9px] uppercase tracking-widest">Search</span>

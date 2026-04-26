@@ -131,7 +131,7 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
       URL.revokeObjectURL(url);
       trackSelfie();
     }
-  }, [phase, makeFilename, camera.name]);
+  }, [phase, makeFilename, camera.name, camera.id]);
 
   const isActive = phase.status === "countdown";
   const isDone = phase.status === "result";

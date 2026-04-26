@@ -218,12 +218,22 @@ export function MapView({
     flyTo([cam.longitude, cam.latitude], 15);
   }, [cameras, initialCameraId, flyTo]);
 
-  // Bottom-nav "Browse" button opens the panel
+  // Bottom-nav "Browse" button opens the panel; MAP tab closes it
   useEffect(() => {
-    const handler = () => setMobileListOpen(true);
-    window.addEventListener("map:openBrowser", handler);
-    return () => window.removeEventListener("map:openBrowser", handler);
+    const open = () => setMobileListOpen(true);
+    const close = () => setMobileListOpen(false);
+    window.addEventListener("map:openBrowser", open);
+    window.addEventListener("map:closeBrowser", close);
+    return () => {
+      window.removeEventListener("map:openBrowser", open);
+      window.removeEventListener("map:closeBrowser", close);
+    };
   }, []);
+
+  // Broadcast browser open/close state so AppNav can reflect active tab
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("map:browserState", { detail: { open: mobileListOpen } }));
+  }, [mobileListOpen]);
 
   // Deep-link from PersistentMap: fired when user navigates to /explore with a
   // camera param while the map is already mounted (initialResolved is already true).

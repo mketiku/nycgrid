@@ -23,7 +23,7 @@ export default function LandingPage() {
         }}
       />
 
-      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-6xl grid-cols-1 items-center gap-8 py-14 pt-20 lg:grid-cols-[minmax(0,0.9fr)_minmax(440px,1.1fr)] lg:gap-12 lg:py-16">
+      <div className="relative z-10 mx-auto grid min-h-screen w-full max-w-6xl grid-cols-1 items-center gap-8 py-14 pt-20 lg:grid-cols-[minmax(min-content,1fr)_minmax(440px,1fr)] lg:gap-12 lg:py-16">
         <section className="flex flex-col items-center text-center lg:items-start lg:text-left">
           <div className="font-mono text-xs text-[var(--color-text-muted)] tracking-widest uppercase">
             public infrastructure · open access · live
