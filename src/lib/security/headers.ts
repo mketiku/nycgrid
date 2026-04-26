@@ -1,3 +1,6 @@
+// This file is imported by next.config.ts, which Next.js evaluates before path alias resolution.
+// All imports here MUST use relative paths — @/ aliases will fail at build time.
+//
 // 'unsafe-inline' is required by Next.js App Router (inline bootstrap scripts).
 // Removing it requires per-request nonce middleware — tracked as a follow-up.
 // 'unsafe-eval' is added in dev only: React dev mode uses eval() for callstack reconstruction.

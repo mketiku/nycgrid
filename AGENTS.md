@@ -39,6 +39,8 @@ Standards for the **nycgrid** repository (Next.js 16, React 19, TypeScript).
 
 ## 3. React & Next.js (v19 / v16)
 
+**`next.config.ts` import constraint**: Any file imported (directly or transitively) by `next.config.ts` must use **relative imports only** — no `@/` path aliases. Next.js evaluates the config before alias resolution is available, so `@/` imports silently resolve locally (Vitest handles them) but fail at Vercel build time. Currently affected: `src/lib/security/headers.ts`, `src/lib/assets/cdn.ts`.
+
 - **Server Components First**: Never add `'use client'` without considering if the component can remain a Server Component. MapLibre GL and camera feed components WILL need `'use client'` — that's expected and fine.
 - **Async Request APIs (Breaking)**: `params`, `searchParams`, `cookies()`, `headers()` are **Promises** — you MUST await them.
 - **State Management**: TanStack Query for server state, Zustand for lightweight client state (selected camera, photobooth mode), `useState`/`useReducer` for local state.
