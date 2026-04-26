@@ -46,3 +46,6 @@ next-env.d.ts
 
 # Playwright CLI
 .playwright-cli/
+
+# Marketing assets — regenerate with node scripts/capture-screenshots.mjs / capture-video.mjs
+/scripts/screenshots/
