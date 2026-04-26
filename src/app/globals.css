@@ -259,6 +259,16 @@ body {
   font-size: 10px;
   opacity: 0.5;
 }
+/* Strip MapLibre's default popup chrome so our themed inner div takes full control */
+.nycgrid-popup .maplibregl-popup-content {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  border-radius: 0;
+}
+.nycgrid-popup .maplibregl-popup-tip {
+  display: none;
+}
 
 /* Push top controls below the fixed desktop navbar (h-12 = 48px) */
 @media (min-width: 768px) {

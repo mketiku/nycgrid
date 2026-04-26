@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { MapPin, Camera, Eye } from "lucide-react";
+import { MapPin, Camera, Eye, Radio } from "lucide-react";
 import { buttonClasses } from "@/components/ui/Button";
 import { CAMERA_COUNT, BOROUGHS } from "@/lib/cameras/data";
 import { CameraSpotlight, CameraSpotlightSkeleton } from "@/features/spotlight/CameraSpotlight";
@@ -38,13 +38,22 @@ export default function LandingPage() {
             with live weather, transit, and Citibike layered onto every feed.
           </p>
 
-          <Link
-            href="/explore"
-            className={buttonClasses({ size: "lg", className: "mt-8 gap-3 tracking-wide" })}
-          >
-            <MapPin className="w-4 h-4" />
-            Explore the map
-          </Link>
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Link
+              href="/explore"
+              className={buttonClasses({ size: "lg", className: "gap-3 tracking-wide" })}
+            >
+              <MapPin className="w-4 h-4" />
+              Explore the map
+            </Link>
+            <Link
+              href="/ambient"
+              className="inline-flex items-center justify-center gap-3 h-11 px-6 font-mono text-base font-medium tracking-wide rounded border border-white/30 bg-transparent text-white/70 hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+            >
+              <Radio className="w-4 h-4" />
+              Watch ambient
+            </Link>
+          </div>
 
           <div className="mt-8 flex w-full items-center justify-center gap-8 border-t border-[var(--color-border)] pt-4 lg:justify-start">
             <Stat

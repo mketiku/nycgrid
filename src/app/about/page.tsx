@@ -35,13 +35,6 @@ export default function AboutPage() {
           and education: see the bridges, tunnels, and intersections that keep 8 million people
           moving, with context for what you&apos;re looking at.
         </p>
-        <p className="text-[var(--color-text-secondary)] leading-relaxed">
-          NycGrid will always be NYC-only. It&apos;s built around this city&apos;s specific
-          infrastructure, data sources, and character — and that focus is intentional. If you want
-          to do something like this for another city, the code is open source: fork it and build
-          your own thing.
-        </p>
-
         <div className="flex gap-3 pt-2">
           <Link href="/explore" className={buttonClasses({ size: "sm", className: "gap-2" })}>
             <MapPin className="w-3.5 h-3.5" />
@@ -103,6 +96,7 @@ export default function AboutPage() {
                 </a>
                 .
               </>,
+              "NycGrid will always be NYC-only. It's built around this city's specific infrastructure, data sources, and character — that focus is intentional. The code is open source if you want to build something similar for another city.",
             ] as React.ReactNode[]
           ).map((point, i) => (
             <li key={i} className="flex items-start gap-3">

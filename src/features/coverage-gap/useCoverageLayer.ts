@@ -124,14 +124,14 @@ function applyCoverageLayer(map: maplibregl.Map, data: CoverageGeoJSON) {
     if (!props || !e.lngLat) return;
     const label = props.neighborhood ? `${props.name} — ${props.neighborhood}` : props.name;
     import("maplibre-gl").then(({ default: ml }) => {
-      new ml.Popup()
+      new ml.Popup({ className: "nycgrid-popup" })
         .setLngLat(e.lngLat)
         .setHTML(
-          `<div style="font-family:monospace;font-size:12px;line-height:1.6">
+          `<div style="font-family:monospace;font-size:12px;line-height:1.6;background:var(--color-elevated);color:var(--color-text-primary);border:1px solid var(--color-border);border-radius:8px;padding:10px 12px;min-width:160px">
             <strong>${label}</strong><br/>
-            ${props.cameraCount} camera${props.cameraCount === 1 ? "" : "s"}<br/>
+            <span style="color:var(--color-text-secondary)">${props.cameraCount} camera${props.cameraCount === 1 ? "" : "s"}<br/>
             ${props.densityPerSqMile.toFixed(1)} per sq mile<br/>
-            Rank: #${props.densityRank} of 59
+            Rank: #${props.densityRank} of 59</span>
           </div>`
         )
         .addTo(map);
