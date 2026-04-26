@@ -1,13 +1,13 @@
 import { defineConfig } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
-import eslintPluginPrettier from "eslint-plugin-prettier/recommended";
+import eslintConfigPrettier from "eslint-config-prettier";
 
 const eslintConfig = defineConfig([
   { ignores: [".claude/**", ".next/**"] },
   ...nextVitals,
   ...nextTs,
-  eslintPluginPrettier,
+  eslintConfigPrettier,
   {
     settings: {
       react: { version: "19" },
