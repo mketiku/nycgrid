@@ -1475,8 +1475,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
             className="w-9 h-9 flex items-center justify-center rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors"
           >
             {audioMode === "podcast" ||
-            (audioMode === "radio" &&
-              (ALL_STREAMS[stationIndex]?.loop || stationIndex >= STATIONS.length)) ? (
+            (audioMode === "radio" && ALL_STREAMS[stationIndex]?.loop) ? (
               isMuted ? (
                 <Play className="w-5 h-5" />
               ) : (
