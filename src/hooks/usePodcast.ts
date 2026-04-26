@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { buildSpeakLines } from "@/lib/podcast/script-engine";
 import { cancelSpeech, initVoices, speakLines } from "@/lib/podcast/speech";
 import { DAILY_HONK_SEGMENTS } from "@/lib/podcast/channels/daily-honk";
+import { LOST_SIGNAL_NUMBERS_SEGMENTS } from "@/lib/podcast/channels/lost-signal-numbers";
 import type { CameraContext, ChannelId, SpeakLine } from "@/lib/podcast/types";
 
 export interface PodcastActions {
@@ -26,19 +27,21 @@ interface InternalState {
 
 type Store = PodcastState & PodcastActions & InternalState;
 
-function getLines(camera: CameraContext | null): SpeakLine[] {
+function getLines(camera: CameraContext | null, channel: ChannelId): SpeakLine[] {
   const ctx: CameraContext = camera ?? {
     name: "the city",
     borough: "New York",
     isOnline: true,
     timeOfDay: "evening",
   };
-  return buildSpeakLines(DAILY_HONK_SEGMENTS, null, ctx);
+  const segments =
+    channel === "lost-signal-numbers" ? LOST_SIGNAL_NUMBERS_SEGMENTS : DAILY_HONK_SEGMENTS;
+  return buildSpeakLines(segments, null, ctx);
 }
 
 function startLoop(get: () => Store, set: (partial: Partial<InternalState>) => void): void {
-  const { camera } = get();
-  const lines = getLines(camera);
+  const { camera, channel } = get();
+  const lines = getLines(camera, channel);
   const cancel = speakLines(lines, () => {
     if (!get().isPlaying) return;
     const id = setTimeout(() => startLoop(get, set), 1000 + Math.random() * 2000);

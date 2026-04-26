@@ -1,6 +1,6 @@
-export type ChannelId = "daily-honk";
+export type ChannelId = "daily-honk" | "lost-signal-numbers";
 
-export type Speaker = "terry" | "jay" | "deshawn" | "maurizio";
+export type Speaker = "terry" | "jay" | "deshawn" | "maurizio" | "reader";
 
 export type TimeOfDay = "morning" | "afternoon" | "evening" | "night";
 

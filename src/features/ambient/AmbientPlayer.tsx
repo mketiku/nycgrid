@@ -238,6 +238,7 @@ const ALL_STREAMS: AudioStream[] = [...STATIONS, ...EPISODES];
 
 const PODCAST_CHANNELS: { id: ChannelId; name: string; desc: string }[] = [
   { id: "daily-honk", name: "The Daily Honk", desc: "Jay Johan Jaywalker reports" },
+  { id: "lost-signal-numbers", name: "Lost Signal", desc: "Ep 2 · Numbers station" },
 ];
 
 const FRAME_REFRESH_MS = 30_000;
@@ -1649,7 +1650,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                         >
                           <Headphones className="w-3.5 h-3.5 text-white/40 shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <p className="font-mono text-xs font-medium text-white truncate">
+                            <p className="font-mono text-xs font-medium text-white line-clamp-2">
                               {ep.desc}
                             </p>
                             {ep.duration && (

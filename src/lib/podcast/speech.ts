@@ -5,6 +5,7 @@ const VOICE_CONFIGS: Record<Speaker, VoiceConfig> = {
   jay: { rate: 1.0, pitch: 1.15, voicePreference: "male", pauseRange: [50, 150] },
   deshawn: { rate: 1.0, pitch: 1.0, voicePreference: "male", pauseRange: [100, 250] },
   maurizio: { rate: 1.05, pitch: 0.9, voicePreference: "male", pauseRange: [150, 350] },
+  reader: { rate: 0.72, pitch: 0.85, voicePreference: "female", pauseRange: [600, 1200] },
 };
 
 function jitter(base: number, range: number): number {
