@@ -35,6 +35,7 @@ import { initVoices } from "@/lib/podcast/speech";
 import type { ChannelId } from "@/lib/podcast/types";
 import { FEATURED_CAMERAS } from "@/features/context/lib/featured-cameras";
 import { CAMERA_COUNT } from "@/lib/cameras/data";
+import { areaBalancedFeaturedShuffle } from "./lib/shuffle";
 
 const CAMERA_DWELL_MS = 25_000;
 const IDLE_MS = 4_000;
@@ -43,7 +44,7 @@ type AudioMode = "noise" | "radio" | "podcast";
 
 type AudioStream = { id: string; name: string; desc: string; url: string; loop: boolean };
 
-const CDN = "https://cdn.jsdelivr.net/gh/mketiku/nycgrid-assets@v1.3.0";
+const CDN = "https://cdn.jsdelivr.net/gh/mketiku/nycgrid-assets@v1.4.0";
 
 interface LofiTrack {
   url: string;
@@ -180,15 +181,43 @@ const EPISODES: AudioStream[] = [
   {
     id: "fresh-asphalt-ep1",
     name: "Fresh Asphalt",
-    desc: "Adam & Barbara",
+    desc: "Ep 1 · Adam & Barbara",
     url: `${CDN}/audio/podcast/fresh-asphalt-ep1-compressed.m4a`,
+    loop: true,
+  },
+  {
+    id: "fresh-asphalt-ep2",
+    name: "Fresh Asphalt",
+    desc: "Ep 2 · Taxi Medallions",
+    url: `${CDN}/audio/podcast/fresh-asphalt-ep2-compressed.m4a`,
     loop: true,
   },
   {
     id: "stoop-talk-ep1",
     name: "Stoop Talk",
-    desc: "Devin & Carmen",
+    desc: "Ep 1 · Devin & Carmen",
     url: `${CDN}/audio/podcast/stoop-talk-ep1-compressed.m4a`,
+    loop: true,
+  },
+  {
+    id: "7-train-diaries-ep1",
+    name: "7 Train Diaries",
+    desc: "Ep 1 · Yolanda & Chen",
+    url: `${CDN}/audio/podcast/7-train-diaries-ep1-compressed.m4a`,
+    loop: true,
+  },
+  {
+    id: "gridlines-ep1",
+    name: "Gridlines",
+    desc: "Ep 1 · The Bureau",
+    url: `${CDN}/audio/podcast/gridlines-ep1-compressed.m4a`,
+    loop: true,
+  },
+  {
+    id: "lost-signal-ep1",
+    name: "Lost Signal",
+    desc: "Ep 1 · Unknown Caller",
+    url: `${CDN}/audio/podcast/lost-signal-ep1-compressed.m4a`,
     loop: true,
   },
 ];
@@ -237,36 +266,7 @@ function wmoDescription(code: number): string {
   return "—";
 }
 
-function fisherYatesShuffle<T>(arr: T[]): T[] {
-  const shuffled = [...arr];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-function areaBalancedShuffle(cameras: Camera[]): Camera[] {
-  const byArea = new Map<string, Camera[]>();
-  for (const cam of cameras) {
-    const group = byArea.get(cam.area) ?? [];
-    group.push(cam);
-    byArea.set(cam.area, group);
-  }
-  const groups = [...byArea.values()].map((g) => fisherYatesShuffle(g));
-  const result: Camera[] = [];
-  let hasMore = true;
-  for (let i = 0; hasMore; i++) {
-    hasMore = false;
-    for (const group of groups) {
-      if (i < group.length) {
-        result.push(group[i]);
-        hasMore = true;
-      }
-    }
-  }
-  return result;
-}
+const FEATURED_IDS = new Set(FEATURED_CAMERAS.map((c) => c.id));
 
 function pickKB(last: KBVariant | null): KBVariant {
   const options = last !== null ? KB_VARIANTS.filter((v) => v !== last) : [...KB_VARIANTS];
@@ -485,7 +485,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   // Initialise shuffled list and prime slot 0
   useEffect(() => {
     if (cameras.length === 0) return;
-    shuffledRef.current = areaBalancedShuffle(cameras);
+    shuffledRef.current = areaBalancedFeaturedShuffle(cameras, FEATURED_IDS);
     indexRef.current = 0;
     isFrameRefreshRef.current = false;
     const first = shuffledRef.current[0];
@@ -1225,6 +1225,14 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
             >
               {currentCamera.area}
             </p>
+            {FEATURED_IDS.has(currentCamera.id) && (
+              <p
+                className="font-mono text-[10px] tracking-widest uppercase mt-1"
+                style={{ color: "var(--color-accent)" }}
+              >
+                ★ featured location
+              </p>
+            )}
             {weatherTemp !== undefined && (
               <p className="font-mono text-xs text-white/50 mt-1">
                 {weatherTemp}°F · {weatherCode !== undefined ? wmoDescription(weatherCode) : ""}
@@ -1592,33 +1600,47 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                   Episodes
                 </p>
 
-                {EPISODES.map((ep, i) => (
-                  <button
-                    key={ep.id}
-                    onClick={() => {
-                      setAudioMode("radio");
-                      setStationIndex(STATIONS.length + i);
-                      setIsMuted(false);
-                      setPickerOpen(false);
-                    }}
-                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-left hover:bg-white/8 transition-colors"
-                  >
-                    <Headphones className="w-4 h-4 text-white/50 shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-mono text-xs font-medium text-white">{ep.name}</p>
-                      <p className="font-mono text-[10px] text-white/40">{ep.desc}</p>
-                    </div>
-                    {audioMode === "radio" &&
-                      stationIndex === STATIONS.length + i &&
-                      (streamLoading && !isMuted ? (
-                        <Loader2
-                          className="w-3.5 h-3.5 shrink-0 animate-spin"
-                          style={{ color: "#39ff14" }}
-                        />
-                      ) : (
-                        <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#39ff14" }} />
-                      ))}
-                  </button>
+                {Object.entries(
+                  EPISODES.reduce<Record<string, { ep: AudioStream; globalIdx: number }[]>>(
+                    (acc, ep, i) => {
+                      (acc[ep.name] ??= []).push({ ep, globalIdx: STATIONS.length + i });
+                      return acc;
+                    },
+                    {}
+                  )
+                ).map(([showName, entries]) => (
+                  <div key={showName}>
+                    <p className="font-mono text-[9px] uppercase tracking-widest text-white/20 px-3 pt-2 pb-0.5">
+                      {showName}
+                    </p>
+                    {entries.map(({ ep, globalIdx }) => (
+                      <button
+                        key={ep.id}
+                        onClick={() => {
+                          setAudioMode("radio");
+                          setStationIndex(globalIdx);
+                          setIsMuted(false);
+                          setPickerOpen(false);
+                        }}
+                        className="flex items-center gap-3 w-full px-3 py-2 rounded-xl text-left hover:bg-white/8 transition-colors"
+                      >
+                        <Headphones className="w-4 h-4 text-white/50 shrink-0" />
+                        <p className="flex-1 min-w-0 font-mono text-[10px] text-white/60 truncate">
+                          {ep.desc}
+                        </p>
+                        {audioMode === "radio" &&
+                          stationIndex === globalIdx &&
+                          (streamLoading && !isMuted ? (
+                            <Loader2
+                              className="w-3.5 h-3.5 shrink-0 animate-spin"
+                              style={{ color: "#39ff14" }}
+                            />
+                          ) : (
+                            <Check className="w-3.5 h-3.5 shrink-0" style={{ color: "#39ff14" }} />
+                          ))}
+                      </button>
+                    ))}
+                  </div>
                 ))}
 
                 <div className="h-px bg-white/8 mx-3 my-1" />

@@ -88,6 +88,8 @@ NycGrid expands on that idea into a full city exploration experience — richer 
 
 - Full-screen Ken Burns drift (4 animation variants: zoom-in, zoom-out, pan-left, pan-right) across cameras with configurable audio
 - Area-balanced shuffling — cameras distributed across boroughs so the feed doesn't clump geographically
+- Featured location weighting — a curated set of notable locations (Times Square, Central Park, Brooklyn Bridge, etc.) receive 3× weight in the weighted shuffle within each area group, so they rise toward the front of each borough's rotation without dominating it. Non-featured cameras retain 1× weight. In a typical 30-minute session, expect roughly one featured camera every 8–9 shown
+- Featured location badge — when the current camera is a featured location, a `★ featured location` label appears in the accent color below the borough name in the bottom-left info overlay
 - Double-buffered rendering — two slots swap seamlessly to prevent flicker on image transitions
 - Lore cycling — camera facts appear as overlaid text every 10s with fade transitions; reset on camera change
 - Live weather — Open-Meteo polling every 30 minutes, feeds into audio mixing
