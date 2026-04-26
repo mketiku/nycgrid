@@ -1,6 +1,10 @@
 # NycGrid
 
-Explore NYC through its public traffic camera network. Browse cameras on a live map, watch feeds, and take photobooth-style photos with live context — weather, transit alerts, and Citibike availability tied to each camera's location.
+NYC's traffic cameras have always been public. NycGrid makes them worth exploring.
+
+Browse cameras across all five boroughs on a live map, watch feeds in ambient mode, and take photobooth-style photos with real camera footage. Every feed is layered with live context — weather, transit alerts, bus arrivals, Citibike availability, and nearby events tied to each camera's location.
+
+It's also a way to learn the city. Each camera links to the street, neighborhood, and infrastructure around it — bridges, tunnels, parks, parkways — with historical and cultural context surfaced alongside the live data. The name comes from the two things the app puts together: NYC's gridded streets and the gridlock that defines them.
 
 Built with Next.js 16, React 19, and MapLibre GL.
 
