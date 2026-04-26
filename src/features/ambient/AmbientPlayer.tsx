@@ -8,6 +8,7 @@ import {
   ArrowRight,
   AudioWaveform,
   Check,
+  Headphones,
   Info,
   Loader2,
   MapPin,
@@ -190,7 +191,7 @@ const EPISODES: AudioStream[] = [
     desc: "Ep 1 · The crosswalk",
     duration: "5m",
     url: `${CDN}/audio/podcast/fresh-asphalt-ep1-compressed.m4a`,
-    loop: true,
+    loop: false,
   },
   {
     id: "fresh-asphalt-ep2",
@@ -198,7 +199,7 @@ const EPISODES: AudioStream[] = [
     desc: "Ep 2 · Taxi Medallions",
     duration: "6m",
     url: `${CDN}/audio/podcast/fresh-asphalt-ep2-compressed.m4a`,
-    loop: true,
+    loop: false,
   },
   {
     id: "stoop-talk-ep1",
@@ -206,7 +207,7 @@ const EPISODES: AudioStream[] = [
     desc: "Ep 1 · 311 & stoop culture",
     duration: "6m",
     url: `${CDN}/audio/podcast/stoop-talk-ep1-compressed.m4a`,
-    loop: true,
+    loop: false,
   },
   {
     id: "7-train-diaries-ep1",
@@ -214,7 +215,7 @@ const EPISODES: AudioStream[] = [
     desc: "Ep 1 · Overheard on the 7",
     duration: "22m",
     url: `${CDN}/audio/podcast/7-train-diaries-ep1-compressed.m4a`,
-    loop: true,
+    loop: false,
   },
   {
     id: "gridlines-ep1",
@@ -222,7 +223,7 @@ const EPISODES: AudioStream[] = [
     desc: "Ep 1 · Anomaly in the grid",
     duration: "2m",
     url: `${CDN}/audio/podcast/gridlines-ep1-compressed.m4a`,
-    loop: true,
+    loop: false,
   },
   {
     id: "lost-signal-ep1",
@@ -230,7 +231,7 @@ const EPISODES: AudioStream[] = [
     desc: "Ep 1 · Late-night broadcast",
     duration: "2m",
     url: `${CDN}/audio/podcast/lost-signal-ep1-compressed.m4a`,
-    loop: true,
+    loop: false,
   },
 ];
 const ALL_STREAMS: AudioStream[] = [...STATIONS, ...EPISODES];
@@ -349,6 +350,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   const [weatherTemp, setWeatherTemp] = useState<number | undefined>(undefined);
   const [audioMode, setAudioMode] = useState<AudioMode>("noise");
   const [stationIndex, setStationIndex] = useState(0);
+  const stationIndexRef = useRef(0);
   const [podcastChannelId, setPodcastChannelId] = useState<ChannelId>("daily-honk");
   const [pickerOpen, setPickerOpen] = useState(false);
   const radioRef = useRef<HTMLAudioElement | null>(null);
@@ -712,6 +714,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
 
   // Set stream source and loop flag when the station selection changes
   useEffect(() => {
+    stationIndexRef.current = stationIndex;
     const el = radioRef.current;
     if (!el) return;
     const stream = ALL_STREAMS[stationIndex];
@@ -1184,6 +1187,13 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
         onWaiting={() => setStreamLoading(true)}
         onCanPlay={() => setStreamLoading(false)}
         onPlaying={() => setStreamLoading(false)}
+        onEnded={() => {
+          const idx = stationIndexRef.current;
+          if (idx >= STATIONS.length) {
+            const next = idx + 1;
+            setStationIndex(next < ALL_STREAMS.length ? next : STATIONS.length);
+          }
+        }}
       />
       <audio ref={musicRef0} preload="none" onEnded={handleLofiEnded} />
       <audio ref={musicRef1} preload="none" onEnded={handleLofiEnded} />
@@ -1465,7 +1475,8 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
             className="w-9 h-9 flex items-center justify-center rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors"
           >
             {audioMode === "podcast" ||
-            (audioMode === "radio" && ALL_STREAMS[stationIndex]?.loop) ? (
+            (audioMode === "radio" &&
+              (ALL_STREAMS[stationIndex]?.loop || stationIndex >= STATIONS.length)) ? (
               isMuted ? (
                 <Play className="w-5 h-5" />
               ) : (
@@ -1635,16 +1646,17 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                             setIsMuted(false);
                             setPickerOpen(false);
                           }}
-                          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-left hover:bg-white/8 transition-colors"
+                          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-left hover:bg-white/8 transition-colors"
                         >
-                          <p className="flex-1 min-w-0 font-mono text-[10px] text-white/60 truncate">
-                            {ep.desc}
-                          </p>
-                          {ep.duration && (
-                            <span className="font-mono text-[9px] text-white/25 shrink-0">
-                              {ep.duration}
-                            </span>
-                          )}
+                          <Headphones className="w-3.5 h-3.5 text-white/40 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-mono text-xs font-medium text-white truncate">
+                              {ep.desc}
+                            </p>
+                            {ep.duration && (
+                              <p className="font-mono text-[10px] text-white/40">{ep.duration}</p>
+                            )}
+                          </div>
                           {audioMode === "radio" &&
                             stationIndex === globalIdx &&
                             (streamLoading && !isMuted ? (
