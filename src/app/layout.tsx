@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Inter } from "next/font/google";
+import { JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/features/theme/ThemeProvider";
 import { QueryProvider } from "@/components/QueryProvider";
@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
   display: "optional",
 });
 
-const inter = Inter({
+const spaceGrotesk = Space_Grotesk({
   variable: "--font-sans",
   subsets: ["latin"],
   display: "optional",
@@ -57,7 +57,7 @@ export default function RootLayout({
     <html
       lang="en"
       data-theme="street"
-      className={`${jetbrainsMono.variable} ${inter.variable} h-full antialiased`}
+      className={`${jetbrainsMono.variable} ${spaceGrotesk.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="bg-[var(--color-base)] text-[var(--color-text-primary)] min-h-full flex flex-col font-sans">
