@@ -231,6 +231,7 @@ export function installRecordingCanvasContext(): RecordingCanvasContext {
         angle,
       });
     }),
+    measureText: vi.fn((_text: string) => ({ width: 80 }) as TextMetrics),
   } as unknown as CanvasRenderingContext2D;
 
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(ctx);

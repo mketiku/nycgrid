@@ -556,4 +556,156 @@ describe("AmbientPlayer", () => {
       expect(push).toHaveBeenCalledWith("/explore");
     });
   });
+
+  // ─── Cluster C — keyboard Escape closes picker / overlay ─────────────────
+
+  describe("keyboard Escape closes open picker and overlay without exiting", () => {
+    it("Escape closes the audio picker and does not navigate", async () => {
+      render(<AmbientPlayer cameras={mockCameras} />);
+      fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+      fireEvent.click(screen.getByRole("button", { name: /Choose audio/i }));
+      expect(screen.getByText("Chill background music")).toBeDefined();
+
+      fireEvent.keyDown(window, { code: "Escape" });
+      await waitFor(() => {
+        expect(screen.queryByText("Chill background music")).toBeNull();
+      });
+      expect(push).not.toHaveBeenCalled();
+    });
+
+    it("Escape closes the overlay and does not navigate", async () => {
+      render(<AmbientPlayer cameras={mockCameras} />);
+      fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+      fireEvent.click(screen.getByLabelText(/Ambient camera mode/i));
+      await screen.findByRole("link", { name: /^View$/i });
+
+      fireEvent.keyDown(window, { code: "Escape" });
+      await waitFor(() => {
+        expect(screen.queryByRole("link", { name: /^View$/i })).toBeNull();
+      });
+      expect(push).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── Cluster E — handleScreenClick swipe guard ────────────────────────────
+
+  it("screen click after a swipe does not open the overlay", async () => {
+    mockCoarsePointer();
+    const { container } = render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+    container.querySelectorAll("img").forEach((img) => fireEvent.load(img));
+
+    const screenRoot = screen.getByLabelText(/Ambient camera mode/i);
+    // Swipe: large dx, small dy, starting outside the 30px guard
+    fireEvent.pointerDown(screenRoot, { clientX: 50, clientY: 100 });
+    fireEvent.pointerUp(screenRoot, { clientX: 160, clientY: 105 });
+    container.querySelectorAll("img").forEach((img) => fireEvent.load(img));
+
+    // Synthetic click that follows a touch sequence — should be consumed by swipe guard
+    fireEvent.click(screenRoot);
+
+    expect(screen.queryByRole("link", { name: /^View$/i })).toBeNull();
+  });
+
+  // ─── Cluster F — radio onEnded auto-advance ───────────────────────────────
+
+  it("radio episode onEnded advances to the next episode without crashing", async () => {
+    render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+    fireEvent.click(screen.getByRole("button", { name: /Choose audio/i }));
+    fireEvent.click(await screen.findByText("The crosswalk"));
+
+    // Fire ended on the radio audio element
+    const audioEls = document.querySelectorAll("audio");
+    fireEvent.ended(audioEls[0]!);
+
+    // Re-opening picker should not crash
+    fireEvent.click(screen.getByRole("button", { name: /Choose audio/i }));
+    expect(screen.getByText("Chill background music")).toBeDefined();
+  });
+
+  // ─── Cluster G — audio picker: Ambient button resets mode ────────────────
+
+  it("clicking Ambient in the picker resets mode to noise and closes picker", async () => {
+    render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+    // Switch to an episode first
+    fireEvent.click(screen.getByRole("button", { name: /Choose audio/i }));
+    fireEvent.click(await screen.findByText("The crosswalk"));
+
+    // Re-open picker and switch back to Ambient
+    fireEvent.click(screen.getByRole("button", { name: /Choose audio/i }));
+    const ambientDescEl = await screen.findByText("Chill background music");
+    fireEvent.click(ambientDescEl.closest("button")!);
+
+    // Picker is closed — wait for AnimatePresence exit
+    await waitFor(() => {
+      expect(screen.queryByText("Chill background music")).toBeNull();
+    });
+  });
+
+  // ─── Cluster D — handleMouseMove when controls hidden ────────────────────
+
+  it("mousemove when controls are hidden makes them visible again", () => {
+    vi.useFakeTimers();
+    render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+    const controls = screen.getByTestId("ambient-controls");
+    const screenRoot = screen.getByLabelText(/Ambient camera mode/i);
+
+    act(() => vi.advanceTimersByTime(4001));
+    expect(controls).toHaveClass("opacity-0");
+
+    fireEvent.mouseMove(screenRoot);
+    expect(controls).not.toHaveClass("opacity-0");
+
+    vi.useRealTimers();
+  });
+
+  // ─── Cluster B — visibilitychange / pageshow handlers ─────────────────────
+
+  it("pageshow with persisted=false does not crash", () => {
+    render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+    const evt = new Event("pageshow") as PageTransitionEvent;
+    Object.defineProperty(evt, "persisted", { value: false, writable: false });
+    window.dispatchEvent(evt);
+
+    expect(screen.getByTestId("ambient-controls")).toBeDefined();
+  });
+
+  it("pageshow with persisted=true resets idle timer and shows controls", () => {
+    vi.useFakeTimers();
+    render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+    act(() => vi.advanceTimersByTime(4001));
+    const controls = screen.getByTestId("ambient-controls");
+    expect(controls).toHaveClass("opacity-0");
+
+    act(() => {
+      const evt = new Event("pageshow") as PageTransitionEvent;
+      Object.defineProperty(evt, "persisted", { value: true, writable: false });
+      window.dispatchEvent(evt);
+    });
+
+    expect(controls).not.toHaveClass("opacity-0");
+    vi.useRealTimers();
+  });
+
+  it("visibilitychange (not hidden) does not crash in noise mode while muted", () => {
+    render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+
+    Object.defineProperty(document, "hidden", { configurable: true, value: false });
+    fireEvent(document, new Event("visibilitychange"));
+
+    expect(screen.getByTestId("ambient-controls")).toBeDefined();
+  });
 });
