@@ -12,6 +12,7 @@ import {
   MoreHorizontal,
   X,
   Search,
+  Info,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { ThemeToggle } from "@/features/theme/ThemeToggle";
@@ -179,6 +180,14 @@ export function AppNav() {
                 >
                   <GalleryHorizontal className="w-5 h-5 text-[var(--color-text-muted)]" />
                   <span>My Gallery</span>
+                </Link>
+                <Link
+                  href="/about"
+                  onClick={() => setMoreOpen(false)}
+                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm text-[var(--color-text-primary)] transition-colors hover:bg-[var(--color-surface)]"
+                >
+                  <Info className="w-5 h-5 text-[var(--color-text-muted)]" />
+                  <span>About</span>
                 </Link>
               </div>
             </motion.div>

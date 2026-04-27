@@ -77,4 +77,18 @@ describe("AppNav", () => {
 
     expect(screen.getByRole("link", { name: "Home" })).toBeInTheDocument();
   });
+
+  it("About is in the More sheet and links to /about", () => {
+    mockUsePathname.mockReturnValue("/collections");
+
+    render(<AppNav />);
+
+    expect(screen.queryByRole("link", { name: "About" })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /more options/i }));
+
+    const aboutLink = screen.getByRole("link", { name: "About" });
+    expect(aboutLink).toBeInTheDocument();
+    expect(aboutLink).toHaveAttribute("href", "/about");
+  });
 });
