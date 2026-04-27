@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useAmbientWellness } from "@/features/chicken-wings";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
@@ -332,6 +333,8 @@ function EntrySplash({ onEnter, previewSrc }: { onEnter: () => void; previewSrc:
 export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   const router = useRouter();
   const [entered, setEntered] = useState(false);
+  const [wellnessVisible, setWellnessVisible] = useState(false);
+  useAmbientWellness(() => setWellnessVisible(true));
   const [isCoarsePointer, setIsCoarsePointer] = useState(false);
   const [previewCameraId] = useState<string | null>(() => {
     if (FEATURED_CAMERAS.length === 0) return null;
@@ -1675,6 +1678,39 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                   className="pointer-events-none absolute inset-x-0 bottom-0 h-8 rounded-b-2xl"
                   style={{ background: "linear-gradient(to top, rgba(10,10,10,0.9), transparent)" }}
                 />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Wellness check after 1 hour */}
+        <AnimatePresence>
+          {wellnessVisible && (
+            <motion.div
+              className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm px-4"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 16 }}
+              transition={{ type: "spring", damping: 26, stiffness: 280 }}
+            >
+              <div className="bg-black/80 backdrop-blur-sm border border-white/10 rounded-lg px-5 py-4 flex flex-col gap-3">
+                <div>
+                  <p className="font-mono text-[9px] uppercase tracking-widest text-white/40 mb-1">
+                    [ NYCGRID WELLNESS CHECK ]
+                  </p>
+                  <p className="font-mono text-sm text-white leading-snug">
+                    You&apos;ve been watching traffic for 90 minutes.
+                  </p>
+                  <p className="font-mono text-xs text-white/50 mt-1">
+                    NYC has 302 miles of parkland. Just saying.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setWellnessVisible(false)}
+                  className="font-mono text-[10px] uppercase tracking-widest text-white/40 hover:text-white/70 transition-colors self-end"
+                >
+                  I live here, I know.
+                </button>
               </div>
             </motion.div>
           )}

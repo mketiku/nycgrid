@@ -21,6 +21,8 @@ import { composeCinema } from "./canvas/cinema";
 import { useMyShots } from "@/hooks/useMyShots";
 import { trackSelfie } from "@/lib/analytics/session";
 import type { Camera as CameraType } from "@/lib/cameras/types";
+import { useCheesecode } from "@/features/chicken-wings";
+import { applySurveillanceOverlay } from "./canvas/surveillance";
 
 interface PhotoboothClientProps {
   camera: CameraType;
@@ -38,7 +40,9 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
   const [caption, setCaption] = useState("");
   const [showBoroughStamp, setShowBoroughStamp] = useState(false);
   const [showNycWatermark, setShowNycWatermark] = useState(false);
+  const [surveillanceMode, setSurveillanceMode] = useState(false);
   const { phase, shoot, reset } = useCapture(camera.id);
+  useCheesecode(() => setSurveillanceMode((v) => !v));
   const { addShot } = useMyShots();
   const savedRef = useRef(false);
 
@@ -65,17 +69,25 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
 
   const handleShoot = useCallback(() => {
     const overlayOptions = { showBoroughStamp, showNycWatermark };
-    let compose: (shots: HTMLImageElement[]) => Promise<HTMLCanvasElement>;
+    let baseCompose: (shots: HTMLImageElement[]) => Promise<HTMLCanvasElement>;
 
     if (frameType === "filmstrip") {
-      compose = (shots) => composeFilmstrip(shots, camera.name, camera.area);
+      baseCompose = (shots) => composeFilmstrip(shots, camera.name, camera.area);
     } else if (frameType === "polaroid") {
-      compose = (shots) => composePolaroid(shots[0], caption, camera.name);
+      baseCompose = (shots) => composePolaroid(shots[0], caption, camera.name);
     } else if (frameType === "strip3") {
-      compose = (shots) => composeStrip3(shots, camera.name, camera.area, overlayOptions);
+      baseCompose = (shots) => composeStrip3(shots, camera.name, camera.area, overlayOptions);
     } else {
-      compose = (shots) => composeCinema(shots[0], camera.name, camera.area, overlayOptions);
+      baseCompose = (shots) => composeCinema(shots[0], camera.name, camera.area, overlayOptions);
     }
+
+    const compose = surveillanceMode
+      ? async (shots: HTMLImageElement[]) => {
+          const canvas = await baseCompose(shots);
+          applySurveillanceOverlay(canvas, camera.id);
+          return canvas;
+        }
+      : baseCompose;
 
     void shoot(selectedFrame.shots, compose);
   }, [
@@ -84,14 +96,19 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
     selectedFrame.shots,
     camera.name,
     camera.area,
+    camera.id,
     caption,
     showBoroughStamp,
     showNycWatermark,
+    surveillanceMode,
   ]);
 
   const makeFilename = useCallback(
-    () => `nycgrid-${frameType}-${camera.id.slice(0, 8)}-${Date.now()}.png`,
-    [frameType, camera.id]
+    () =>
+      surveillanceMode
+        ? `evidence_${Date.now()}.png`
+        : `nycgrid-${frameType}-${camera.id.slice(0, 8)}-${Date.now()}.png`,
+    [frameType, camera.id, surveillanceMode]
   );
 
   const handleDownload = useCallback(() => {
@@ -187,6 +204,16 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
           >
             {showNycWatermark ? "✓ " : ""}Shot in NYC
           </button>
+        </div>
+      )}
+
+      {/* Surveillance mode indicator */}
+      {surveillanceMode && phase.status === "idle" && (
+        <div className="flex items-center gap-2">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+          <span className="font-mono text-[10px] uppercase tracking-widest text-red-500">
+            Surveillance Mode Active
+          </span>
         </div>
       )}
 
