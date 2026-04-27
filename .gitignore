@@ -52,3 +52,6 @@ next-env.d.ts
 
 # Launch planning — local only, not tracked in git
 /launch/
+
+# Daily planning — local scratch file
+PLAN_OF_DAY.md
