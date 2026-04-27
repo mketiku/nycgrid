@@ -6,9 +6,17 @@ const THRESHOLD = 15;
 const CONSECUTIVE_REQUIRED = 3;
 const DEBOUNCE_MS = 5000;
 
+type DMEWithPermission = typeof DeviceMotionEvent & {
+  requestPermission?: () => Promise<"granted" | "denied">;
+};
+
 export function useShake(onShake: () => void) {
   const consecutiveRef = useRef(0);
   const lastFiredRef = useRef(0);
+  const onShakeRef = useRef(onShake);
+  useEffect(() => {
+    onShakeRef.current = onShake;
+  });
 
   useEffect(() => {
     function handleMotion(e: DeviceMotionEvent) {
@@ -28,12 +36,33 @@ export function useShake(onShake: () => void) {
         if (now - lastFiredRef.current > DEBOUNCE_MS) {
           lastFiredRef.current = now;
           consecutiveRef.current = 0;
-          onShake();
+          onShakeRef.current();
         }
       }
     }
 
-    window.addEventListener("devicemotion", handleMotion);
+    function attach() {
+      window.addEventListener("devicemotion", handleMotion);
+    }
+
+    const DME = DeviceMotionEvent as DMEWithPermission;
+
+    if (typeof DME.requestPermission === "function") {
+      function handleFirstTouch() {
+        (DME.requestPermission as () => Promise<"granted" | "denied">)()
+          .then((state) => {
+            if (state === "granted") attach();
+          })
+          .catch(() => {});
+      }
+      window.addEventListener("touchstart", handleFirstTouch, { once: true });
+      return () => {
+        window.removeEventListener("touchstart", handleFirstTouch);
+        window.removeEventListener("devicemotion", handleMotion);
+      };
+    }
+
+    attach();
     return () => window.removeEventListener("devicemotion", handleMotion);
-  }, [onShake]);
+  }, []);
 }

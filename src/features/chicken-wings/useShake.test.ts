@@ -103,4 +103,51 @@ describe("useShake", () => {
     unmount();
     expect(window.removeEventListener).toHaveBeenCalledWith("devicemotion", expect.any(Function));
   });
+
+  describe("iOS 13+ permission gate", () => {
+    let requestPermission: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      requestPermission = vi.fn().mockResolvedValue("granted");
+      Object.defineProperty(DeviceMotionEvent, "requestPermission", {
+        value: requestPermission,
+        configurable: true,
+        writable: true,
+      });
+    });
+
+    afterEach(() => {
+      // @ts-expect-error restoring non-standard property
+      delete DeviceMotionEvent.requestPermission;
+    });
+
+    it("requests permission on first touchstart instead of attaching devicemotion immediately", async () => {
+      const onShake = vi.fn();
+      renderHook(() => useShake(onShake));
+
+      // devicemotion should NOT be registered yet
+      expect(listeners["devicemotion"]).toBeUndefined();
+      expect(listeners["touchstart"]).toBeDefined();
+
+      // Simulate the first touch
+      await act(async () => {
+        listeners["touchstart"]?.(new Event("touchstart"));
+      });
+
+      expect(requestPermission).toHaveBeenCalledTimes(1);
+      expect(listeners["devicemotion"]).toBeDefined();
+    });
+
+    it("does not attach devicemotion listener when permission is denied", async () => {
+      requestPermission.mockResolvedValue("denied");
+      const onShake = vi.fn();
+      renderHook(() => useShake(onShake));
+
+      await act(async () => {
+        listeners["touchstart"]?.(new Event("touchstart"));
+      });
+
+      expect(listeners["devicemotion"]).toBeUndefined();
+    });
+  });
 });

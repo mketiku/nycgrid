@@ -1,4 +1,5 @@
 import type { Camera } from "./types";
+import { GHOST_CAMERA } from "./ghost";
 
 /**
  * NYC DOT traffic cameras — 952 total.
@@ -8576,7 +8577,9 @@ export const CAMERAS: Camera[] = [
   },
 ];
 
-export const CAMERA_COUNT = CAMERAS.length;
+CAMERAS.push(GHOST_CAMERA);
+
+export const CAMERA_COUNT = CAMERAS.length - 1;
 
 export const BOROUGHS = [...new Set(CAMERAS.map((c) => c.area))];
 

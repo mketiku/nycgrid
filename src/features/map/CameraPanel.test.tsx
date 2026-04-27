@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CameraPanel } from "./CameraPanel";
+import { GHOST_CAMERA_ID } from "@/lib/cameras/ghost";
 import type { Camera } from "@/lib/cameras/types";
 
 const toggle = vi.fn();
@@ -155,6 +156,22 @@ describe("CameraPanel", () => {
     render(<CameraPanel camera={camera} onClose={onClose} />);
     fireEvent.keyDown(document, { key: "Escape" });
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("renders SIGNAL LOST screen for the ghost camera", () => {
+    const ghostCamera: Camera = {
+      id: GHOST_CAMERA_ID,
+      name: "CAM-???",
+      latitude: 40.6301,
+      longitude: -73.8442,
+      area: "Unknown",
+      isOnline: false,
+      imageUrl: "",
+    };
+    render(<CameraPanel camera={ghostCamera} onClose={onClose} />);
+    expect(screen.getAllByText(/SIGNAL LOST/i)).not.toHaveLength(0);
+    expect(screen.getAllByText(/\[REDACTED\]/i)).not.toHaveLength(0);
+    expect(screen.queryByTestId("camera-image")).toBeNull();
   });
 
   it("traps focus within the panel", () => {

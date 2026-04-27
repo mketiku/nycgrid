@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { ChickenWingProvider } from "./ChickenWingProvider";
 
 function dispatchShake() {
@@ -13,6 +13,25 @@ function dispatchShake() {
 }
 
 describe("ChickenWingProvider", () => {
+  describe("console drop", () => {
+    beforeEach(() => {
+      vi.spyOn(console, "log").mockImplementation(() => {});
+    });
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it("logs the surveillance node message on mount", () => {
+      render(<ChickenWingProvider />);
+      // eslint-disable-next-line no-console
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining("NYCGRID SURVEILLANCE NODE"),
+        expect.any(String),
+        expect.any(String)
+      );
+    });
+  });
+
   it("renders into the document body without visible modals initially", () => {
     render(<ChickenWingProvider />);
     expect(screen.queryByRole("dialog")).toBeNull();

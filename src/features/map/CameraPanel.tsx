@@ -5,6 +5,7 @@ import { X, MapPin, ArrowRight, Camera, Star, Share2, Check } from "lucide-react
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { Camera as CameraType } from "@/lib/cameras/types";
+import { GHOST_CAMERA_ID } from "@/lib/cameras/ghost";
 import { getCameraLore } from "@/lib/cameras/lore";
 import { CameraImage } from "@/features/camera-feed/CameraImage";
 import { CameraLore } from "@/components/ui/CameraLore";
@@ -70,7 +71,65 @@ export function CameraPanel({ camera, onClose }: CameraPanelProps) {
   );
 }
 
+function GhostContent({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="flex flex-col gap-3 p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-col gap-1">
+          <p className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-muted)]">
+            B.R.A.K.E. — RESTRICTED FEED
+          </p>
+          <h2 className="font-mono text-sm font-bold text-[var(--color-text-primary)]">
+            SIGNAL LOST
+          </h2>
+        </div>
+        <button
+          onClick={onClose}
+          aria-label="Close camera panel"
+          className="shrink-0 rounded-lg p-1 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-elevated)] hover:text-[var(--color-text-primary)]"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] aspect-video flex flex-col items-center justify-center gap-2">
+        <span className="font-mono text-xs text-[var(--color-text-muted)] animate-pulse">
+          ▓▓▓ NO SIGNAL ▓▓▓
+        </span>
+        <span className="font-mono text-[9px] text-[var(--color-text-muted)] opacity-60">
+          [REDACTED]
+        </span>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Row label="CAMERA ID" value="[REDACTED]" />
+        <Row label="LOCATION" value="[REDACTED]" />
+        <Row label="CLASSIFICATION" value="[REDACTED]" />
+        <Row label="LAST KNOWN STATUS" value="SIGNAL LOST" />
+      </div>
+      <p className="font-mono text-[9px] text-[var(--color-text-muted)] leading-relaxed">
+        This feed is not available to the public. If you believe this is an error, please contact
+        your nearest B.R.A.K.E. field office with your badge number.
+      </p>
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <span className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-muted)]">
+        {label}
+      </span>
+      <span className="font-mono text-xs text-[var(--color-text-primary)]">{value}</span>
+    </div>
+  );
+}
+
 function MobileCardContent({ camera, onClose }: { camera: CameraType; onClose: () => void }) {
+  if (camera.id === GHOST_CAMERA_ID) return <GhostContent onClose={onClose} />;
+  return <MobileCardNormal camera={camera} onClose={onClose} />;
+}
+
+function MobileCardNormal({ camera, onClose }: { camera: CameraType; onClose: () => void }) {
   const { toggle, isFavourite } = useFavourites();
   const { recordView } = useRecentlyViewed();
   const onCloseRef = useRef(onClose);
@@ -166,6 +225,11 @@ function MobileCardContent({ camera, onClose }: { camera: CameraType; onClose: (
 }
 
 function PanelContent({ camera, onClose }: { camera: CameraType; onClose: () => void }) {
+  if (camera.id === GHOST_CAMERA_ID) return <GhostContent onClose={onClose} />;
+  return <PanelNormal camera={camera} onClose={onClose} />;
+}
+
+function PanelNormal({ camera, onClose }: { camera: CameraType; onClose: () => void }) {
   const { toggle, isFavourite } = useFavourites();
   const { recordView } = useRecentlyViewed();
   const panelRef = useRef<HTMLDivElement>(null);
