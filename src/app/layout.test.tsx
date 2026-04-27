@@ -4,7 +4,7 @@ import RootLayout from "./layout";
 
 vi.mock("next/font/google", () => ({
   JetBrains_Mono: () => ({ variable: "font-mono" }),
-  Inter: () => ({ variable: "font-sans" }),
+  Space_Grotesk: () => ({ variable: "font-sans" }),
 }));
 
 vi.mock("@/features/theme/ThemeProvider", () => ({
