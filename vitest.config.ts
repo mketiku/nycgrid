@@ -14,6 +14,7 @@ import react from "@vitejs/plugin-react";
 const integrationFiles: string[] = [
   // Add integration test files here as the project grows
   // e.g. "src/lib/api/counts.test.ts"
+  "src/app/api/map/citibike-cameras/route.test.ts",
   "src/features/coverage-gap/useCoverageLayer.test.ts",
   "src/lib/citibike/nearby-cameras.test.ts",
 ];
