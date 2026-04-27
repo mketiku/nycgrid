@@ -57,6 +57,7 @@ export function AppNav() {
       <header className="hidden desktop-layout:flex fixed top-0 left-0 right-0 z-40 h-12 items-center justify-between px-5 border-b border-[var(--color-border)] bg-[var(--color-base)]/90 backdrop-blur-sm">
         <Link
           href="/"
+          onClick={() => window.dispatchEvent(new CustomEvent("nav:logoClick"))}
           className="font-mono text-sm font-bold tracking-tighter text-[var(--color-text-primary)] hover:text-[var(--color-accent)] transition-colors"
         >
           NYC<span className="text-[var(--color-accent)]">GRID</span>

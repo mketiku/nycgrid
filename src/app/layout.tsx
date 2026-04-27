@@ -7,6 +7,7 @@ import { AppNav } from "@/components/layout/AppNav";
 import { AppFooter } from "@/components/layout/AppFooter";
 import { MOBILE_NAV_CLEARANCE_CLASS } from "@/components/layout/mobileNav";
 import { PersistentMap } from "@/features/map/PersistentMap";
+import { ChickenWingProvider } from "@/features/chicken-wings";
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
@@ -68,6 +69,7 @@ export default function RootLayout({
         <QueryProvider>
           <ThemeProvider>
             <PersistentMap />
+            <ChickenWingProvider />
             <AppNav />
             <div id="main-content" tabIndex={-1} className="flex-1 outline-none">
               {children}
