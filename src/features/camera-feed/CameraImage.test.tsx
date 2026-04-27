@@ -1,6 +1,6 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { CameraImage } from "./CameraImage";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { Camera } from "@/lib/cameras/types";
 
 const mockCamera: Camera = {
@@ -81,5 +81,52 @@ describe("CameraImage", () => {
 
     rerender(<CameraImage camera={newCamera} />);
     expect(screen.getAllByAltText(/New Camera/i).length).toBeGreaterThan(0);
+  });
+
+  describe("frame timestamp", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("shows no timestamp before the first frame loads", () => {
+      render(<CameraImage camera={mockCamera} />);
+      expect(screen.queryByText(/ago/i)).toBeNull();
+    });
+
+    it("shows 'just now' immediately after the first frame loads", () => {
+      render(<CameraImage camera={mockCamera} />);
+      const imgs = screen.getAllByRole("img", { hidden: true });
+      fireEvent.load(imgs[1]);
+      expect(screen.getByText(/just now/i)).toBeDefined();
+    });
+
+    it("increments the counter as time passes", () => {
+      render(<CameraImage camera={mockCamera} />);
+      const imgs = screen.getAllByRole("img", { hidden: true });
+      fireEvent.load(imgs[1]);
+
+      act(() => {
+        vi.advanceTimersByTime(10_000);
+      });
+      expect(screen.getByText(/10s ago/i)).toBeDefined();
+    });
+
+    it("resets to 'just now' when a new frame loads", () => {
+      render(<CameraImage camera={mockCamera} />);
+      const imgs = screen.getAllByRole("img", { hidden: true });
+      fireEvent.load(imgs[1]);
+
+      act(() => {
+        vi.advanceTimersByTime(12_000);
+      });
+      expect(screen.getByText(/12s ago/i)).toBeDefined();
+
+      // New frame arrives on the other slot
+      fireEvent.load(imgs[0]);
+      expect(screen.getByText(/just now/i)).toBeDefined();
+    });
   });
 });

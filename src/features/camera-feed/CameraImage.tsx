@@ -5,6 +5,24 @@ import { WifiOff, RefreshCw } from "lucide-react";
 import type { Camera } from "@/lib/cameras/types";
 import { proxiedImageUrl, windowedProxiedImageUrl } from "@/lib/cameras/types";
 
+function useFrameAge(loadedAt: number | null): string | null {
+  const [tick, setTick] = useState<{ loadedAt: number; age: number } | null>(null);
+
+  useEffect(() => {
+    if (loadedAt === null) return;
+    const id = setInterval(() => {
+      setTick({ loadedAt, age: Math.round((Date.now() - loadedAt) / 1000) });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [loadedAt]);
+
+  if (loadedAt === null) return null;
+  // tick is stale (from a previous frame) or hasn't fired yet — show "just now"
+  if (tick === null || tick.loadedAt !== loadedAt) return "just now";
+  if (tick.age < 2) return "just now";
+  return `${tick.age}s ago`;
+}
+
 interface CameraImageProps {
   camera: Camera;
   refreshInterval?: number;
@@ -26,6 +44,8 @@ export function CameraImage({
   const [staging, setStaging] = useState<0 | 1>(1);
   const [hasFirstFrame, setHasFirstFrame] = useState(false);
   const [error, setError] = useState(false);
+  const [loadedAt, setLoadedAt] = useState<number | null>(null);
+  const frameAge = useFrameAge(loadedAt);
 
   // Adjust state during render when camera prop changes (avoids setState-in-effect)
   const [displayedId, setDisplayedId] = useState(camera.id);
@@ -60,6 +80,7 @@ export function CameraImage({
       if (slot !== staging) return; // stale load from the previously active slot
       setHasFirstFrame(true);
       setError(false);
+      setLoadedAt(Date.now());
       setActive(staging);
       setStaging(active);
       onFrameLoad?.(e.currentTarget);
@@ -119,6 +140,13 @@ export function CameraImage({
         onLoad={(e) => handleLoad(1, e)}
         onError={() => handleError(1)}
       />
+
+      {/* Frame age */}
+      {frameAge && !error && (
+        <div className="absolute bottom-1.5 left-2 font-mono text-[10px] text-[var(--color-text-muted)] select-none pointer-events-none">
+          {frameAge}
+        </div>
+      )}
 
       {/* Error state */}
       {error && (
