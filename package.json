@@ -18,6 +18,7 @@
     "test:e2e": "playwright test",
     "validate:commit": "node scripts/run-hook-checks.mjs pre-commit",
     "validate:push": "node scripts/run-hook-checks.mjs pre-push",
+    "capture:all": "node scripts/capture-screenshots.mjs && node scripts/capture-video.mjs",
     "capture:screenshots": "node scripts/capture-screenshots.mjs",
     "capture:screenshots:local": "BASE_URL=http://localhost:3100 node scripts/capture-screenshots.mjs",
     "capture:video": "node scripts/capture-video.mjs",

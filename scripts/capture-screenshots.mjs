@@ -17,7 +17,15 @@ import { fileURLToPath } from "url";
 
 const BASE_URL = process.env.BASE_URL ?? "https://nycgrid.vercel.app";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "screenshots");
-const OUT = join(ROOT, "images");
+
+// Each run gets its own timestamped folder: images/2026-04-26T20-08/
+const RUN_TS = new Date()
+  .toISOString()
+  .slice(0, 16)
+  .replace("T", "T")
+  .replace(":", "-")
+  .replace(":", "-");
+const OUT = join(ROOT, "images", RUN_TS);
 
 // Iconic cameras: Broadway @ 42 St, FDR @ Brooklyn Bridge
 const FEATURED_CAMERAS = [
@@ -80,16 +88,32 @@ for (const id of FEATURED_CAMERAS) {
   await page.close();
 }
 
-// 4. Ambient mode — click start, wait for live feed
+// 4a. Ambient mode — cinematic (no controls bar)
 {
-  console.log("📸  Ambient mode (live feed)...");
+  console.log("📸  Ambient mode (cinematic, no controls)...");
   const page = await newPage();
   await page.goto(`${BASE_URL}/ambient`, { waitUntil: "networkidle" });
   await waitForFonts(page);
   await wait(2000);
   await page.getByRole("button", { name: "Start ambient mode" }).click();
-  await wait(6000); // feed + UI chrome fully rendered
+  await wait(6000); // feed settled, controls idle-hidden after 4s
   await page.screenshot({ path: join(OUT, "ambient.png") });
+  await page.close();
+}
+
+// 4b. Ambient mode — controls bar visible (mouse nudge triggers onMouseMove)
+{
+  console.log("📸  Ambient mode (controls bar visible)...");
+  const page = await newPage();
+  await page.goto(`${BASE_URL}/ambient`, { waitUntil: "networkidle" });
+  await waitForFonts(page);
+  await wait(2000);
+  await page.getByRole("button", { name: "Start ambient mode" }).click();
+  await wait(5000); // feed settled
+  // Move mouse to lower-center — triggers onMouseMove, controls pill appears at top-right
+  await page.mouse.move(720, 700);
+  await wait(1000); // give controls opacity transition time to complete
+  await page.screenshot({ path: join(OUT, "ambient-controls.png") });
   await page.close();
 }
 
@@ -122,10 +146,11 @@ for (const id of FEATURED_CAMERAS) {
 
 await browser.close();
 
-console.log(`\n✅  Screenshots saved to scripts/screenshots/images/`);
-console.log("   home-hero.png         — hero section, desktop");
-console.log("   explore-map.png       — full NYC map with camera dots");
-console.log("   camera-*.png          — live feed detail pages");
-console.log("   ambient.png           — ambient mode, live feed");
-console.log("   home-mobile.png       — mobile hero, iPhone 16");
-console.log("   ambient-mobile.png    — ambient mode, iPhone 16");
+console.log(`\n✅  Screenshots saved to scripts/screenshots/images/${RUN_TS}/`);
+console.log("   home-hero.png          — hero section, desktop");
+console.log("   explore-map.png        — full NYC map with camera dots");
+console.log("   camera-*.png           — live feed detail pages");
+console.log("   ambient.png            — ambient mode, cinematic (no controls)");
+console.log("   ambient-controls.png   — ambient mode, controls bar visible");
+console.log("   home-mobile.png        — mobile hero, iPhone 16");
+console.log("   ambient-mobile.png     — ambient mode, iPhone 16");
