@@ -372,9 +372,7 @@ export default function AboutPage() {
         >
           Buy me a coffee ↗
         </a>
-        <p className="font-mono text-[10px] text-[var(--color-text-muted)]">
-          No ads. No sponsored content. No tracking scripts. Ever.
-        </p>
+
         <p className="font-mono text-[var(--color-text-muted)]" style={{ fontSize: "4px" }}>
           *{" "}
           <a href="/foia" className="underline">
