@@ -8,21 +8,6 @@ const SPAWN_INTERVAL_MS = 450;
 
 type Pulse = { x: number; y: number; progress: number };
 
-function resolveAccentRgb(): string {
-  const raw = window
-    .getComputedStyle(document.documentElement)
-    .getPropertyValue("--color-accent")
-    .trim();
-  const hex = /^#([0-9a-f]{6})$/i.exec(raw);
-  if (hex) {
-    const n = parseInt(hex[1], 16);
-    return `${(n >> 16) & 0xff}, ${(n >> 8) & 0xff}, ${n & 0xff}`;
-  }
-  const rgb = raw.match(/^rgb\(\s*(\d+),\s*(\d+),\s*(\d+)/);
-  if (rgb) return `${rgb[1]}, ${rgb[2]}, ${rgb[3]}`;
-  return "255, 222, 0";
-}
-
 export function HomeBackground() {
   const gridRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -52,15 +37,6 @@ export function HomeBackground() {
     let pulses: Pulse[] = [];
     let rafId: number;
     let lastSpawn = 0;
-    const accentRgb = { current: resolveAccentRgb() };
-
-    const observer = new MutationObserver(() => {
-      accentRgb.current = resolveAccentRgb();
-    });
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme", "class"],
-    });
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -94,12 +70,12 @@ export function HomeBackground() {
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${accentRgb.current}, ${opacity * 0.65})`;
+        ctx.fillStyle = `rgba(255, 222, 0, ${opacity * 0.65})`;
         ctx.fill();
 
         ctx.beginPath();
         ctx.arc(p.x, p.y, radius * 2.2, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(${accentRgb.current}, ${opacity * 0.18})`;
+        ctx.strokeStyle = `rgba(255, 222, 0, ${opacity * 0.18})`;
         ctx.lineWidth = 1;
         ctx.stroke();
 
@@ -114,7 +90,6 @@ export function HomeBackground() {
     return () => {
       cancelAnimationFrame(rafId);
       window.removeEventListener("resize", resize);
-      observer.disconnect();
     };
   }, []);
 
