@@ -137,14 +137,6 @@ function ComplaintDropdown() {
               >
                 This website →
               </a>
-              <Link
-                href="/foia"
-                role="menuitem"
-                onClick={() => setOpen(false)}
-                className={menuItemClass}
-              >
-                The developer →
-              </Link>
             </div>
           </motion.div>
         )}

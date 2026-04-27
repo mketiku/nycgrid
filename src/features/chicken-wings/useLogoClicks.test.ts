@@ -48,10 +48,11 @@ describe("useLogoClicks", () => {
   });
 
   it("resets count after firing so it can fire again", () => {
+    // Pin target to max (9) so 9 clicks fires exactly once per round
+    vi.spyOn(Math, "random").mockReturnValue(0.999);
     const onSeven = vi.fn();
     renderHook(() => useLogoClicks(onSeven));
 
-    // 9 clicks covers the maximum target in both rounds
     for (let i = 0; i < 9; i++) fireLogoClick();
     for (let i = 0; i < 9; i++) fireLogoClick();
 
