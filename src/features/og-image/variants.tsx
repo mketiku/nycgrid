@@ -578,6 +578,7 @@ function mosaicPanel(style: React.CSSProperties, children: React.ReactNode): Rea
     <div
       style={{
         position: "absolute",
+        display: "flex",
         border: "1px solid rgba(255,255,255,0.12)",
         background:
           "linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)",
