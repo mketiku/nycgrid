@@ -6,6 +6,10 @@ vi.mock("@/features/spotlight/CameraSpotlight", () => ({
   CameraSpotlightSkeleton: () => <div data-testid="camera-spotlight-skeleton">Loading</div>,
 }));
 
+vi.mock("@/features/theme/ThemeToggle", () => ({
+  ThemeToggle: () => <div data-testid="theme-toggle" />,
+}));
+
 import LandingPage from "./page";
 
 describe("LandingPage", () => {
@@ -36,5 +40,6 @@ describe("LandingPage", () => {
     );
     expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", "/legal/privacy");
     expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute("href", "/legal/terms");
+    expect(screen.getByTestId("theme-toggle")).toBeDefined();
   });
 });

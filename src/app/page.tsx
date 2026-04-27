@@ -5,6 +5,7 @@ import { buttonClasses } from "@/components/ui/Button";
 import { CAMERA_COUNT, BOROUGHS } from "@/lib/cameras/data";
 import { CameraSpotlight, CameraSpotlightSkeleton } from "@/features/spotlight/CameraSpotlight";
 import { HomeBackground } from "@/features/home/HomeBackground";
+import { ThemeToggle } from "@/features/theme/ThemeToggle";
 
 export const revalidate = 1800;
 
@@ -12,6 +13,10 @@ export default function LandingPage() {
   return (
     <main className="relative min-h-screen overflow-x-clip px-4 sm:px-6">
       <HomeBackground />
+
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeToggle />
+      </div>
 
       {/* Radial glow */}
       <div
