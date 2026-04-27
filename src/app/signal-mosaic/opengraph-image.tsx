@@ -5,10 +5,10 @@ import {
 } from "@/features/og-image/variants";
 
 export const runtime = "nodejs";
-export const alt = "nycgrid — Explore the city through its public camera network";
+export const alt = "nycgrid — Signal Mosaic";
 export const size = OG_IMAGE_SIZE;
 export const contentType = OG_IMAGE_CONTENT_TYPE;
 
-export default function OgImage() {
-  return renderOgVariant("city-atlas");
+export default function Image() {
+  return renderOgVariant("signal-mosaic");
 }
