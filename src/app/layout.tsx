@@ -8,6 +8,7 @@ import { AppFooter } from "@/components/layout/AppFooter";
 import { MOBILE_NAV_CLEARANCE_CLASS } from "@/components/layout/mobileNav";
 import { PersistentMap } from "@/features/map/PersistentMap";
 import { ChickenWingProvider } from "@/features/chicken-wings";
+import { Analytics } from "@vercel/analytics/next";
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "nycgrid — NYC's public traffic cameras, on a map",
     description:
-      "900+ live feeds from NYC DOT traffic cameras across all five boroughs. Public infrastructure data — free, no ads, no tracking.",
+      "900+ live feeds from NYC DOT traffic cameras across all five boroughs. Public infrastructure data — free, no ads.",
     type: "website",
     siteName: "nycgrid",
     url: process.env.NEXT_PUBLIC_APP_URL || "https://nycgrid.vercel.app",
@@ -43,7 +44,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "nycgrid — NYC's public traffic cameras, on a map",
     description:
-      "900+ live feeds from NYC DOT traffic cameras across all five boroughs. Public infrastructure data — free, no ads, no tracking.",
+      "900+ live feeds from NYC DOT traffic cameras across all five boroughs. Public infrastructure data — free, no ads.",
   },
 };
 
@@ -70,6 +71,7 @@ export default function RootLayout({
           <ThemeProvider>
             <PersistentMap />
             <ChickenWingProvider />
+            <Analytics />
             <AppNav />
             <div id="main-content" tabIndex={-1} className="flex-1 outline-none">
               {children}

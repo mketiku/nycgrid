@@ -39,8 +39,9 @@ export default function PrivacyPage() {
       <p>
         The app is hosted on Vercel. Like any web host, Vercel may process standard metadata,
         including IP address, user agent, and requested URL, in order to serve the app, operate the
-        platform, and troubleshoot failures. We do not run third-party analytics or client-side
-        error-monitoring scripts.
+        platform, and troubleshoot failures. We use Vercel Analytics to count visitors and page
+        views — it collects no cookies, no fingerprints, and no personal data. We do not run
+        third-party client-side analytics or error-monitoring scripts.
       </p>
 
       <h2>Third-party services</h2>

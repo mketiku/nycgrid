@@ -124,7 +124,7 @@ export default function AboutPage() {
         <ul className="flex flex-col gap-3">
           {[
             "No images are stored. NycGrid displays live DOT feeds directly — nothing is saved to our servers.",
-            "No accounts. No tracking. Vercel logs standard request metadata needed to serve and operate the app. We do not run third-party analytics or error-monitoring scripts in the browser.",
+            "No accounts. Vercel Analytics counts visitors and page views — no cookies, no fingerprinting, no personal data stored. Vercel also logs standard request metadata to serve and operate the app.",
             "Traffic cameras are fixed to monitor intersections and road flow — not pedestrians.",
             "Photobooth photos are generated entirely in your browser and downloaded to your device. They never leave your machine.",
           ].map((point) => (
@@ -361,8 +361,8 @@ export default function AboutPage() {
       <section className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 flex flex-col gap-4">
         <SectionLabel>Support the project</SectionLabel>
         <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">
-          NycGrid is free, runs no ads, and collects no tracking data — and that&apos;s not
-          changing. If you find it useful and want to say thanks, a coffee goes a long way.
+          NycGrid is free and runs no ads — and that&apos;s not changing. If you find it useful and
+          want to say thanks, a coffee goes a long way.
         </p>
         <a
           href="https://www.buymeacoffee.com/mketiku"

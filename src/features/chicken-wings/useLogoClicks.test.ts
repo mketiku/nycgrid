@@ -18,16 +18,16 @@ describe("useLogoClicks", () => {
     });
   }
 
-  it("does not fire before 3 clicks (below minimum target of 4)", () => {
+  it("does not fire before 8 clicks (below target of 9)", () => {
     const onSeven = vi.fn();
     renderHook(() => useLogoClicks(onSeven));
 
-    for (let i = 0; i < 3; i++) fireLogoClick();
+    for (let i = 0; i < 8; i++) fireLogoClick();
 
     expect(onSeven).not.toHaveBeenCalled();
   });
 
-  it("fires callback within 9 clicks (at or below maximum target)", () => {
+  it("fires callback on exactly 9 clicks", () => {
     const onSeven = vi.fn();
     renderHook(() => useLogoClicks(onSeven));
 
@@ -42,14 +42,12 @@ describe("useLogoClicks", () => {
 
     for (let i = 0; i < 4; i++) fireLogoClick();
     act(() => vi.advanceTimersByTime(5100));
-    for (let i = 0; i < 7; i++) fireLogoClick();
+    for (let i = 0; i < 9; i++) fireLogoClick();
 
     expect(onSeven).toHaveBeenCalledTimes(1);
   });
 
   it("resets count after firing so it can fire again", () => {
-    // Pin target to max (9) so 9 clicks fires exactly once per round
-    vi.spyOn(Math, "random").mockReturnValue(0.999);
     const onSeven = vi.fn();
     renderHook(() => useLogoClicks(onSeven));
 

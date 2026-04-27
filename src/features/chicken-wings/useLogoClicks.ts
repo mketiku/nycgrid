@@ -3,15 +3,11 @@
 import { useEffect, useRef } from "react";
 
 const WINDOW_MS = 5000;
-
-function randomTarget() {
-  return Math.floor(Math.random() * 6) + 4; // 4–9 inclusive
-}
+const TARGET_CLICKS = 9;
 
 export function useLogoClicks(onSeven: () => void) {
   const countRef = useRef(0);
   const windowStartRef = useRef(0);
-  const targetRef = useRef(randomTarget());
 
   useEffect(() => {
     function handleClick() {
@@ -24,10 +20,9 @@ export function useLogoClicks(onSeven: () => void) {
 
       countRef.current += 1;
 
-      if (countRef.current >= targetRef.current) {
+      if (countRef.current >= TARGET_CLICKS) {
         countRef.current = 0;
         windowStartRef.current = 0;
-        targetRef.current = randomTarget();
         onSeven();
       }
     }
