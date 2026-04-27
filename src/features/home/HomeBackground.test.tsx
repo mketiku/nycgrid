@@ -72,7 +72,7 @@ describe("HomeBackground", () => {
         })
       );
       vi.spyOn(window, "getComputedStyle").mockReturnValue({
-        getPropertyValue: (prop: string) => (prop === "--color-accent" ? "rgb(255, 222, 0)" : ""),
+        getPropertyValue: (prop: string) => (prop === "--color-accent" ? "#ffde00" : ""),
       } as unknown as CSSStyleDeclaration);
     });
 
@@ -91,7 +91,6 @@ describe("HomeBackground", () => {
         fillStyle: "",
         strokeStyle: "",
         lineWidth: 0,
-        globalAlpha: 1,
       } as unknown as CanvasRenderingContext2D);
 
       render(<HomeBackground />);
@@ -109,7 +108,6 @@ describe("HomeBackground", () => {
         fillStyle: "",
         strokeStyle: "",
         lineWidth: 0,
-        globalAlpha: 1,
       } as unknown as CanvasRenderingContext2D);
 
       render(<HomeBackground />);
@@ -130,7 +128,6 @@ describe("HomeBackground", () => {
         fillStyle: "",
         strokeStyle: "",
         lineWidth: 0,
-        globalAlpha: 1,
       } as unknown as CanvasRenderingContext2D);
 
       const { unmount } = render(<HomeBackground />);
@@ -141,7 +138,7 @@ describe("HomeBackground", () => {
 
     it("re-reads accent color when the MutationObserver fires", () => {
       const getComputedStyleSpy = vi.spyOn(window, "getComputedStyle").mockReturnValue({
-        getPropertyValue: (prop: string) => (prop === "--color-accent" ? "rgb(255, 222, 0)" : ""),
+        getPropertyValue: (prop: string) => (prop === "--color-accent" ? "#ffde00" : ""),
       } as unknown as CSSStyleDeclaration);
 
       vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
@@ -153,7 +150,6 @@ describe("HomeBackground", () => {
         fillStyle: "",
         strokeStyle: "",
         lineWidth: 0,
-        globalAlpha: 1,
       } as unknown as CanvasRenderingContext2D);
 
       render(<HomeBackground />);
