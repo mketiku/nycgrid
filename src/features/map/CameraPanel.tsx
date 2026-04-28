@@ -109,6 +109,14 @@ function GhostContent({ onClose }: { onClose: () => void }) {
         This feed is not available to the public. If you believe this is an error, please contact
         your nearest B.R.A.K.E. field office with your badge number.
       </p>
+      <a
+        href="https://www.nyc.gov/dot"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+      >
+        DECLASSIFIED READING ↗
+      </a>
     </div>
   );
 }

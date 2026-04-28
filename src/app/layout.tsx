@@ -38,7 +38,7 @@ export const metadata: Metadata = {
       "900+ live feeds from NYC DOT traffic cameras across all five boroughs. Public infrastructure data — free, no ads.",
     type: "website",
     siteName: "nycgrid",
-    url: process.env.NEXT_PUBLIC_APP_URL || "https://nycgrid.vercel.app",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://nycgrid.mketiku.com",
   },
   twitter: {
     card: "summary_large_image",

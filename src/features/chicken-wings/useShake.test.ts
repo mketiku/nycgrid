@@ -121,32 +121,38 @@ describe("useShake", () => {
       delete DeviceMotionEvent.requestPermission;
     });
 
-    it("requests permission on first touchstart instead of attaching devicemotion immediately", async () => {
-      const onShake = vi.fn();
-      renderHook(() => useShake(onShake));
-
-      // devicemotion should NOT be registered yet
+    it("does not attach devicemotion listener immediately on iOS", () => {
+      renderHook(() => useShake(vi.fn()));
       expect(listeners["devicemotion"]).toBeUndefined();
-      expect(listeners["touchstart"]).toBeDefined();
+    });
 
-      // Simulate the first touch
+    it("returns a requestMotionPermission function on iOS", () => {
+      const { result } = renderHook(() => useShake(vi.fn()));
+      expect(result.current.requestMotionPermission).toBeTypeOf("function");
+    });
+
+    it("returns null requestMotionPermission on non-iOS", () => {
+      // @ts-expect-error restoring non-standard property
+      delete DeviceMotionEvent.requestPermission;
+      const { result } = renderHook(() => useShake(vi.fn()));
+      expect(result.current.requestMotionPermission).toBeNull();
+    });
+
+    it("attaches devicemotion after calling requestMotionPermission and permission is granted", async () => {
+      const { result } = renderHook(() => useShake(vi.fn()));
       await act(async () => {
-        listeners["touchstart"]?.(new Event("touchstart"));
+        await result.current.requestMotionPermission!();
       });
-
       expect(requestPermission).toHaveBeenCalledTimes(1);
       expect(listeners["devicemotion"]).toBeDefined();
     });
 
-    it("does not attach devicemotion listener when permission is denied", async () => {
+    it("does not attach devicemotion when permission is denied", async () => {
       requestPermission.mockResolvedValue("denied");
-      const onShake = vi.fn();
-      renderHook(() => useShake(onShake));
-
+      const { result } = renderHook(() => useShake(vi.fn()));
       await act(async () => {
-        listeners["touchstart"]?.(new Event("touchstart"));
+        await result.current.requestMotionPermission!();
       });
-
       expect(listeners["devicemotion"]).toBeUndefined();
     });
   });

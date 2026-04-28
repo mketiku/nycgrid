@@ -6,12 +6,12 @@ describe("sitemap", () => {
   it("includes static pages and indexable camera detail pages", () => {
     const entries = sitemap();
 
-    expect(entries).toContainEqual(expect.objectContaining({ url: "https://nycgrid.vercel.app" }));
+    expect(entries).toContainEqual(expect.objectContaining({ url: "https://nycgrid.mketiku.com" }));
     expect(entries).toContainEqual(
-      expect.objectContaining({ url: "https://nycgrid.vercel.app/explore" })
+      expect.objectContaining({ url: "https://nycgrid.mketiku.com/explore" })
     );
     expect(entries).toContainEqual(
-      expect.objectContaining({ url: `https://nycgrid.vercel.app/camera/${CAMERAS[0].id}` })
+      expect.objectContaining({ url: `https://nycgrid.mketiku.com/camera/${CAMERAS[0].id}` })
     );
   });
 });

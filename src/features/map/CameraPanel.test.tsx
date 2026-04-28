@@ -172,6 +172,9 @@ describe("CameraPanel", () => {
     expect(screen.getAllByText(/SIGNAL LOST/i)).not.toHaveLength(0);
     expect(screen.getAllByText(/\[REDACTED\]/i)).not.toHaveLength(0);
     expect(screen.queryByTestId("camera-image")).toBeNull();
+    const links = screen.getAllByRole("link", { name: /DECLASSIFIED READING/i });
+    expect(links[0]).toHaveAttribute("href", expect.stringContaining("nyc.gov/dot"));
+    expect(links[0]).toHaveAttribute("target", "_blank");
   });
 
   it("traps focus within the panel", () => {
