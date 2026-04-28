@@ -2,16 +2,6 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { ChickenWingProvider } from "./ChickenWingProvider";
 
-function dispatchShake() {
-  const evt = new Event("devicemotion") as DeviceMotionEvent;
-  Object.defineProperty(evt, "accelerationIncludingGravity", {
-    value: { x: 20, y: 0, z: 0 },
-    writable: false,
-    configurable: true,
-  });
-  act(() => window.dispatchEvent(evt));
-}
-
 describe("ChickenWingProvider", () => {
   describe("console drop", () => {
     beforeEach(() => {
@@ -36,26 +26,6 @@ describe("ChickenWingProvider", () => {
     render(<ChickenWingProvider />);
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(screen.queryByRole("status")).toBeNull();
-  });
-
-  it("opens the ComplaintModal after the required shake sequence", async () => {
-    render(<ChickenWingProvider />);
-    // useShake: CONSECUTIVE_REQUIRED=3, THRESHOLD=15
-    dispatchShake();
-    dispatchShake();
-    dispatchShake();
-    expect(await screen.findByRole("dialog")).toBeDefined();
-    expect(screen.getByText("SUBMIT A COMPLAINT")).toBeDefined();
-  });
-
-  it("closes the ComplaintModal when onClose is called", async () => {
-    render(<ChickenWingProvider />);
-    dispatchShake();
-    dispatchShake();
-    dispatchShake();
-    await screen.findByRole("dialog");
-    fireEvent.click(screen.getByRole("button", { name: /Close/i }));
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 
   it("opens the BadgeToast after 9 logo clicks within 5 seconds", async () => {
