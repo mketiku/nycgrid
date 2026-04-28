@@ -1,0 +1,37 @@
+# Codex workspace defaults for nycgrid.
+# These settings bias Codex toward small, reviewable, repo-native changes.
+
+[agent]
+prefer_local_search = true
+prefer_apply_patch = true
+keep_updates_concise = true
+avoid_destructive_commands = true
+
+[workflow]
+start_with_repo_inspection = true
+prefer_small_scoped_changes = true
+validate_with_lint = true
+validate_with_typecheck = true
+validate_with_tests = true
+validate_with_build = true
+
+[nextjs]
+version = 16
+react_version = 19
+require_await_params = true
+require_await_search_params = true
+require_await_cookies = true
+require_await_headers = true
+prefer_server_actions = true
+
+[ui]
+prefer_server_components = true
+use_motion_react = true
+wrap_browser_apis = true
+require_loading_skeletons = true
+prefer_link_for_navigation = true
+
+[verification]
+prefer_browser_check_for_shell_changes = true
+capture_screenshots_for_ui_regressions = true
+run_pre_push_checks_before_completion = true

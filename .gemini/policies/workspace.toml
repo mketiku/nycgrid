@@ -1,0 +1,177 @@
+# .gemini/policies/workspace.toml
+# Workspace-level policy for the nycgrid project
+# Tier: Workspace (3.xxx)
+
+# Portable Project Introspection
+# Block absolute paths (starts with '/')
+[[rule]]
+toolName = "run_command"
+argsPattern = '"CommandLine":"ls( .*)? /.*"'
+decision = "deny"
+priority = 500
+modes = ["default", "autoEdit", "plan"]
+denyMessage = "Workspace policy restricts 'ls' to relative paths within the project."
+
+# Block directory traversal (contains '../')
+[[rule]]
+toolName = "run_command"
+argsPattern = '"CommandLine":"ls.*\\.\\..*"'
+decision = "deny"
+priority = 505
+modes = ["default", "autoEdit", "plan"]
+denyMessage = "Directory traversal (../) is prohibited in workspace rules."
+
+# Allow project-local 'ls' (relative paths & simple commands)
+[[rule]]
+toolName = "run_command"
+commandPrefix = "ls"
+decision = "allow"
+priority = 400
+modes = ["default", "autoEdit", "plan"]
+
+# Workspace Scaffolding & Navigation
+[[rule]]
+toolName = "run_command"
+commandPrefix = "mkdir -p "
+decision = "allow"
+priority = 400
+modes = ["default", "autoEdit", "plan"]
+
+[[rule]]
+toolName = "run_command"
+commandPrefix = "find "
+decision = "allow"
+priority = 400
+modes = ["default", "autoEdit", "plan"]
+
+[[rule]]
+toolName = "run_command"
+commandPrefix = "grep "
+decision = "allow"
+priority = 400
+modes = ["default", "autoEdit", "plan"]
+
+[[rule]]
+toolName = "run_command"
+commandPrefix = "rg "
+decision = "allow"
+priority = 400
+modes = ["default", "autoEdit", "plan"]
+
+# Git Operations
+[[rule]]
+toolName = "run_command"
+commandPrefix = "git "
+decision = "allow"
+priority = 110
+modes = ["default", "autoEdit", "plan"]
+
+# Development & Build Commands
+[[rule]]
+toolName = "run_command"
+commandPrefix = "bun install"
+decision = "allow"
+priority = 120
+modes = ["default", "autoEdit", "plan"]
+
+[[rule]]
+toolName = "run_command"
+commandPrefix = "bun run "
+decision = "allow"
+priority = 121
+modes = ["default", "autoEdit", "plan"]
+
+[[rule]]
+toolName = "run_command"
+commandPrefix = "bun test"
+decision = "allow"
+priority = 150
+modes = ["default", "autoEdit", "plan"]
+
+[[rule]]
+toolName = "run_command"
+commandPrefix = "bunx tsx "
+decision = "allow"
+priority = 140
+modes = ["default", "autoEdit", "plan"]
+
+[[rule]]
+toolName = "run_command"
+commandPrefix = "node scripts/"
+decision = "allow"
+priority = 140
+modes = ["default", "autoEdit", "plan"]
+
+[[rule]]
+toolName = "run_command"
+commandPrefix = "bunx tsx scripts/"
+decision = "allow"
+priority = 140
+modes = ["default", "autoEdit", "plan"]
+
+# DevOps & Deployments
+[[rule]]
+toolName = "run_command"
+commandPrefix = "npx vercel"
+decision = "allow"
+priority = 160
+modes = ["default", "autoEdit", "plan"]
+
+[[rule]]
+toolName = "run_command"
+commandPrefix = "bunx vercel"
+decision = "allow"
+priority = 160
+modes = ["default", "autoEdit", "plan"]
+
+# Playwright & E2E
+[[rule]]
+toolName = "run_command"
+commandPrefix = "npx playwright test"
+decision = "allow"
+priority = 150
+modes = ["default", "autoEdit", "plan"]
+
+[[rule]]
+toolName = "run_command"
+commandPrefix = "bunx playwright test"
+decision = "allow"
+priority = 150
+modes = ["default", "autoEdit", "plan"]
+
+# System Utilities & Debugging
+[[rule]]
+toolName = "run_command"
+commandPrefix = "lsof -i"
+decision = "allow"
+priority = 400
+modes = ["default", "autoEdit", "plan"]
+
+[[rule]]
+toolName = "run_command"
+commandPrefix = "printenv"
+decision = "allow"
+priority = 300
+modes = ["default", "autoEdit", "plan"]
+
+[[rule]]
+toolName = "run_command"
+commandPrefix = "curl "
+decision = "allow"
+priority = 300
+modes = ["default", "autoEdit", "plan"]
+
+# Version Checks
+[[rule]]
+toolName = "run_command"
+argsPattern = { CommandLine = "node --version" }
+decision = "allow"
+priority = 100
+modes = ["default", "autoEdit", "plan"]
+
+[[rule]]
+toolName = "run_command"
+argsPattern = { CommandLine = "bun --version" }
+decision = "allow"
+priority = 100
+modes = ["default", "autoEdit", "plan"]

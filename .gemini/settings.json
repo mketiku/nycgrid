@@ -1,0 +1,38 @@
+{
+  "context": {
+    "fileName": [
+      "AGENTS.md",
+      "README.md",
+      "package.json",
+      "docs/context/prd.md",
+      "docs/context/architecture.md",
+      "docs/context/style-guide.md",
+      "docs/context/platform-constraints.md",
+      "docs/context/data-sources.md"
+    ],
+    "excludeFileName": [
+      "node_modules/**",
+      ".next/**",
+      "coverage/**",
+      "playwright-report/**",
+      "test-results/**",
+      "dist/**",
+      ".git/**",
+      "**/worktrees/**"
+    ]
+  },
+  "general": {
+    "enableNotifications": true,
+    "maxSteps": 30
+  },
+  "model": {
+    "disableLoopDetection": true
+  },
+  "security": {
+    "enablePermanentToolApproval": true,
+    "autoAddToPolicyByDefault": true
+  },
+  "experimental": {
+    "contextManagement": false
+  }
+}
