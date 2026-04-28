@@ -2,12 +2,9 @@
 
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import { useShake } from "./useShake";
 import { useLogoClicks } from "./useLogoClicks";
 import { useOpendataCode } from "./useOpendataCode";
-import { ComplaintModal } from "./ComplaintModal";
 import { BadgeToast } from "./BadgeToast";
-import { MotionPrompt } from "./MotionPrompt";
 import { OpendataToast } from "./OpendataToast";
 
 export function ChickenWingProvider() {
@@ -25,18 +22,14 @@ export function ChickenWingProvider() {
     () => true,
     () => false
   );
-  const [complaintOpen, setComplaintOpen] = useState(false);
   const [badgeOpen, setBadgeOpen] = useState(false);
   const [opendataOpen, setOpendataOpen] = useState(false);
 
-  const openComplaint = useCallback(() => setComplaintOpen(true), []);
-  const closeComplaint = useCallback(() => setComplaintOpen(false), []);
   const openBadge = useCallback(() => setBadgeOpen(true), []);
   const closeBadge = useCallback(() => setBadgeOpen(false), []);
   const openOpendata = useCallback(() => setOpendataOpen(true), []);
   const closeOpendata = useCallback(() => setOpendataOpen(false), []);
 
-  const { requestMotionPermission } = useShake(openComplaint);
   useLogoClicks(openBadge);
   useOpendataCode(openOpendata);
 
@@ -44,12 +37,8 @@ export function ChickenWingProvider() {
 
   return createPortal(
     <>
-      <ComplaintModal open={complaintOpen} onClose={closeComplaint} />
       <BadgeToast open={badgeOpen} onClose={closeBadge} />
       <OpendataToast open={opendataOpen} onClose={closeOpendata} />
-      {requestMotionPermission && (
-        <MotionPrompt requestMotionPermission={requestMotionPermission} />
-      )}
     </>,
     document.body
   );
