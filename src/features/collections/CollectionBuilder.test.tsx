@@ -65,7 +65,7 @@ describe("CollectionBuilder", () => {
     vi.stubGlobal("prompt", prompt);
     Object.defineProperty(window, "location", {
       configurable: true,
-      value: { origin: "https://nycgrid.vercel.app" },
+      value: { origin: "https://nycgrid.mketiku.com" },
     });
   });
 
@@ -143,7 +143,7 @@ describe("CollectionBuilder", () => {
 
     await waitFor(() => {
       expect(writeText).toHaveBeenCalledWith(
-        "https://nycgrid.vercel.app/collections/custom?c=cam-1"
+        "https://nycgrid.mketiku.com/collections/custom?c=cam-1"
       );
       expect(screen.getByRole("button", { name: /Link copied!/i })).toBeInTheDocument();
     });
@@ -159,7 +159,7 @@ describe("CollectionBuilder", () => {
     await waitFor(() => {
       expect(prompt).toHaveBeenCalledWith(
         "Copy this link:",
-        "https://nycgrid.vercel.app/collections/custom?c=cam-1"
+        "https://nycgrid.mketiku.com/collections/custom?c=cam-1"
       );
     });
   });

@@ -36,7 +36,7 @@ NYC_511_API_KEY             # subway alerts panel (transit.md)
 MTA_BUS_TIME_KEY            # bus arrivals panel (bustime.md)
 
 # App metadata
-NEXT_PUBLIC_APP_URL         # e.g. https://nycgrid.vercel.app
+NEXT_PUBLIC_APP_URL         # e.g. https://nycgrid.mketiku.com
 NEXT_PUBLIC_BRAND_DOMAIN    # watermark domain (optional)
 
 ```

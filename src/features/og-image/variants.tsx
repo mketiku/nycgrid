@@ -32,7 +32,7 @@ export const OG_VARIANTS: Array<{
   },
 ];
 
-const DOMAIN = process.env.NEXT_PUBLIC_BRAND_DOMAIN ?? "nycgrid.vercel.app";
+const DOMAIN = process.env.NEXT_PUBLIC_BRAND_DOMAIN ?? "nycgrid.mketiku.com";
 
 function frame(): React.CSSProperties {
   return {

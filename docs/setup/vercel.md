@@ -25,9 +25,9 @@ Go to **Project → Settings → Environment Variables** and add every variable 
 
 **Required for the app to start:**
 
-| Variable              | Guide                                                         |
-| --------------------- | ------------------------------------------------------------- |
-| `NEXT_PUBLIC_APP_URL` | Set to your production URL, e.g. `https://nycgrid.vercel.app` |
+| Variable              | Guide                                                          |
+| --------------------- | -------------------------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL` | Set to your production URL, e.g. `https://nycgrid.mketiku.com` |
 
 **Optional (features degrade gracefully without these):**
 
@@ -55,7 +55,7 @@ After adding env vars, trigger a new deploy:
 ## 5. Add a custom domain (optional)
 
 1. **Project → Settings → Domains**.
-2. Add your domain (e.g. `nycgrid.vercel.app`).
+2. Add your domain (e.g. `nycgrid.mketiku.com`).
 3. Follow the DNS instructions Vercel provides (usually a CNAME or A record).
 
 Once the domain is set, update `NEXT_PUBLIC_APP_URL` to match.

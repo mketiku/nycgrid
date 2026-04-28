@@ -135,7 +135,7 @@ Raw concrete. Zero decoration. Heavy weights, blocky layout, white on gray.
 - Single shot
 - Off-white border `#f5f0e8`
 - Editable caption below — Kalam or cursive font
-- Bottom text: `nycgrid.vercel.app | [camera name]`
+- Bottom text: `nycgrid.mketiku.com | [camera name]`
 
 ### Yellow Cab
 

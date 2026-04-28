@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const host = process.env.NEXT_PUBLIC_APP_URL || "https://nycgrid.vercel.app";
+const host = process.env.NEXT_PUBLIC_APP_URL || "https://nycgrid.mketiku.com";
 
 export default function robots(): MetadataRoute.Robots {
   return {

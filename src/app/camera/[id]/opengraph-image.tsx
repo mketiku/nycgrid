@@ -177,7 +177,7 @@ export default async function Image({ params }: ImageProps) {
               letterSpacing: "0.08em",
             }}
           >
-            {process.env.NEXT_PUBLIC_BRAND_DOMAIN ?? "nycgrid.vercel.app"}
+            {process.env.NEXT_PUBLIC_BRAND_DOMAIN ?? "nycgrid.mketiku.com"}
           </span>
         </div>
       </div>
