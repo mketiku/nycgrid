@@ -183,9 +183,18 @@ function printFoiaDocument(caseNumber: string, docType: string) {
     justify-content: space-between;
   }
 
+  @page {
+    margin: 0.85in 0.75in;
+  }
   @media print {
     body { background: #fff; }
-    .page { padding: 0.6in 0.75in; }
+    .page { padding: 0; }
+    .letterhead { break-inside: avoid; }
+    .case-block { break-inside: avoid; }
+    .signoff { break-inside: avoid; break-before: avoid; }
+    .personal-note { break-inside: avoid; }
+    .page-footer { break-inside: avoid; }
+    ol li { break-inside: avoid; }
   }
 </style>
 </head>
@@ -316,7 +325,7 @@ export function FoiaForm() {
           </p>
         </div>
 
-        <div className="border border-[var(--color-border)] bg-[var(--color-surface)] rounded-lg p-5 flex flex-col gap-3">
+        <div className="border border-[var(--color-border)] bg-[var(--color-surface)] rounded-lg p-5 flex flex-col gap-3.5">
           <ConfirmRow label="Case" value={caseNumber} />
           <ConfirmRow label="Document Type" value={docType} />
           <ConfirmRow label="Status" value="PENDING INTERDEPARTMENTAL REVIEW" />
@@ -324,11 +333,10 @@ export function FoiaForm() {
           <ConfirmRow label="Filed with" value="B.R.A.K.E." />
         </div>
 
-        <p className="font-mono text-xs text-[var(--color-text-muted)] leading-relaxed">
+        <p className="font-mono text-xs text-[var(--color-text-muted)] leading-relaxed max-w-md">
           You will be contacted at the address on file. If you do not have an address on file,
-          please visit your nearest Borough office with two forms of ID and a{" "}
-          <span className="text-[var(--color-text-primary)]">stamped, self-addressed envelope</span>
-          .
+          please visit your nearest Borough office with two forms of ID and a stamped,
+          self-addressed envelope.
         </p>
 
         <div className="flex gap-3 flex-wrap">
@@ -357,6 +365,9 @@ export function FoiaForm() {
       }}
       className="flex flex-col gap-6"
     >
+      <p className="font-mono text-[9px] uppercase tracking-widest text-[var(--color-text-muted)] -mb-2">
+        Section A — Requestor Information &amp; Document Specification
+      </p>
       <FormField id="requestor" label="Requestor Name">
         <input
           id="requestor"
@@ -391,7 +402,7 @@ export function FoiaForm() {
       </FormField>
 
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <p className="font-mono text-[10px] text-[var(--color-text-muted)]">
+        <p className="font-mono text-xs text-[var(--color-text-muted)] leading-relaxed">
           All requests are reviewed in the order received.
           <br />
           Processing times may vary. Significantly.
@@ -432,7 +443,7 @@ function FormField({
 function ConfirmRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4">
-      <span className="font-mono text-[10px] text-[var(--color-text-muted)] uppercase tracking-widest shrink-0">
+      <span className="font-mono text-[9px] text-[var(--color-text-muted)] uppercase tracking-widest shrink-0 pt-px">
         {label}
       </span>
       <span className="font-mono text-xs text-[var(--color-text-primary)] text-right">{value}</span>
