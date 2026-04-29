@@ -145,6 +145,7 @@ Agents should use `.agents/skills/` for workflow guidance.
 | `nextjs_feature_workflow` | Pages, layouts, server actions, component work |
 | `validation`              | Pre-commit/pre-push checks, hook failures      |
 | `cv_pipeline`             | Adding/upgrading the computer vision pipeline  |
+| `ci_skip`                 | Deciding when/how to skip CI or Vercel builds  |
 
 ## 10. Domain Knowledge
 
