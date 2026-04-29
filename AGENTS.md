@@ -119,7 +119,9 @@ Two URL strategies exist — pick the right one or the canvas will be tainted:
 - **Conventional Commits**: `type(scope): concise summary` (7–14 words).
   - Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
   - Examples: `feat(map): add camera markers with live status indicators`, `fix(photobooth): fix canvas capture on Safari`
-- **Skip builds for non-code changes**: Append `[skip ci]` to commit messages for docs, ADRs, or config-only changes.
+- **Skip builds for non-code changes**: Use two distinct skip mechanisms — they are independent.
+  - `[skip ci]` in the commit message skips **GitHub Actions** (CI pipeline). Vercel also honours this tag and skips its own build. Use it for docs, ADRs, and any change that does not affect the running app. Examples: `docs: update notes [skip ci]`, `chore: update AGENTS.md [skip ci]`.
+  - **Vercel Ignored Build Step** (dashboard → Project Settings → Git) runs `bash scripts/vercel-build-skip.sh` before every build. The script auto-skips when only non-app files changed and supports a `[skip vercel]` manual tag to skip Vercel without skipping GitHub CI. See `.agents/skills/ci_skip.md` for the decision table and script details.
 - **Plan Before Implementation**: When asked to create a plan, produce it first and wait for approval before code changes.
 
 ## 8. Documentation Standards
