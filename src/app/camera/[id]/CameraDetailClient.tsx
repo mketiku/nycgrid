@@ -85,6 +85,14 @@ export function CameraDetailClient({
           <span className="font-mono text-xs text-[var(--color-text-secondary)]">
             {camera.area}
           </span>
+          {camera.neighborhood && (
+            <Link
+              href={`/explore?neighborhood=${encodeURIComponent(camera.neighborhood)}`}
+              className="font-mono text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+            >
+              {camera.neighborhood}
+            </Link>
+          )}
           <span
             className="font-mono text-xs flex items-center gap-1"
             style={{

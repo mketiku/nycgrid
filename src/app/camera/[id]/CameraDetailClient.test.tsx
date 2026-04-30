@@ -114,4 +114,22 @@ describe("CameraDetailClient", () => {
     expect(screen.queryByText("Raw camera name")).not.toBeInTheDocument();
     expect(screen.queryByTestId("camera-lore")).not.toBeInTheDocument();
   });
+
+  it("renders neighborhood as an explore filter link when present", () => {
+    const cameraWithNeighborhood: Camera = { ...camera, neighborhood: "South Williamsburg" };
+    render(
+      <CameraDetailClient
+        camera={cameraWithNeighborhood}
+        displayName="Camera"
+        showRawName={false}
+      />
+    );
+    const link = screen.getByRole("link", { name: "South Williamsburg" });
+    expect(link).toHaveAttribute("href", "/explore?neighborhood=South%20Williamsburg");
+  });
+
+  it("does not render a neighborhood link when neighborhood is undefined", () => {
+    render(<CameraDetailClient camera={camera} displayName="Camera" showRawName={false} />);
+    expect(screen.queryByRole("link", { name: /explore\?neighborhood/i })).not.toBeInTheDocument();
+  });
 });

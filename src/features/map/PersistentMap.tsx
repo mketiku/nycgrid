@@ -25,6 +25,7 @@ function PersistentMapInner() {
     query: searchParams?.get("q") ?? undefined,
     borough: searchParams?.get("borough") ?? undefined,
     type: searchParams?.get("type") ?? undefined,
+    neighborhood: searchParams?.get("neighborhood") ?? undefined,
   }));
 
   // Deep-link: when already in-app and user navigates TO /explore with a camera
@@ -69,6 +70,7 @@ function PersistentMapInner() {
         initialQuery={initial.query}
         initialBorough={initial.borough}
         initialType={initial.type}
+        initialNeighborhood={initial.neighborhood}
         citibikeCameraIds={citibikeCameraIds}
       />
     </div>

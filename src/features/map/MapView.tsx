@@ -85,6 +85,7 @@ interface MapViewProps {
   initialQuery?: string;
   initialBorough?: string;
   initialType?: string;
+  initialNeighborhood?: string;
   citibikeCameraIds?: Set<string>;
 }
 
@@ -94,6 +95,7 @@ export function MapView({
   initialQuery,
   initialBorough,
   initialType,
+  initialNeighborhood,
   citibikeCameraIds,
 }: MapViewProps) {
   const initialResolved = useRef(false);
@@ -115,6 +117,9 @@ export function MapView({
     initialType && VALID_TYPES.has(initialType as CameraType) ? (initialType as CameraType) : "all"
   );
   const [nearCitibike, setNearCitibike] = useState(false);
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState<string | null>(
+    initialNeighborhood ?? null
+  );
   const [mobileListOpen, setMobileListOpen] = useState(false);
   const { theme } = useThemeStore();
   const { favourites, toggle } = favouritesApi;
@@ -157,6 +162,7 @@ export function MapView({
         q: string;
         borough: string | null;
         type: CameraType;
+        neighborhood: string | null;
       }>
     ) => {
       const url = new URL(window.location.href);
@@ -169,6 +175,7 @@ export function MapView({
       if ("borough" in overrides) setOrDelete("borough", overrides.borough ?? null);
       if ("type" in overrides)
         setOrDelete("type", overrides.type === "all" ? null : (overrides.type ?? null));
+      if ("neighborhood" in overrides) setOrDelete("neighborhood", overrides.neighborhood ?? null);
       // Use history.replaceState instead of router.replace — the URL update is a
       // permalink only; all state is local. router.replace triggers a full App Router
       // navigation cycle (~600ms), history.replaceState is instant.
@@ -205,6 +212,11 @@ export function MapView({
   const handleNearCitibikeToggle = useCallback(() => {
     setNearCitibike((prev) => !prev);
   }, []);
+
+  const handleNeighborhoodClear = useCallback(() => {
+    setSelectedNeighborhood(null);
+    pushParams({ neighborhood: null });
+  }, [pushParams]);
 
   const handleAddManyFavourites = useCallback(
     (ids: string[]) => {
@@ -304,6 +316,7 @@ export function MapView({
         if (selectedBorough && c.area !== selectedBorough) return false;
         if (selectedType !== "all" && classifyCameraType(c.name) !== selectedType) return false;
         if (nearCitibike && citibikeCameraIds && !citibikeCameraIds.has(c.id)) return false;
+        if (selectedNeighborhood && c.neighborhood !== selectedNeighborhood) return false;
         const q = query.trim().toLowerCase();
         if (q) {
           const haystack = `${c.name} ${c.area} ${c.id}`.toLowerCase();
@@ -318,6 +331,7 @@ export function MapView({
       selectedType,
       nearCitibike,
       citibikeCameraIds,
+      selectedNeighborhood,
       query,
     ]
   );
@@ -333,12 +347,23 @@ export function MapView({
     if (nearCitibike && citibikeCameraIds) {
       result = result.filter((c) => citibikeCameraIds.has(c.id));
     }
+    if (selectedNeighborhood) {
+      result = result.filter((c) => c.neighborhood === selectedNeighborhood);
+    }
     if (!normalizedQuery) return result;
     return result.filter((camera) => {
       const haystack = `${camera.name} ${camera.area} ${camera.id}`.toLowerCase();
       return haystack.includes(normalizedQuery);
     });
-  }, [query, sortedCameras, selectedBorough, selectedType, nearCitibike, citibikeCameraIds]);
+  }, [
+    query,
+    sortedCameras,
+    selectedBorough,
+    selectedType,
+    nearCitibike,
+    citibikeCameraIds,
+    selectedNeighborhood,
+  ]);
 
   const handleBoroughSelect = useCallback(
     (borough: CameraArea) => {
@@ -443,6 +468,8 @@ export function MapView({
           nearCitibike={nearCitibike}
           onNearCitibikeToggle={handleNearCitibikeToggle}
           hasCitibikeData={!!citibikeCameraIds?.size}
+          activeNeighborhood={selectedNeighborhood}
+          onClearNeighborhood={handleNeighborhoodClear}
           searchInputRef={searchInputRef}
           isDesktopInline
           favourites={favourites}
@@ -592,6 +619,8 @@ export function MapView({
         searchInputRef={searchInputRef}
         selectedBorough={selectedBorough}
         onBoroughSelect={handleBoroughSelect}
+        activeNeighborhood={selectedNeighborhood}
+        onClearNeighborhood={handleNeighborhoodClear}
         favourites={favourites}
         onToggleFavourite={toggle}
         onAddManyFavourites={handleAddManyFavourites}
@@ -694,6 +723,8 @@ interface CameraBrowsePanelProps {
   isDesktopInline?: boolean;
   selectedBorough?: CameraArea | null;
   onBoroughSelect?: (borough: CameraArea) => void;
+  activeNeighborhood?: string | null;
+  onClearNeighborhood?: () => void;
   searchInputRef?: React.RefObject<HTMLInputElement | null>;
   favourites: Set<string>;
   onToggleFavourite: (cameraId: string) => void;
@@ -718,6 +749,8 @@ export function CameraBrowsePanel({
   isDesktopInline = false,
   selectedBorough,
   onBoroughSelect,
+  activeNeighborhood,
+  onClearNeighborhood,
   searchInputRef,
   favourites,
   onToggleFavourite,
@@ -801,6 +834,8 @@ export function CameraBrowsePanel({
           hasCitibikeData={hasCitibikeData ?? false}
           selectedBorough={null}
           onBoroughSelect={() => {}}
+          activeNeighborhood={activeNeighborhood ?? null}
+          onClearNeighborhood={onClearNeighborhood ?? (() => {})}
           searchInputRef={searchInputRef}
           isSelectMode={isSelectMode}
           selectedCameraIds={selectedCameraIds}
@@ -847,6 +882,8 @@ export function CameraBrowsePanel({
             hasCitibikeData={hasCitibikeData ?? false}
             selectedBorough={selectedBorough ?? null}
             onBoroughSelect={onBoroughSelect ?? (() => {})}
+            activeNeighborhood={activeNeighborhood ?? null}
+            onClearNeighborhood={onClearNeighborhood ?? (() => {})}
             searchInputRef={searchInputRef}
             isSelectMode={isSelectMode}
             selectedCameraIds={selectedCameraIds}
@@ -884,6 +921,8 @@ interface PanelContentsProps {
   hasCitibikeData: boolean;
   selectedBorough: CameraArea | null;
   onBoroughSelect: (borough: CameraArea) => void;
+  activeNeighborhood: string | null;
+  onClearNeighborhood: () => void;
   searchInputRef?: React.RefObject<HTMLInputElement | null>;
   isSelectMode: boolean;
   selectedCameraIds: string[];
@@ -923,6 +962,8 @@ function PanelContents({
   hasCitibikeData,
   selectedBorough,
   onBoroughSelect,
+  activeNeighborhood,
+  onClearNeighborhood,
   searchInputRef,
   isSelectMode,
   selectedCameraIds,
@@ -1110,6 +1151,25 @@ function PanelContents({
           </div>
         )}
 
+        {activeNeighborhood && (
+          <div className="flex gap-1.5 mt-2">
+            <button
+              type="button"
+              onClick={onClearNeighborhood}
+              aria-label={`Clear neighborhood filter: ${activeNeighborhood}`}
+              className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest px-2.5 py-1 rounded border transition-colors"
+              style={{
+                backgroundColor: "var(--color-elevated)",
+                borderColor: "var(--color-accent)",
+                color: "var(--color-accent)",
+              }}
+            >
+              {activeNeighborhood}
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        )}
+
         {isSelectMode ? (
           <div className="mt-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
             <div className="flex flex-wrap items-center gap-2">
@@ -1201,11 +1261,15 @@ function PanelContents({
           </li>
         )}
       </ul>
-      {!query && selectedType === "all" && !nearCitibike && !selectedBorough && (
-        <div className="shrink-0 border-t border-[var(--color-border)] p-3">
-          <YourStats />
-        </div>
-      )}
+      {!query &&
+        selectedType === "all" &&
+        !nearCitibike &&
+        !selectedBorough &&
+        !activeNeighborhood && (
+          <div className="shrink-0 border-t border-[var(--color-border)] p-3">
+            <YourStats />
+          </div>
+        )}
     </>
   );
 }
