@@ -32,7 +32,7 @@ NycGrid relies on `localStorage` and `sessionStorage` for persistence. To preven
 - **Cameras explored (lifetime)**: Capped at **500 unique IDs**. When the limit is reached, new cameras are not added to the lifetime history to preserve `localStorage` space.
 - **Photobooth gallery**: Capped at **12 saved shots**. Oldest shots are automatically pruned when a new one is saved.
 - **Favourites**: No hard cap, but expected to stay under 100 for UX reasons.
-- **Ambient heartbeat**: Increments the timer every **60s**. Frequent writes are avoided to minimize overhead.
+- **Ambient heartbeat**: Increments the timer every **60s** via `trackAmbientHeartbeat()` in `src/lib/analytics/session.ts`. This is a **pure `localStorage` write** — it does not emit a Vercel Analytics event and has zero API cost. Its sole purpose is accumulating ambient session duration for the stats page.
 - **Theme/Settings**: Persisted as small strings/booleans.
 
 **Constraint**: All data is bound to the specific browser and device. Clearing browser data wipes all NycGrid history.

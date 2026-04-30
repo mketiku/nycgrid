@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C * show *)",
+      "Bash(git -C * log *)",
+      "Bash(git -C * diff *)",
+      "Bash(git -C * status)",
+      "Bash(git -C * status *)",
+      "Bash(vercel ls *)",
+      "Bash(vercel logs *)",
+      "Bash(bunx tsc --noEmit)",
+      "mcp__claude_ai_Supabase__get_advisors",
+      "mcp__claude_ai_Supabase__list_projects",
+      "mcp__claude_ai_Supabase__get_logs",
+      "mcp__claude_ai_Supabase__list_tables",
+      "Bash(open *)",
+      "Bash(docker compose ps *)",
+      "Bash(docker compose logs *)"
+    ]
+  }
+}
