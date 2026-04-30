@@ -1,0 +1,352 @@
+# ================================================================
+#  CI Pipeline — Quality Gate for Pull Requests
+#  Stack: Next.js + React + TypeScript + ESLint + Vitest
+#
+#  Job DAG:
+#    actionlint ──► preflight ─┬──► lint ────┐
+#                               ├──► typecheck─┼──► build ──┬──► deploy-preview (PRs)
+#                               └──► unit ────┘             └──► deploy (main) ──► smoke ──► rollback?
+# ================================================================
+
+name: CI / Quality Gate
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
+      - ".gitignore"
+      - "LICENSE"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+jobs:
+  actionlint:
+    name: Lint Workflows (actionlint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run actionlint
+        env:
+          SHELLCHECK_OPTS: "-S warning"
+        run: |
+          bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
+
+  preflight:
+    name: Preflight Checks
+    runs-on: ubuntu-latest
+    needs: [actionlint]
+    steps:
+      - name: Check deploy secrets
+        if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'pull_request'
+        run: |
+          missing=()
+          [[ -z "$VERCEL_TOKEN" ]]      && missing+=("VERCEL_TOKEN")
+          [[ -z "$VERCEL_ORG_ID" ]]     && missing+=("VERCEL_ORG_ID")
+          [[ -z "$VERCEL_PROJECT_ID" ]] && missing+=("VERCEL_PROJECT_ID")
+          if [[ ${#missing[@]} -gt 0 ]]; then
+            echo "❌ Missing deploy secrets: ${missing[*]}"
+            exit 1
+          fi
+          echo "✅ Deploy secrets present"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    needs: [preflight]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.12"
+      - name: Cache node_modules
+        id: cache-modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
+      - name: Install dependencies
+        if: steps.cache-modules.outputs.cache-hit != 'true'
+        env:
+          HUSKY: "0"
+        run: bun install --frozen-lockfile
+      - name: Run ESLint
+        run: bun run lint
+
+  typecheck:
+    name: TypeScript Check
+    runs-on: ubuntu-latest
+    needs: [preflight]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.12"
+      - name: Cache node_modules
+        id: cache-modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
+      - name: Install dependencies
+        if: steps.cache-modules.outputs.cache-hit != 'true'
+        env:
+          HUSKY: "0"
+        run: bun install --frozen-lockfile
+      - name: Run TypeScript compiler
+        run: bun run typecheck
+
+  unit-test:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    needs: [preflight]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.12"
+      - name: Cache node_modules
+        id: cache-modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
+      - name: Install dependencies
+        if: steps.cache-modules.outputs.cache-hit != 'true'
+        env:
+          HUSKY: "0"
+        run: bun install --frozen-lockfile
+      - name: Run Vitest (fast, no coverage)
+        if: github.event_name == 'pull_request'
+        run: bunx vitest run
+      - name: Run Vitest with coverage
+        if: github.event_name != 'pull_request'
+        run: bun run test:coverage
+      - name: Upload coverage report
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-coverage
+          path: coverage/
+          retention-days: 7
+
+  build:
+    name: Production Build
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck]
+    env:
+      NEXT_PUBLIC_SITE_URL: "https://nycgrid.app"
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.12"
+      - name: Cache node_modules
+        id: cache-modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
+      - name: Install dependencies
+        if: steps.cache-modules.outputs.cache-hit != 'true'
+        env:
+          HUSKY: "0"
+        run: bun install --frozen-lockfile
+      - name: Install Vercel CLI
+        run: bun install -g vercel@52
+      - name: Pull Vercel project settings
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Build for production
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Upload Vercel build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: vercel-build
+          path: .vercel/output/
+          retention-days: 1
+      - name: Upload Next.js build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextjs-build
+          path: .next/
+          retention-days: 1
+
+  deploy-preview:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    needs: [build, unit-test]
+    if: github.event_name == 'pull_request'
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Vercel CLI
+        run: npm install -g vercel@52
+      - name: Download Vercel build output
+        uses: actions/download-artifact@v4
+        with:
+          name: vercel-build
+          path: .vercel/output/
+      - name: Deploy preview
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: Comment preview URL on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy.outputs.url }}';
+            const body = `### Preview deployment\n\n🔗 ${url}\n\n_Built from ${context.sha.slice(0,7)}_`;
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.data.find(c =>
+              c.user.login === 'github-actions[bot]' && c.body.includes('Preview deployment')
+            );
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, unit-test]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Vercel CLI
+        run: npm install -g vercel@52
+      - name: Download Vercel build output
+        uses: actions/download-artifact@v4
+        with:
+          name: vercel-build
+          path: .vercel/output/
+      - name: Deploy prebuilt to production
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: Smoke test
+        id: smoke
+        run: |
+          BASE="${{ steps.deploy.outputs.url }}"
+          fail=0
+          check() {
+            local url="$1" expect="$2"
+            status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$url")
+            if [[ "$expect" == *"$status"* ]]; then
+              echo "✅ $url → $status"
+            else
+              echo "❌ $url → $status (expected $expect)"
+              fail=1
+            fi
+          }
+          check "$BASE/"           "200"
+          check "$BASE/explore"    "200"
+          exit $fail
+      - name: Auto-rollback on smoke failure
+        if: steps.deploy.outcome == 'success' && steps.smoke.outcome == 'failure'
+        run: |
+          echo "Smoke tests failed — rolling back to previous deployment"
+          vercel rollback --token=${{ secrets.VERCEL_TOKEN }} --yes
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  e2e:
+    name: Playwright E2E
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    needs: [build]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.12"
+      - name: Cache node_modules
+        id: cache-modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
+      - name: Install dependencies
+        if: steps.cache-modules.outputs.cache-hit != 'true'
+        env:
+          HUSKY: "0"
+        run: bun install --frozen-lockfile
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-build
+          path: .next/
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium --with-deps
+      - name: Run E2E tests
+        run: bunx playwright test
+        env:
+          CI: true
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
