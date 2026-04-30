@@ -14,9 +14,11 @@ import { useFavourites } from "@/hooks/useFavourites";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useShareUrl } from "@/hooks/useShareUrl";
 
+type CloseReason = "keyboard" | "button";
+
 interface CameraPanelProps {
   camera: CameraType | null;
-  onClose: () => void;
+  onClose: (reason?: CloseReason) => void;
 }
 
 export function CameraPanel({ camera, onClose }: CameraPanelProps) {
@@ -30,6 +32,7 @@ export function CameraPanel({ camera, onClose }: CameraPanelProps) {
           <motion.div
             key="mobile-card"
             role="dialog"
+            aria-modal="true"
             aria-label="Selected camera details"
             className="lg:hidden fixed bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] left-2 right-2 z-60 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-2xl md:bottom-3"
             initial={shouldReduceMotion ? { opacity: 0 } : { y: 12, opacity: 0 }}
@@ -52,6 +55,7 @@ export function CameraPanel({ camera, onClose }: CameraPanelProps) {
           <motion.div
             key="desktop-panel"
             role="dialog"
+            aria-modal="true"
             aria-label="Selected camera details"
             className="hidden lg:flex fixed top-12 right-0 bottom-0 z-50 w-[440px] xl:w-[480px] flex-col bg-[var(--color-surface)] border-l border-[var(--color-border)] overflow-hidden shadow-2xl"
             initial={shouldReduceMotion ? false : { x: "110%", opacity: 0 }}
@@ -71,7 +75,7 @@ export function CameraPanel({ camera, onClose }: CameraPanelProps) {
   );
 }
 
-function GhostContent({ onClose }: { onClose: () => void }) {
+function GhostContent({ onClose }: { onClose: (reason?: CloseReason) => void }) {
   return (
     <div className="flex flex-col gap-3 p-4">
       <div className="flex items-start justify-between gap-2">
@@ -84,7 +88,7 @@ function GhostContent({ onClose }: { onClose: () => void }) {
           </h2>
         </div>
         <button
-          onClick={onClose}
+          onClick={() => onClose("button")}
           aria-label="Close camera panel"
           className="shrink-0 rounded-lg p-1 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-elevated)] hover:text-[var(--color-text-primary)]"
         >
@@ -132,12 +136,24 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function MobileCardContent({ camera, onClose }: { camera: CameraType; onClose: () => void }) {
+function MobileCardContent({
+  camera,
+  onClose,
+}: {
+  camera: CameraType;
+  onClose: (reason?: CloseReason) => void;
+}) {
   if (camera.id === GHOST_CAMERA_ID) return <GhostContent onClose={onClose} />;
   return <MobileCardNormal camera={camera} onClose={onClose} />;
 }
 
-function MobileCardNormal({ camera, onClose }: { camera: CameraType; onClose: () => void }) {
+function MobileCardNormal({
+  camera,
+  onClose,
+}: {
+  camera: CameraType;
+  onClose: (reason?: CloseReason) => void;
+}) {
   const { toggle, isFavourite } = useFavourites();
   const { recordView } = useRecentlyViewed();
   const onCloseRef = useRef(onClose);
@@ -153,7 +169,7 @@ function MobileCardNormal({ camera, onClose }: { camera: CameraType; onClose: ()
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCloseRef.current();
+      if (e.key === "Escape") onCloseRef.current("keyboard");
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
@@ -197,7 +213,7 @@ function MobileCardNormal({ camera, onClose }: { camera: CameraType; onClose: ()
           </div>
         </div>
         <button
-          onClick={onClose}
+          onClick={() => onClose("button")}
           aria-label="Close camera panel"
           className="shrink-0 rounded-lg p-1 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-elevated)] hover:text-[var(--color-text-primary)]"
         >
@@ -241,12 +257,24 @@ function MobileCardNormal({ camera, onClose }: { camera: CameraType; onClose: ()
   );
 }
 
-function PanelContent({ camera, onClose }: { camera: CameraType; onClose: () => void }) {
+function PanelContent({
+  camera,
+  onClose,
+}: {
+  camera: CameraType;
+  onClose: (reason?: CloseReason) => void;
+}) {
   if (camera.id === GHOST_CAMERA_ID) return <GhostContent onClose={onClose} />;
   return <PanelNormal camera={camera} onClose={onClose} />;
 }
 
-function PanelNormal({ camera, onClose }: { camera: CameraType; onClose: () => void }) {
+function PanelNormal({
+  camera,
+  onClose,
+}: {
+  camera: CameraType;
+  onClose: (reason?: CloseReason) => void;
+}) {
   const { toggle, isFavourite } = useFavourites();
   const { recordView } = useRecentlyViewed();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -261,7 +289,7 @@ function PanelNormal({ camera, onClose }: { camera: CameraType; onClose: () => v
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onCloseRef.current();
+      if (e.key === "Escape") onCloseRef.current("keyboard");
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
@@ -351,7 +379,7 @@ function PanelNormal({ camera, onClose }: { camera: CameraType; onClose: () => v
             />
           </button>
           <button
-            onClick={onClose}
+            onClick={() => onClose("button")}
             aria-label="Close camera panel"
             className="inline-flex items-center justify-center w-11 h-11 rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
           >

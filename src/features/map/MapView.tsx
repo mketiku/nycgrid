@@ -36,6 +36,7 @@ const TYPE_LABELS: Record<CameraType, string> = {
 const CAMERA_TYPES: CameraType[] = ["all", "street", "bridge", "highway", "tunnel"];
 import { useMapSetup } from "./useMapSetup";
 import { CameraPanel } from "./CameraPanel";
+import { useBoroughAnnouncement } from "./useBoroughAnnouncement";
 import { useThemeStore, THEME_ACCENTS } from "@/features/theme/useThemeStore";
 import { ThemeToggle } from "@/features/theme/ThemeToggle";
 import { FEATURED_CAMERAS } from "@/features/context/lib/featured-cameras";
@@ -121,6 +122,9 @@ export function MapView({
 
   const accentColor = THEME_ACCENTS[theme] ?? THEME_ACCENTS.street;
   const isLight = theme === "light";
+  const lastActivatedCameraRef = useRef<HTMLElement | null>(null);
+  const closeReasonRef = useRef<"keyboard" | "button" | "other">("other");
+  const prevSelectedCameraRef = useRef<Camera | null>(selectedCamera);
   const queryPushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
     () => () => {
@@ -128,6 +132,21 @@ export function MapView({
     },
     []
   );
+
+  // Restore focus to the camera list item that opened the panel when the panel
+  // closes via keyboard (Escape) or the close button. Skip restoration for
+  // unrelated state changes (e.g. clicking a different camera, navigation).
+  useEffect(() => {
+    const previous = prevSelectedCameraRef.current;
+    prevSelectedCameraRef.current = selectedCamera;
+    if (previous && !selectedCamera) {
+      const reason = closeReasonRef.current;
+      closeReasonRef.current = "other";
+      if (reason === "keyboard" || reason === "button") {
+        lastActivatedCameraRef.current?.focus();
+      }
+    }
+  }, [selectedCamera]);
 
   const featuredIds = useMemo(() => new Set(FEATURED_CAMERAS.map((c) => c.id)), []);
 
@@ -333,7 +352,8 @@ export function MapView({
   );
 
   const handleCameraBrowseSelect = useCallback(
-    (camera: Camera) => {
+    (camera: Camera, trigger?: HTMLElement | null) => {
+      if (trigger) lastActivatedCameraRef.current = trigger;
       selectCamera(camera);
       flyTo([camera.longitude, camera.latitude], 15);
       setMobileListOpen(false);
@@ -378,6 +398,12 @@ export function MapView({
     );
   }, [cameras, flyTo, selectCamera]);
 
+  const boroughAnnouncement = useBoroughAnnouncement({
+    selectedBorough,
+    filteredCount: filteredCameras.length,
+    totalCount: cameras.length,
+  });
+
   const zoomBtnCls =
     "flex items-center justify-center w-11 h-11 border font-mono text-sm transition-colors shadow-sm";
   const mapCtrlStyle = {
@@ -389,6 +415,16 @@ export function MapView({
   return (
     <div className="relative w-full h-full">
       <div ref={containerRef} className="w-full h-full" />
+
+      <div
+        data-testid="borough-filter-announcement"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {boroughAnnouncement}
+      </div>
 
       {/* ── Desktop: camera browser fills the full left column ── */}
       <div className="absolute top-[60px] left-4 bottom-4 z-50 hidden desktop-layout:flex flex-col w-80 lg:w-96">
@@ -587,7 +623,13 @@ export function MapView({
         })}
       </div>
 
-      <CameraPanel camera={selectedCamera} onClose={() => selectCamera(null)} />
+      <CameraPanel
+        camera={selectedCamera}
+        onClose={(reason) => {
+          closeReasonRef.current = reason ?? "other";
+          selectCamera(null);
+        }}
+      />
 
       {/* Attribution — lives here so it layers below camera panels (z-50/60) and can
           shift left on desktop when the camera panel is open */}
@@ -641,7 +683,7 @@ interface CameraBrowsePanelProps {
   isMobileOpen: boolean;
   onCloseMobile: () => void;
   onQueryChange: (query: string) => void;
-  onSelectCamera: (camera: Camera) => void;
+  onSelectCamera: (camera: Camera, trigger?: HTMLElement | null) => void;
   onSurpriseMe: () => void;
   query: string;
   selectedType: CameraType;
@@ -830,7 +872,7 @@ interface PanelContentsProps {
   selectedCameraId: string | null;
   query: string;
   onQueryChange: (q: string) => void;
-  onSelectCamera: (c: Camera) => void;
+  onSelectCamera: (c: Camera, trigger?: HTMLElement | null) => void;
   onSurpriseMe: () => void;
   onCloseMobile: () => void;
   showCloseButton: boolean;
@@ -1181,7 +1223,7 @@ function CameraListItem({
 }: {
   camera: Camera;
   isSelected: boolean;
-  onSelect: (c: Camera) => void;
+  onSelect: (c: Camera, trigger?: HTMLElement | null) => void;
   isSelectMode: boolean;
   isChecked: boolean;
   isSelectionDisabled: boolean;
@@ -1217,12 +1259,12 @@ function CameraListItem({
         ) : null}
         <button
           type="button"
-          onClick={() => {
+          onClick={(event) => {
             if (isSelectMode) {
               onToggleSelection(camera.id);
               return;
             }
-            onSelect(camera);
+            onSelect(camera, event.currentTarget);
           }}
           aria-pressed={isSelected}
           className="min-w-0 flex-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"

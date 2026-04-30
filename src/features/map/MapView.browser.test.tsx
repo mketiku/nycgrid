@@ -259,8 +259,15 @@ describe("MapView", () => {
     expect(filterByBorough).toHaveBeenCalledWith("Brooklyn");
     expect(flyTo).toHaveBeenCalledWith([-73.9442, 40.6782], 12);
 
+    // ARIA live region announces filter change to screen readers
+    const liveRegion = screen.getByTestId("borough-filter-announcement");
+    expect(liveRegion).toHaveAttribute("role", "status");
+    expect(liveRegion).toHaveAttribute("aria-live", "polite");
+    expect(liveRegion.textContent).toMatch(/Showing \d+ camera.* in Brooklyn/);
+
     fireEvent.click(boroughGroup.getByRole("button", { name: "Brooklyn" }));
     expect(filterByBorough).toHaveBeenLastCalledWith(null);
+    expect(liveRegion.textContent).toMatch(/Showing all \d+ cameras/);
 
     fireEvent.click(screen.getAllByRole("button", { name: /brooklyn bridge brooklyn/i })[0]);
 
