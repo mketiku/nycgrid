@@ -88,13 +88,17 @@ describe("ComplaintModal", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it("focuses the first focusable element when the modal opens", () => {
+  it("focuses the Submit Complaint button when the modal opens", () => {
     render(<ComplaintModal open={true} onClose={vi.fn()} />);
+    const submitButton = screen.getByRole("button", { name: /Submit Complaint/i });
+    expect(document.activeElement).toBe(submitButton);
+  });
 
-    const dialog = screen.getByRole("dialog");
-    const firstFocusable = dialog.querySelector<HTMLElement>("button, [href], input, [tabindex]");
-    expect(firstFocusable).not.toBeNull();
-    expect(document.activeElement).toBe(firstFocusable);
+  it("focuses the Acknowledge button after submitting", () => {
+    render(<ComplaintModal open={true} onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: /Submit Complaint/i }));
+    const acknowledgeButton = screen.getByRole("button", { name: /Acknowledge/i });
+    expect(document.activeElement).toBe(acknowledgeButton);
   });
 
   it("closes on Escape key", () => {

@@ -19,6 +19,8 @@ export function ComplaintModal({ open, onClose }: ComplaintModalProps) {
   const [submitted, setSubmitted] = useState(false);
   const [caseNumber] = useState(() => randomCaseNumber());
   const dialogRef = useRef<HTMLDivElement>(null);
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
+  const acknowledgeButtonRef = useRef<HTMLButtonElement>(null);
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -31,9 +33,12 @@ export function ComplaintModal({ open, onClose }: ComplaintModalProps) {
 
   useEffect(() => {
     if (!open) return;
-    const el = dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE);
-    el?.focus();
+    submitButtonRef.current?.focus();
   }, [open]);
+
+  useEffect(() => {
+    if (submitted) acknowledgeButtonRef.current?.focus();
+  }, [submitted]);
 
   useEffect(() => {
     if (!open) return;
@@ -161,6 +166,7 @@ export function ComplaintModal({ open, onClose }: ComplaintModalProps) {
                         Never mind, it&apos;s fine
                       </button>
                       <button
+                        ref={submitButtonRef}
                         onClick={handleSubmit}
                         className="font-mono text-xs uppercase tracking-widest px-4 py-2 bg-[var(--color-accent)] text-[var(--color-base)] rounded hover:opacity-90 transition-opacity font-semibold"
                       >
@@ -197,6 +203,7 @@ export function ComplaintModal({ open, onClose }: ComplaintModalProps) {
                     </p>
 
                     <button
+                      ref={acknowledgeButtonRef}
                       onClick={handleClose}
                       className="font-mono text-xs uppercase tracking-widest px-4 py-2 border border-[var(--color-border)] text-[var(--color-text-secondary)] rounded hover:border-[var(--color-accent)] hover:text-[var(--color-text-primary)] transition-colors self-end"
                     >

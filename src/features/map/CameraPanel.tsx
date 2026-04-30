@@ -141,7 +141,7 @@ function MobileCardNormal({ camera, onClose }: { camera: CameraType; onClose: ()
   const { toggle, isFavourite } = useFavourites();
   const { recordView } = useRecentlyViewed();
   const onCloseRef = useRef(onClose);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const cameraHeadingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -160,7 +160,7 @@ function MobileCardNormal({ camera, onClose }: { camera: CameraType; onClose: ()
   }, []);
 
   useEffect(() => {
-    closeButtonRef.current?.focus();
+    cameraHeadingRef.current?.focus();
   }, [camera.id]);
 
   const favourited = isFavourite(camera.id);
@@ -170,7 +170,11 @@ function MobileCardNormal({ camera, onClose }: { camera: CameraType; onClose: ()
       {/* Header: name + close */}
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <h2 className="font-mono text-sm font-semibold leading-tight text-[var(--color-text-primary)] line-clamp-2">
+          <h2
+            ref={cameraHeadingRef}
+            tabIndex={-1}
+            className="font-mono text-sm font-semibold leading-tight text-[var(--color-text-primary)] line-clamp-2 outline-none"
+          >
             {camera.name}
           </h2>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -193,7 +197,6 @@ function MobileCardNormal({ camera, onClose }: { camera: CameraType; onClose: ()
           </div>
         </div>
         <button
-          ref={closeButtonRef}
           onClick={onClose}
           aria-label="Close camera panel"
           className="shrink-0 rounded-lg p-1 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-elevated)] hover:text-[var(--color-text-primary)]"
