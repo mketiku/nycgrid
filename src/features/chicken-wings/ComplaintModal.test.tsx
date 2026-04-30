@@ -88,6 +88,22 @@ describe("ComplaintModal", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it("focuses the first focusable element when the modal opens", () => {
+    render(<ComplaintModal open={true} onClose={vi.fn()} />);
+
+    const dialog = screen.getByRole("dialog");
+    const firstFocusable = dialog.querySelector<HTMLElement>("button, [href], input, [tabindex]");
+    expect(firstFocusable).not.toBeNull();
+    expect(document.activeElement).toBe(firstFocusable);
+  });
+
+  it("closes on Escape key", () => {
+    const onClose = vi.fn();
+    render(<ComplaintModal open={true} onClose={onClose} />);
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
   it("calls onClose when the backdrop is clicked", () => {
     const onClose = vi.fn();
     const { container } = render(<ComplaintModal open={true} onClose={onClose} />);

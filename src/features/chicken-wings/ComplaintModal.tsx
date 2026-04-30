@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { X } from "lucide-react";
 
@@ -13,14 +13,52 @@ function randomCaseNumber() {
   return String(Math.floor(1000000 + Math.random() * 9000000));
 }
 
+const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
 export function ComplaintModal({ open, onClose }: ComplaintModalProps) {
   const [submitted, setSubmitted] = useState(false);
   const [caseNumber] = useState(() => randomCaseNumber());
+  const dialogRef = useRef<HTMLDivElement>(null);
   const today = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
   });
+
+  useEffect(() => {
+    if (!open) return;
+    const el = dialogRef.current?.querySelector<HTMLElement>(FOCUSABLE);
+    el?.focus();
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const trap = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClose();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+      const elements = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
+        (el) => !el.hasAttribute("disabled")
+      );
+      if (!elements.length) return;
+      const first = elements[0];
+      const last = elements[elements.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", trap);
+    return () => document.removeEventListener("keydown", trap);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   function handleSubmit() {
     setSubmitted(true);
@@ -55,7 +93,10 @@ export function ComplaintModal({ open, onClose }: ComplaintModalProps) {
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
           >
-            <div className="w-full max-w-md bg-[var(--color-base)] border border-[var(--color-border)] rounded-lg overflow-hidden shadow-2xl">
+            <div
+              ref={dialogRef}
+              className="w-full max-w-md bg-[var(--color-base)] border border-[var(--color-border)] rounded-lg overflow-hidden shadow-2xl"
+            >
               {/* Header */}
               <div className="border-b border-[var(--color-border)] bg-[var(--color-surface)] px-5 py-3 flex items-start justify-between gap-3">
                 <div>

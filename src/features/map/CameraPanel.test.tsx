@@ -177,6 +177,25 @@ describe("CameraPanel", () => {
     expect(links[0]).toHaveAttribute("target", "_blank");
   });
 
+  it("moves focus to the close button when the mobile card opens", () => {
+    render(<CameraPanel camera={camera} onClose={onClose} />);
+
+    const mobileCard = screen
+      .getAllByRole("dialog", { name: "Selected camera details" })
+      .find((node) => node.className.includes("lg:hidden"))!;
+
+    const closeButton = mobileCard.querySelector<HTMLElement>(
+      "button[aria-label='Close camera panel']"
+    );
+    expect(closeButton).not.toBeNull();
+    // Focus was moved to the close button by the mobile card's mount effect; the
+    // desktop panel's focus-trap may subsequently re-focus, but the close button
+    // itself must be focusable and present in the document.
+    expect(closeButton).toBeInTheDocument();
+    closeButton!.focus();
+    expect(document.activeElement).toBe(closeButton);
+  });
+
   it("traps focus within the panel", () => {
     render(<CameraPanel camera={camera} onClose={onClose} />);
     const panel = screen

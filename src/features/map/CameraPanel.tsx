@@ -141,6 +141,7 @@ function MobileCardNormal({ camera, onClose }: { camera: CameraType; onClose: ()
   const { toggle, isFavourite } = useFavourites();
   const { recordView } = useRecentlyViewed();
   const onCloseRef = useRef(onClose);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -157,6 +158,10 @@ function MobileCardNormal({ camera, onClose }: { camera: CameraType; onClose: ()
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, []);
+
+  useEffect(() => {
+    closeButtonRef.current?.focus();
+  }, [camera.id]);
 
   const favourited = isFavourite(camera.id);
 
@@ -188,6 +193,7 @@ function MobileCardNormal({ camera, onClose }: { camera: CameraType; onClose: ()
           </div>
         </div>
         <button
+          ref={closeButtonRef}
           onClick={onClose}
           aria-label="Close camera panel"
           className="shrink-0 rounded-lg p-1 text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-elevated)] hover:text-[var(--color-text-primary)]"

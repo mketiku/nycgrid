@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const STORAGE_KEY = "nycgrid-shots";
 const MAX_SHOTS = 12;
@@ -17,6 +17,7 @@ export interface Shot {
 
 interface UseMyShots {
   shots: Shot[];
+  isLoading: boolean;
   addShot: (shot: Omit<Shot, "id">) => void;
   removeShot: (id: string) => void;
   clearAll: () => void;
@@ -43,19 +44,21 @@ function writeToStorage(shots: Shot[]): void {
 }
 
 export function useMyShots(): UseMyShots {
+  const initialised = useRef(false);
   const [shots, setShots] = useState<Shot[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadShots = () => {
-      setShots(readFromStorage());
-    };
-    loadShots();
+    if (initialised.current) return;
+    initialised.current = true;
+    const loaded = readFromStorage();
+    setShots(loaded);
+    setIsLoading(false);
   }, []);
 
   function addShot(shot: Omit<Shot, "id">): void {
     setShots((prev) => {
       const newShot: Shot = { ...shot, id: crypto.randomUUID() };
-      // Prepend new shot and enforce max — drop oldest (last in array)
       const next = [newShot, ...prev].slice(0, MAX_SHOTS);
       writeToStorage(next);
       return next;
@@ -79,5 +82,5 @@ export function useMyShots(): UseMyShots {
     }
   }
 
-  return { shots, addShot, removeShot, clearAll };
+  return { shots, isLoading, addShot, removeShot, clearAll };
 }

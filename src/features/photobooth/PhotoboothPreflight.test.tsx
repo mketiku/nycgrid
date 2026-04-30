@@ -63,6 +63,21 @@ describe("PhotoboothPreflight", () => {
     );
   });
 
+  it("enables the Ready button via keyboard: tab to checkbox, space to check, tab to button", () => {
+    render(<PhotoboothPreflight camera={camera} />);
+
+    const checkbox = screen.getByRole("checkbox", { name: "Agree to terms" });
+    const button = screen.getByRole("button", { name: "Open photobooth" });
+
+    expect(button).toBeDisabled();
+
+    checkbox.focus();
+    fireEvent.keyDown(checkbox, { key: " ", code: "Space" });
+    fireEvent.click(checkbox);
+
+    expect(button).not.toBeDisabled();
+  });
+
   it("skips the preflight when the localStorage shortcut is already set", () => {
     localStorage.setItem("nycgrid-photobooth-agreed", "1");
 

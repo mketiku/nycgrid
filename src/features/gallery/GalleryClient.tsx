@@ -21,8 +21,37 @@ function downloadShot(dataUrl: string, cameraId: string, frameType: string): voi
   a.click();
 }
 
+function GallerySkeleton() {
+  return (
+    <div aria-label="Loading gallery" className="flex flex-col gap-6">
+      <div className="h-7 w-32 rounded bg-[var(--color-elevated)] animate-pulse" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            className="rounded-lg overflow-hidden"
+            style={{
+              backgroundColor: "var(--color-surface)",
+              border: "1px solid var(--color-border)",
+            }}
+          >
+            <div className="w-full aspect-video bg-[var(--color-elevated)] animate-pulse" />
+            <div className="p-2 flex flex-col gap-1.5">
+              <div className="h-3 w-3/4 rounded bg-[var(--color-elevated)] animate-pulse" />
+              <div className="h-2.5 w-1/2 rounded bg-[var(--color-elevated)] animate-pulse" />
+              <div className="h-2 w-2/3 rounded bg-[var(--color-elevated)] animate-pulse" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function GalleryClient() {
-  const { shots, removeShot, clearAll } = useMyShots();
+  const { shots, isLoading, removeShot, clearAll } = useMyShots();
+
+  if (isLoading) return <GallerySkeleton />;
 
   return (
     <div className="flex flex-col gap-6">

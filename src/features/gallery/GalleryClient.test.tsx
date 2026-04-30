@@ -17,6 +17,36 @@ vi.mock("@/hooks/useMyShots", () => ({
   useMyShots: () => mockUseMyShots(),
 }));
 
+describe("GalleryClient skeleton", () => {
+  it("renders a loading skeleton while the hook has not yet initialised", () => {
+    mockUseMyShots.mockReturnValue({
+      shots: [],
+      isLoading: true,
+      removeShot: vi.fn(),
+      clearAll: vi.fn(),
+    });
+
+    render(<GalleryClient />);
+
+    expect(screen.getByLabelText("Loading gallery")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "My Gallery" })).not.toBeInTheDocument();
+  });
+
+  it("renders the full UI once loading is complete", () => {
+    mockUseMyShots.mockReturnValue({
+      shots: [],
+      isLoading: false,
+      removeShot: vi.fn(),
+      clearAll: vi.fn(),
+    });
+
+    render(<GalleryClient />);
+
+    expect(screen.queryByLabelText("Loading gallery")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "My Gallery" })).toBeInTheDocument();
+  });
+});
+
 const shots: Shot[] = [
   {
     id: "shot-1",
