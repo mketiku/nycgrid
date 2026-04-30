@@ -129,6 +129,17 @@ NycGrid relies on `localStorage` and `sessionStorage` for persistence. To preven
 
 ---
 
+## Vercel Analytics
+
+- **Package**: `@vercel/analytics@2.0.1` — injected via `<Analytics />` in the root layout
+- **What it tracks**: Page views and unique visitors only. No cookies, no fingerprinting, no personal data collected. Compliant with GDPR/CCPA without a consent banner.
+- **Hobby plan limit**: 2,500 events/day (≈75,000/month). No overage charges — tracking simply stops if the limit is hit.
+- **Failure mode**: Graceful no-op — if the script is blocked (ad blocker, CSP mismatch) the page continues to function normally.
+- **Privacy disclosure**: About page (`/about`) states analytics usage explicitly.
+- **CSP**: Vercel Analytics requires `script-src` and `connect-src` to allow `va.vercel-scripts.com` — verify this is present in `src/lib/security/headers.ts` if CSP is tightened.
+
+---
+
 ## jsDelivr CDN (Static Audio Assets)
 
 - **Used for**: Ambient mode audio — lofi tracks and podcast episodes hosted in `mketiku/nycgrid-assets`
