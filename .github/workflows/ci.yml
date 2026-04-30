@@ -55,7 +55,7 @@ jobs:
     needs: [actionlint]
     steps:
       - name: Check deploy secrets
-        if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'pull_request'
+        if: github.actor != 'dependabot[bot]' && ((github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'pull_request')
         run: |
           missing=()
           [[ -z "$VERCEL_TOKEN" ]]      && missing+=("VERCEL_TOKEN")
