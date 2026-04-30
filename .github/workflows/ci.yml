@@ -4,8 +4,8 @@
 #
 #  Job DAG:
 #    actionlint ──► preflight ─┬──► lint ────┐
-#                               ├──► typecheck─┼──► build ──┬──► deploy-preview (PRs)
-#                               └──► unit ────┘             └──► deploy (main) ──► smoke ──► rollback?
+#                               ├──► typecheck─┼──► deploy-preview (PRs)
+#                               └──► unit ────┘──► deploy (main) ──► smoke ──► rollback?
 # ================================================================
 
 name: CI / Quality Gate
@@ -41,7 +41,7 @@ jobs:
     name: Lint Workflows (actionlint)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Run actionlint
         env:
           SHELLCHECK_OPTS: "-S warning"
@@ -76,8 +76,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [preflight]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
       - uses: oven-sh/setup-bun@v2
@@ -102,8 +102,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [preflight]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
       - uses: oven-sh/setup-bun@v2
@@ -128,8 +128,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [preflight]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
       - uses: oven-sh/setup-bun@v2
@@ -154,79 +154,28 @@ jobs:
         run: bun run test:coverage
       - name: Upload coverage report
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: vitest-coverage
           path: coverage/
           retention-days: 7
 
-  build:
-    name: Production Build
-    runs-on: ubuntu-latest
-    needs: [lint, typecheck]
-    env:
-      NEXT_PUBLIC_SITE_URL: "https://nycgrid.app"
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: "1.3.12"
-      - name: Cache node_modules
-        id: cache-modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
-      - name: Install dependencies
-        if: steps.cache-modules.outputs.cache-hit != 'true'
-        env:
-          HUSKY: "0"
-        run: bun install --frozen-lockfile
-      - name: Install Vercel CLI
-        run: bun install -g vercel@52
-      - name: Pull Vercel project settings
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Build for production
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Upload Vercel build output
-        uses: actions/upload-artifact@v4
-        with:
-          name: vercel-build
-          path: .vercel/output/
-          retention-days: 1
-      - name: Upload Next.js build output
-        uses: actions/upload-artifact@v4
-        with:
-          name: nextjs-build
-          path: .next/
-          retention-days: 1
-
   deploy-preview:
     name: Deploy Preview
     runs-on: ubuntu-latest
-    needs: [build, unit-test]
+    needs: [lint, typecheck, unit-test]
     if: github.event_name == 'pull_request'
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install Vercel CLI
         run: npm install -g vercel@52
-      - name: Download Vercel build output
-        uses: actions/download-artifact@v4
-        with:
-          name: vercel-build
-          path: .vercel/output/
       - name: Deploy preview
         id: deploy
         run: |
-          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          url=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
       - name: Comment preview URL on PR
         uses: actions/github-script@v7
@@ -261,24 +210,19 @@ jobs:
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [build, unit-test]
+    needs: [lint, typecheck, unit-test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install Vercel CLI
         run: npm install -g vercel@52
-      - name: Download Vercel build output
-        uses: actions/download-artifact@v4
-        with:
-          name: vercel-build
-          path: .vercel/output/
-      - name: Deploy prebuilt to production
+      - name: Deploy to production
         id: deploy
         run: |
-          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          url=$(vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
       - name: Smoke test
         id: smoke
@@ -295,8 +239,8 @@ jobs:
               fail=1
             fi
           }
-          check "$BASE/"           "200"
-          check "$BASE/explore"    "200"
+          check "$BASE/"        "200"
+          check "$BASE/explore" "200"
           exit $fail
       - name: Auto-rollback on smoke failure
         if: steps.deploy.outcome == 'success' && steps.smoke.outcome == 'failure'
@@ -311,11 +255,11 @@ jobs:
     name: Playwright E2E
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    needs: [build]
+    needs: [lint, typecheck, unit-test]
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
       - uses: oven-sh/setup-bun@v2
@@ -332,11 +276,6 @@ jobs:
         env:
           HUSKY: "0"
         run: bun install --frozen-lockfile
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: nextjs-build
-          path: .next/
       - name: Install Playwright browsers
         run: bunx playwright install chromium --with-deps
       - name: Run E2E tests
@@ -344,7 +283,7 @@ jobs:
         env:
           CI: true
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
