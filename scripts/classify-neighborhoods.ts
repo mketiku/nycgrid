@@ -33,8 +33,9 @@ function buildUpdatedDataTs(neighborhoodMap: Map<string, string | null>): string
   const dataPath = join(__dirname, "../src/lib/cameras/data.ts");
   let result = readFileSync(dataPath, "utf8");
 
-  // Strip any previously written neighborhood lines to make the script idempotent
-  result = result.replace(/\n\s+neighborhood: '[^']*',/g, "");
+  // Strip any previously written neighborhood lines to make the script idempotent.
+  // Match both single and double quotes since prettier may reformat on the next lint run.
+  result = result.replace(/\n\s+neighborhood: ['"][^'"]*['"],/g, "");
 
   for (const camera of CAMERAS) {
     const neighborhood = neighborhoodMap.get(camera.id) ?? null;

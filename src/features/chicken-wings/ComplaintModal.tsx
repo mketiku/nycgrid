@@ -19,6 +19,10 @@ export function ComplaintModal({ open, onClose }: ComplaintModalProps) {
   const [submitted, setSubmitted] = useState(false);
   const [caseNumber] = useState(() => randomCaseNumber());
   const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
   const today = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -35,7 +39,8 @@ export function ComplaintModal({ open, onClose }: ComplaintModalProps) {
     if (!open) return;
     const trap = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        handleClose();
+        setSubmitted(false);
+        onCloseRef.current();
         return;
       }
       if (e.key !== "Tab") return;
@@ -57,7 +62,6 @@ export function ComplaintModal({ open, onClose }: ComplaintModalProps) {
     };
     document.addEventListener("keydown", trap);
     return () => document.removeEventListener("keydown", trap);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   function handleSubmit() {

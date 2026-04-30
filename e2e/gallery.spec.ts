@@ -4,7 +4,7 @@ test.describe("Gallery empty state", () => {
   test.beforeEach(async ({ page }) => {
     // Ensure localStorage has no saved shots so empty state renders
     await page.goto("/");
-    await page.evaluate(() => localStorage.removeItem("nycgrid-my-shots"));
+    await page.evaluate(() => localStorage.removeItem("nycgrid-shots"));
   });
 
   test("shows empty state when no shots are saved", async ({ page }) => {
