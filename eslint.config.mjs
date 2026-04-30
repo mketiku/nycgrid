@@ -18,7 +18,7 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    files: ["scripts/**/*.mjs", "scripts/**/*.js"],
+    files: ["scripts/**/*.mjs", "scripts/**/*.js", "scripts/**/*.ts"],
     rules: { "no-console": "off" },
   },
 ]);

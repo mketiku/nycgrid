@@ -14,6 +14,7 @@ export interface Camera {
   area: CameraArea;
   isOnline: boolean;
   imageUrl: string;
+  neighborhood?: string;
 }
 
 export function cameraImageUrl(id: string): string {
