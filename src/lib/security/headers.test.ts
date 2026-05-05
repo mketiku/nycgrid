@@ -2,6 +2,15 @@ import { describe, expect, it } from "vitest";
 import { ASSETS_CDN } from "@/lib/assets/cdn";
 import { buildCSP, CONTENT_SECURITY_POLICY, SECURITY_HEADERS } from "./headers";
 
+function directiveValue(csp: string, directive: string): string {
+  return (
+    csp
+      .split("; ")
+      .find((entry) => entry.startsWith(`${directive} `))
+      ?.slice(directive.length + 1) ?? ""
+  );
+}
+
 describe("security headers", () => {
   it("includes a baseline CSP with frame restrictions", () => {
     expect(CONTENT_SECURITY_POLICY).toContain("default-src 'self'");
@@ -32,6 +41,11 @@ describe("security headers", () => {
 
     it("includes upgrade-insecure-requests", () => {
       expect(prodCSP).toContain("upgrade-insecure-requests");
+    });
+
+    it("allows Vercel Analytics script loading and event delivery", () => {
+      expect(directiveValue(prodCSP, "script-src")).toContain("https://va.vercel-scripts.com");
+      expect(directiveValue(prodCSP, "connect-src")).toContain("https://va.vercel-scripts.com");
     });
   });
 
