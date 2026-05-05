@@ -97,7 +97,7 @@ Two URL strategies exist — pick the right one or the canvas will be tainted:
 
 ## 6. Testing & Quality
 
-- **TDD By Default**: Red-Green-Refactor for every implementation and bug fix. Write a failing test first, run it, and show the red output before writing any implementation. See `.agents/skills/tdd_workflow.md` for the full workflow.
+- **TDD By Default**: Red-Green-Refactor for every implementation and bug fix. Write a failing test first, run it, and show the red output before writing any implementation. See `.claude/skills/tdd_workflow.md` for the full workflow.
 - **Tiered Test Projects** (`vitest.config.ts`):
   - `bun run test:unit` — pure logic, no DOM, no MSW
   - `bun run test:component` — DOM rendering (happy-dom)
@@ -121,7 +121,7 @@ Two URL strategies exist — pick the right one or the canvas will be tainted:
   - Examples: `feat(map): add camera markers with live status indicators`, `fix(photobooth): fix canvas capture on Safari`
 - **Skip builds for non-code changes**: Use two distinct skip mechanisms — they are independent.
   - `[skip ci]` in the commit message skips **GitHub Actions** (CI pipeline). Vercel also honours this tag and skips its own build. Use it for docs, ADRs, and any change that does not affect the running app. Examples: `docs: update notes [skip ci]`, `chore: update AGENTS.md [skip ci]`.
-  - **Vercel Ignored Build Step** (dashboard → Project Settings → Git) runs `bash scripts/vercel-build-skip.sh` before every build. The script auto-skips when only non-app files changed and supports a `[skip vercel]` manual tag to skip Vercel without skipping GitHub CI. See `.agents/skills/ci_skip.md` for the decision table and script details.
+  - **Vercel Ignored Build Step** (dashboard → Project Settings → Git) runs `bash scripts/vercel-build-skip.sh` before every build. The script auto-skips when only non-app files changed and supports a `[skip vercel]` manual tag to skip Vercel without skipping GitHub CI. See `.claude/skills/ci_skip.md` for the decision table and script details.
 - **Plan Before Implementation**: When asked to create a plan, produce it first and wait for approval before code changes.
 
 ## 8. Documentation Standards
@@ -135,19 +135,32 @@ All documentation lives in `docs/`. Never create ad-hoc docs in the root.
 
 ## 9. Skills & Deep Context
 
-Agents should use `.agents/skills/` for workflow guidance.
+Agents should use `.claude/skills/` for workflow guidance and `.claude/commands/` for slash commands.
 
-### Skills (`.agents/skills/`)
+### Skills (`.claude/skills/`)
 
-| Skill                     | When to use                                    |
-| ------------------------- | ---------------------------------------------- |
-| `commit`                  | Before every `git commit` or `git push`        |
-| `bug_hunt`                | Diagnosing any bug                             |
-| `tdd_workflow`            | Every implementation, feature, or bug fix      |
-| `nextjs_feature_workflow` | Pages, layouts, server actions, component work |
-| `validation`              | Pre-commit/pre-push checks, hook failures      |
-| `cv_pipeline`             | Adding/upgrading the computer vision pipeline  |
-| `ci_skip`                 | Deciding when/how to skip CI or Vercel builds  |
+| Skill                     | When to use                                                   |
+| ------------------------- | ------------------------------------------------------------- |
+| `commit`                  | Before every `git commit` or `git push`                       |
+| `tdd_workflow`            | Every implementation, feature, or bug fix                     |
+| `nextjs_feature_workflow` | Pages, layouts, server actions, component work                |
+| `validation`              | Pre-commit/pre-push checks, hook failures                     |
+| `cv_pipeline`             | Adding/upgrading the computer vision pipeline                 |
+| `ci_skip`                 | Deciding when/how to skip CI or Vercel builds                 |
+| `skeptic`                 | Gate 4 of `/deep-debug` — challenge fixes before writing code |
+
+### Commands (`.claude/commands/`)
+
+| Command      | When to use                             |
+| ------------ | --------------------------------------- |
+| `deep-debug` | Diagnosing any bug — five-gate protocol |
+
+### Review Agents (`.claude/agents/`)
+
+| Agent           | When to use                                          |
+| --------------- | ---------------------------------------------------- |
+| `a11y-reviewer` | PR review — WCAG 2.1 AA accessibility findings       |
+| `perf-reviewer` | PR review — bundle size, rendering, Next.js patterns |
 
 ## 10. Domain Knowledge
 

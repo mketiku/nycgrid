@@ -30,10 +30,10 @@ bun run test:coverage    # full suite + thresholds
 
 ## Escalation
 
-| Failure | Fix |
-|---------|-----|
-| Lint/format | `bun run lint -- --fix` |
-| Type error | Fix the code |
+| Failure      | Fix                                |
+| ------------ | ---------------------------------- |
+| Lint/format  | `bun run lint -- --fix`            |
+| Type error   | Fix the code                       |
 | Test failure | Fix the code — never weaken a test |
 
 Bypassing hooks with `--no-verify` requires explicit user consent.

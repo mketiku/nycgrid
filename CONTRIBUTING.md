@@ -118,7 +118,6 @@ Commit the CDN bump and `LOFI_TRACKS` entry together. The PR description should 
 ## What we're not looking for
 
 - Changing the tech stack
-- Adding analytics or tracking
 - Features that aggregate, store, or replay individual camera footage
 - Large refactors without prior discussion
 

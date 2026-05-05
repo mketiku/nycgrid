@@ -65,8 +65,8 @@ bun run build     # production build — must succeed
 
 ## Test Tier Placement
 
-| Your test needs... | Tier | Action needed |
-|--------------------|------|---------------|
-| Nothing (pure logic, vi.mock) | **unit** | None — default catch-all |
-| `render`, `renderHook`, `window`, `localStorage` | **component** | Add to `componentGlobs` in `vitest.config.ts` |
-| `server.use()` for HTTP mocking | **integration** | Add to `integrationFiles` in `vitest.config.ts` |
+| Your test needs...                               | Tier            | Action needed                                   |
+| ------------------------------------------------ | --------------- | ----------------------------------------------- |
+| Nothing (pure logic, vi.mock)                    | **unit**        | None — default catch-all                        |
+| `render`, `renderHook`, `window`, `localStorage` | **component**   | Add to `componentGlobs` in `vitest.config.ts`   |
+| `server.use()` for HTTP mocking                  | **integration** | Add to `integrationFiles` in `vitest.config.ts` |

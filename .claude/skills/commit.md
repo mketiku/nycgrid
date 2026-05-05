@@ -1,22 +1,97 @@
-Create a conventional commit for the current staged/unstaged changes.
+---
+name: commit
+description: Use before every git commit or push. Runs the quality gate (typecheck, lint, tests) and organizes conventional commits.
+---
 
-## Instructions
+# Skill: Commit Workflow
 
-1. Run `git status` and `git diff` (staged and unstaged) to understand all changes.
-2. Run `git log --oneline -5` to match the repo's commit message style.
-3. Draft a commit message following these rules:
-   - Format: `type(scope): concise summary`
-   - **Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
-   - **Scope**: optional but recommended — use short identifiers like `map`, `camera`, `photobooth`, `ui`, `hooks`, `lib`
-   - **Subject length**: 7–14 words — enough context to be meaningful, not a paragraph
-   - **Intent over mechanics**: describe what changed and why, not just "update X file"
-   - **Never** add "Co-authored-by: Claude" or any AI attribution
-   - For non-code changes (docs, ADRs, config only), append `[skip ci]` to avoid a Vercel build
-4. Stage relevant files (prefer specific file names over `git add -A`).
-5. Commit using a HEREDOC to preserve formatting.
-6. Run `git status` to confirm success.
+Use this skill whenever you're about to commit and push changes.
 
-## Examples of good commit messages
+## Steps
+
+### 1. Typecheck
+
+```bash
+bun run typecheck
+```
+
+Fix all TypeScript errors before proceeding. Do not skip. `any` is a lint error in this repo.
+
+### 2. Lint & format staged files
+
+```bash
+bunx lint-staged
+```
+
+### 3. Tests
+
+```bash
+bun run test:unit
+```
+
+If changes touch components or integration points, also run:
+
+```bash
+bun run test:component
+bun run test:integration
+```
+
+### 4. Organize commits
+
+Group changes into logical conventional commits:
+
+- `feat(scope): ...` — new functionality
+- `fix(scope): ...` — bug fix
+- `refactor(scope): ...` — restructuring
+- `test(scope): ...` — test additions
+- `chore(scope): ...` — tooling, config, deps
+- `docs(scope): ...` — documentation only
+
+### 5. Commit
+
+```bash
+git commit -m "$(cat <<'EOF'
+type(scope): concise summary (7-14 words)
+EOF
+)"
+```
+
+### 6. Push
+
+```bash
+git push
+```
+
+### 7. Pull Request (when raising one)
+
+```bash
+gh pr create --draft --title "type(scope): summary" --body "$(cat <<'EOF'
+## Summary
+- ...
+
+## Test plan
+- [ ] ...
+EOF
+)"
+```
+
+**Rules:**
+
+- Always `--draft`. Never open a ready-for-review PR directly.
+- Never include `claude.ai/code/session_*` URLs anywhere in the PR.
+
+## Rules
+
+- Never use `--no-verify` unless the user explicitly asks.
+- Never commit without running at least typecheck + lint + unit tests first.
+- Append `[skip ci]` for docs/ADR/config-only commits.
+- Subject: 7–14 words. Intent over mechanics — describe what changed and why.
+
+## Project scopes
+
+Short identifiers: `map`, `camera`, `photobooth`, `ui`, `hooks`, `lib`.
+
+## Examples
 
 - `feat(map): add coverage-gap overlay with borough boundaries`
 - `fix(camera): handle missing feed URL gracefully in live view`
