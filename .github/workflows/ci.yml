@@ -227,7 +227,7 @@ jobs:
       - name: Smoke test
         id: smoke
         run: |
-          BASE="${{ steps.deploy.outputs.url }}"
+          BASE="https://nycgrid.mketiku.com"
           fail=0
           check() {
             local url="$1" expect="$2"
