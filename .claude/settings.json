@@ -22,8 +22,6 @@
       "Bash(bunx prettier *)",
       "Bash(bunx tsc *)",
       "Bash(npm install *)",
-      "Bash(node_modules/.bin/vitest run *)",
-      "Bash(node_modules/.bin/tsc --noEmit)",
       "Bash(curl *)",
       "Bash(bash)",
       "Bash(command -v bun)",

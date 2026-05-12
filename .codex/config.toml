@@ -1,6 +1,8 @@
 # Codex workspace defaults for nycgrid.
 # These settings bias Codex toward small, reviewable, repo-native changes.
 
+sandbox_mode = "workspace-write"
+
 [agent]
 prefer_local_search = true
 prefer_apply_patch = true
@@ -14,6 +16,15 @@ validate_with_lint = true
 validate_with_typecheck = true
 validate_with_tests = true
 validate_with_build = true
+preferred_package_manager = "bun"
+test_command = "bun run test"
+unit_test_command = "bun run test:unit"
+component_test_command = "bun run test:component"
+integration_test_command = "bun run test:integration"
+typecheck_command = "bun run typecheck"
+lint_command = "bun run lint"
+build_command = "bun run build"
+dev_server_command = "bun run dev"
 
 [nextjs]
 version = 16
@@ -35,3 +46,43 @@ prefer_link_for_navigation = true
 prefer_browser_check_for_shell_changes = true
 capture_screenshots_for_ui_regressions = true
 run_pre_push_checks_before_completion = true
+
+[sandbox_workspace_write]
+network_access = true
+
+[command_prefixes]
+preferred = [
+  ["bun", "run", "test"],
+  ["bun", "run", "test:unit"],
+  ["bun", "run", "test:component"],
+  ["bun", "run", "test:integration"],
+  ["bun", "run", "test:coverage"],
+  ["bun", "run", "test:e2e"],
+  ["bun", "run", "validate:commit"],
+  ["bun", "run", "validate:push"],
+  ["bun", "run", "typecheck"],
+  ["bun", "run", "lint"],
+  ["bun", "run", "build"],
+  ["bun", "run", "dev"],
+  ["bunx", "vitest", "run"],
+  ["bunx", "playwright"],
+  ["git", "fetch"],
+  ["git", "push"],
+  ["gh", "run", "list"],
+  ["gh", "run", "view"],
+  ["gh", "pr"],
+  ["gh", "pr", "view"],
+  ["gh", "pr", "checks"],
+  ["gh", "pr", "diff"],
+  ["vercel", "logs"],
+  ["vercel", "env"],
+  ["vercel", "inspect"],
+  ["vercel", "ls"]
+]
+
+[browser_use]
+prefer_for_localhost = true
+prefer_after_ui_changes = true
+prefer_for_shell_navigation = true
+verify_desktop_and_mobile_when_relevant = true
+capture_screenshot_for_visual_changes = true

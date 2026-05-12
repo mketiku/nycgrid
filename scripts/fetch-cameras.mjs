@@ -61,14 +61,14 @@ if (cameras.length > MAX_CAMERAS) {
   process.exit(1);
 }
 
+const cameraLines = cameras.map((c) => "  " + JSON.stringify(c) + ",").join("\n");
+
 const ts = `import type { Camera } from "./types";
 
-/**
- * NYC DOT traffic cameras — ${cameras.length} total.
- * Source: https://webcams.nyctmc.org/api/cameras
- * Re-run to refresh the list.
- */
-export const CAMERAS: Camera[] = ${JSON.stringify(cameras, null, 2)};
+// NYC DOT traffic cameras — ${cameras.length} total. Source: https://webcams.nyctmc.org/api/cameras
+export const CAMERAS: Camera[] = [
+${cameraLines}
+];
 
 export const CAMERA_COUNT = CAMERAS.length;
 

@@ -287,6 +287,44 @@ function pickKB(last: KBVariant | null): KBVariant {
   return options[Math.floor(Math.random() * options.length)];
 }
 
+const AUDIO_RETRY_CONFIG = { maxAttempts: 3, initialDelayMs: 200 };
+
+function setupAudioRetry(
+  audioEl: HTMLAudioElement,
+  src: string,
+  onFatalError?: () => void
+): () => void {
+  let cancelled = false;
+  let retryTimer: ReturnType<typeof setTimeout> | null = null;
+  let attempts = 0;
+
+  const cancel = () => {
+    cancelled = true;
+    if (retryTimer !== null) clearTimeout(retryTimer);
+  };
+
+  const loadWithRetry = () => {
+    if (cancelled) return;
+    attempts++;
+    audioEl.src = src;
+
+    const onError = () => {
+      if (cancelled) return;
+      if (attempts < AUDIO_RETRY_CONFIG.maxAttempts) {
+        const delay = AUDIO_RETRY_CONFIG.initialDelayMs * Math.pow(2, attempts - 1);
+        retryTimer = setTimeout(loadWithRetry, delay);
+      } else {
+        onFatalError?.();
+      }
+    };
+
+    audioEl.addEventListener("error", onError, { once: true });
+  };
+
+  loadWithRetry();
+  return cancel;
+}
+
 interface AmbientPlayerProps {
   cameras: Camera[];
 }
@@ -360,6 +398,9 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   // Two audio slots for crossfading
   const musicRef0 = useRef<HTMLAudioElement | null>(null);
   const musicRef1 = useRef<HTMLAudioElement | null>(null);
+  const cancelMusicRetry0 = useRef<(() => void) | null>(null);
+  const cancelMusicRetry1 = useRef<(() => void) | null>(null);
+  const cancelRadioRetry = useRef<(() => void) | null>(null);
   const musicActiveSlotRef = useRef<0 | 1>(0);
   const musicFadeRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const musicQueueRef = useRef<number[]>([]);
@@ -722,8 +763,10 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     if (!el) return;
     const stream = ALL_STREAMS[stationIndex];
     el.loop = stream.loop;
-    el.src = stream.url;
+    cancelRadioRetry.current?.();
+    cancelRadioRetry.current = setupAudioRetry(el, stream.url, () => setStreamLoading(false));
     setStreamLoading(true);
+    return () => cancelRadioRetry.current?.();
   }, [stationIndex, entered]);
 
   // Play or pause the radio element based on mode, mute, and pause state
@@ -831,7 +874,10 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
       crossfadingRef.current = true;
       initTrack(nextIdx);
       toEl.volume = 0;
-      toEl.src = LOFI_TRACKS[nextIdx].url;
+      const inactiveSlot = musicActiveSlotRef.current === 0 ? 1 : 0;
+      const cancelRef = inactiveSlot === 0 ? cancelMusicRetry0 : cancelMusicRetry1;
+      cancelRef.current?.();
+      cancelRef.current = setupAudioRetry(toEl, LOFI_TRACKS[nextIdx].url);
       void toEl.play().catch(() => {});
       const steps = Math.round(CROSSFADE_MS / 20);
       let tick = 0;
@@ -914,7 +960,10 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     if (lofiTrackIdxRef.current === -1) {
       const firstIdx = dequeueTrack();
       initTrack(firstIdx);
-      el.src = LOFI_TRACKS[firstIdx].url;
+      const activeSlot = musicActiveSlotRef.current;
+      const activeCancelRef = activeSlot === 0 ? cancelMusicRetry0 : cancelMusicRetry1;
+      activeCancelRef.current?.();
+      activeCancelRef.current = setupAudioRetry(el, LOFI_TRACKS[firstIdx].url);
       // Preload next track into inactive slot
       if (musicQueueRef.current.length === 0) {
         musicQueueRef.current = buildMusicQueue(
@@ -926,7 +975,11 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
       }
       const peekIdx = musicQueueRef.current[0];
       const inactiveEl = getInactiveMusicEl();
-      if (inactiveEl && peekIdx !== undefined) inactiveEl.src = LOFI_TRACKS[peekIdx].url;
+      if (inactiveEl && peekIdx !== undefined) {
+        const inactiveCancelRef = activeSlot === 0 ? cancelMusicRetry1 : cancelMusicRetry0;
+        inactiveCancelRef.current?.();
+        inactiveCancelRef.current = setupAudioRetry(inactiveEl, LOFI_TRACKS[peekIdx].url);
+      }
     }
     cancelMusicFade();
     el.volume = 0;
