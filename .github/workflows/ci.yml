@@ -85,7 +85,7 @@ jobs:
           bun-version: "1.3.12"
       - name: Cache node_modules
         id: cache-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
@@ -111,7 +111,7 @@ jobs:
           bun-version: "1.3.12"
       - name: Cache node_modules
         id: cache-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
@@ -137,7 +137,7 @@ jobs:
           bun-version: "1.3.12"
       - name: Cache node_modules
         id: cache-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
@@ -178,7 +178,7 @@ jobs:
           url=$(vercel deploy --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$url" >> "$GITHUB_OUTPUT"
       - name: Comment preview URL on PR
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const url = '${{ steps.deploy.outputs.url }}';
@@ -267,7 +267,7 @@ jobs:
           bun-version: "1.3.12"
       - name: Cache node_modules
         id: cache-modules
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
