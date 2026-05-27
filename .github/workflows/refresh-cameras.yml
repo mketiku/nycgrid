@@ -45,24 +45,36 @@ jobs:
 
       - name: Open pull request
         if: steps.diff.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: chore/refresh-camera-list
-          commit-message: "chore(cameras): refresh DOT camera list [skip ci]"
-          title: "chore(cameras): refresh DOT camera list (${{ steps.diff.outputs.old_count }} → ${{ steps.diff.outputs.new_count }})"
-          body: |
-            ## Summary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OLD: ${{ steps.diff.outputs.old_count }}
+          NEW: ${{ steps.diff.outputs.new_count }}
+          DELTA: ${{ steps.diff.outputs.delta }}
+        run: |
+          BRANCH="chore/refresh-camera-list"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add src/lib/cameras/data.ts
+          git commit -m "chore(cameras): refresh DOT camera list [skip ci]"
+          git push origin "$BRANCH" --force
 
-            - Automated weekly refresh of the NYC DOT camera list via the DOT webcams API
-            - ${{ steps.diff.outputs.old_count }} → ${{ steps.diff.outputs.new_count }} cameras (${{ steps.diff.outputs.delta }})
+          BODY="## Summary
 
-            ## Test plan
+          - Automated weekly refresh of the NYC DOT camera list via the DOT webcams API
+          - ${OLD} → ${NEW} cameras (${DELTA})
 
-            - [ ] Review diff in `src/lib/cameras/data.ts` — changes should look like additions/removals of camera entries, not wholesale rewrites
-            - [ ] A large drop in count may indicate a DOT API issue even if it passed the safety floor
+          ## Test plan
 
-            ## Notes
+          - [ ] Review diff in \`src/lib/cameras/data.ts\` — changes should look like additions/removals of camera entries, not wholesale rewrites
+          - [ ] A large drop in count may indicate a DOT API issue even if it passed the safety floor"
 
-            <!-- Automated PR — no claude.ai/code/session_* links -->
-          delete-branch: true
+          if gh pr view "$BRANCH" --json state -q .state 2>/dev/null | grep -q "OPEN"; then
+            echo "PR already open for $BRANCH, skipping creation."
+          else
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "chore(cameras): refresh DOT camera list (${OLD} → ${NEW})" \
+              --body "$BODY"
+          fi
