@@ -34,6 +34,23 @@ describe("useShareUrl", () => {
     expect(result.current.copied).toBe(true);
   });
 
+  it("falls through to clipboard when native share throws (user cancel)", async () => {
+    const share = vi.fn().mockRejectedValue(new Error("AbortError"));
+    Object.defineProperty(navigator, "share", { value: share, configurable: true, writable: true });
+
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.spyOn(navigator, "clipboard", "get").mockReturnValue({ writeText } as unknown as Clipboard);
+
+    const { result } = renderHook(() => useShareUrl("https://nycgrid.test/shot/abc"));
+    await act(async () => {
+      await result.current.share();
+    });
+
+    expect(share).toHaveBeenCalledWith({ url: "https://nycgrid.test/shot/abc" });
+    expect(writeText).toHaveBeenCalledWith("https://nycgrid.test/shot/abc");
+    expect(result.current.copied).toBe(true);
+  });
+
   it("falls back to prompt when share and clipboard both fail", async () => {
     vi.spyOn(navigator, "clipboard", "get").mockReturnValue({
       writeText: vi.fn().mockRejectedValue(new Error("no")),
