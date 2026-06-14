@@ -11,7 +11,7 @@ Live map of NYC DOT cameras with per-camera context panel (weather, transit aler
 ## Phase 1.5 — Shipped (not in original Phase 1 scope)
 
 - **Coverage gap layer**: Camera density mapped across NYC neighborhoods using ArcGIS community district boundaries and GeoJSON density computation. Toggle in the map UI. A civic literacy tool, not a surveillance one. (`src/features/coverage-gap/`, `/api/coverage-gap/`)
-- **Neighborhood geocoding**: Point-in-polygon classification of all cameras against NYC NTA boundaries — 924/953 cameras assigned a neighborhood. Enables neighborhood-level filtering and display. (`src/lib/cameras/data.ts`)
+- **Neighborhood geocoding**: Point-in-polygon classification of all cameras against NYC NTA boundaries — 933/961 cameras assigned a neighborhood. Enables neighborhood-level filtering and display. (`src/lib/cameras/data.ts`)
 - **Neighborhood filtering**: Clicking a neighborhood name in the camera detail panel filters the explore map to show only cameras in that neighborhood. (`src/features/explore/`, `src/features/map/`)
 - **Accessibility pass**: Focus restoration after closing the camera panel, ARIA live regions for borough filter announcements, `aria-modal` semantics on overlays. Tracked in `docs/context/a11y-status.md`.
 - **Skeleton loaders**: High-fidelity skeletons in Gallery and camera detail panel — no blank screens during fetching.
