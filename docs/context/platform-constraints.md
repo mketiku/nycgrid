@@ -140,6 +140,30 @@ NycGrid relies on `localStorage` and `sessionStorage` for persistence. To preven
 
 ---
 
+## ESPN Scoreboard API
+
+- **Endpoint**: `site.api.espn.com/apis/site/v2/sports/*/scoreboard`
+- **Source**: Unofficial/reverse-engineered ESPN internal API — no public developer program, no terms of service for third-party use
+- **Auth**: None required
+- **Caching**: `revalidate: 86400` — once per day per sport
+- **Rate limits**: Undocumented; once-per-day caching means negligible load on ESPN's infrastructure
+- **Exception to "No undocumented endpoints" rule**: This endpoint is widely used across the developer community and has a long track record of stability. Once-per-day caching means NycGrid contributes negligible load. Failure is graceful — callers return stale data or an empty array, not an outage. Exception acknowledged here per AGENTS.md §8.
+- **Failure modes**: ESPN may return 4xx, change schema, or block third-party access without notice. All callers must wrap in `try/catch` and return `[]` on any failure. Silent degradation only — no error surfaces to the user.
+
+---
+
+## Ticketmaster Discovery API
+
+- **Endpoint**: `app.ticketmaster.com/discovery/v2/events.json`
+- **Source**: Official Ticketmaster Developer API — [developer.ticketmaster.com](https://developer.ticketmaster.com)
+- **Auth**: Requires `TICKETMASTER_API_KEY` env var — returns `[]` gracefully if missing or revoked
+- **Caching**: `revalidate: 86400` — once per day per venue
+- **Rate limits**: Free tier — 5,000 requests/day, 5 requests/second. At current traffic (~437 visitors over 3 months), well within limits. Review before any scaling event.
+- **Call pattern**: One request per camera context panel load, served from Next.js cache for 24h. Actual origin calls are rare.
+- **Failure modes**: 401 if key is revoked, 429 if rate limit is exceeded — both should return `[]` gracefully. No error surfaces to the user.
+
+---
+
 ## jsDelivr CDN (Static Audio Assets)
 
 - **Used for**: Ambient mode audio — lofi tracks and podcast episodes hosted in `mketiku/nycgrid-assets`
