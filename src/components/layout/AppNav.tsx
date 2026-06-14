@@ -23,6 +23,7 @@ const NAV_LINKS = [
   { href: "/ambient", label: "Ambient" },
   { href: "/collections", label: "Collections" },
   { href: "/gallery", label: "Gallery" },
+  { href: "/postcard", label: "Postcard" },
 ];
 
 export function AppNav() {

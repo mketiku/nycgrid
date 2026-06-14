@@ -18,14 +18,14 @@ const camera: Camera = {
 };
 
 describe("ShotClient", () => {
-  it("renders the terminal header, caption, and the SHOOT THIS CORNER CTA", () => {
+  it("renders the terminal header, caption, and the TAKE YOUR SHOT CTA", () => {
     render(<ShotClient camera={camera} frameType="cinema" caption="midtown 3am" />);
 
     expect(screen.getByText(/LIVE NOW/i)).toBeInTheDocument();
     expect(screen.getByText("midtown 3am")).toBeInTheDocument();
     expect(screen.getByRole("img", { name: /live camera frame/i })).toBeInTheDocument();
 
-    const cta = screen.getByRole("link", { name: /shoot this corner/i });
+    const cta = screen.getByRole("link", { name: /take your shot/i });
     expect(cta).toHaveAttribute("href", `/photobooth/${camera.id}`);
   });
 
@@ -37,7 +37,7 @@ describe("ShotClient", () => {
   it("shows an offline badge but keeps the CTA when the camera is offline", () => {
     render(<ShotClient camera={{ ...camera, isOnline: false }} frameType="polaroid" caption="" />);
     expect(screen.getByText(/offline/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /shoot this corner/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /take your shot/i })).toBeInTheDocument();
     expect(screen.queryByText(/live now/i)).not.toBeInTheDocument();
   });
 });
