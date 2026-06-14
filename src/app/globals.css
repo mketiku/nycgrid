@@ -358,3 +358,24 @@ body {
     height: 14px;
   }
 }
+
+/* CRT scan-line sweep for the /shot live-frame load */
+.shot-scanline {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(57, 255, 20, 0.12) 50%,
+    transparent 100%
+  );
+  background-size: 100% 40%;
+  background-repeat: no-repeat;
+  animation: shot-scan 1.4s linear infinite;
+}
+@keyframes shot-scan {
+  0% {
+    background-position: 0 -40%;
+  }
+  100% {
+    background-position: 0 140%;
+  }
+}

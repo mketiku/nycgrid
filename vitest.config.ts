@@ -103,6 +103,7 @@ export default defineConfig({
         "src/features/coverage-gap/types.ts",
         "src/lib/podcast/types.ts",
         "src/app/opengraph-image.tsx",
+        "src/app/shot/[token]/opengraph-image.tsx",
         "src/app/robots.ts",
       ],
     },

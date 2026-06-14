@@ -63,3 +63,6 @@ next-env.d.ts
 # Daily planning — local scratch file
 PLAN_OF_DAY.md
 .env*.local
+
+# Superpowers specs/plans — local only, never tracked
+/docs/superpowers/
