@@ -14,6 +14,8 @@ export interface Venue {
   cameraIds: string[];
   /** ESPN sport slugs for sports venues, e.g. ["basketball/nba", "hockey/nhl"] */
   espnSports?: string[];
+  /** Home team names to filter ESPN events — if set, only events whose name contains one of these strings are kept */
+  espnHomeTeams?: string[];
   /** Ticketmaster attraction ID for this venue */
   tmId?: string;
 }

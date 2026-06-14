@@ -38,6 +38,20 @@ const MSG_VENUE: Venue = {
   tmId: "KovZpZAEdntA",
 };
 
+const CITI_FIELD_VENUE: Venue = {
+  id: "citi-field",
+  name: "Citi Field",
+  shortName: "Citi Field",
+  lat: 40.7571,
+  lng: -73.8458,
+  tier: "tier1",
+  radiusKm: 1.0,
+  cameraIds: ["39b42007-16d8-4302-8b8c-602bbb9e9683"],
+  espnSports: ["baseball/mlb"],
+  tmId: "KovZpZAEkdoA",
+  espnHomeTeams: ["New York Mets"],
+};
+
 describe("computeEventPhase", () => {
   it("returns arrival when within 2h before start", () => {
     const now = "2024-06-15T22:00:00Z"; // 1.5h before 23:30
@@ -131,6 +145,30 @@ describe("getActiveEventsForVenue", () => {
     await getActiveEventsForVenue(MSG_VENUE, now);
 
     expect(mockFetchSports).toHaveBeenCalledTimes(2);
+  });
+
+  it("filters out ESPN games not played at the venue's home team", async () => {
+    // ESPN returns all MLB games — Padres@Orioles is NOT at Citi Field
+    mockFetchSports.mockResolvedValueOnce([
+      {
+        id: "g1",
+        name: "San Diego Padres at Baltimore Orioles",
+        startIso: GAME_START,
+        url: null,
+      },
+      {
+        id: "g2",
+        name: "Chicago Cubs at New York Mets",
+        startIso: GAME_START,
+        url: "https://espn.com/game/g2",
+      },
+    ]);
+
+    const now = new Date("2024-06-15T22:00:00Z"); // arrival phase
+    const events = await getActiveEventsForVenue(CITI_FIELD_VENUE, now);
+
+    expect(events).toHaveLength(1);
+    expect(events[0].eventName).toBe("Chicago Cubs at New York Mets");
   });
 
   it("falls back to TM events when espnSports is not set", async () => {

@@ -64,6 +64,9 @@ export async function getActiveEventsForVenue(
       );
       for (const sportEvents of allSports) {
         for (const e of sportEvents) {
+          if (venue.espnHomeTeams && !venue.espnHomeTeams.some((team) => e.name.includes(team))) {
+            continue;
+          }
           rawEvents.push({
             startIso: e.startIso,
             name: e.name,

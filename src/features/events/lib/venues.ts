@@ -23,6 +23,7 @@ export const VENUES: Venue[] = [
     radiusKm: 0.5,
     cameraIds: ["ad051a78-9c50-43b3-bb71-83b091acd818"],
     espnSports: ["baseball/mlb"],
+    espnHomeTeams: ["New York Yankees"],
     tmId: "KovZpZAEkAkA",
   },
   {
@@ -35,6 +36,7 @@ export const VENUES: Venue[] = [
     radiusKm: 1.0,
     cameraIds: ["39b42007-16d8-4302-8b8c-602bbb9e9683"],
     espnSports: ["baseball/mlb"],
+    espnHomeTeams: ["New York Mets"],
     tmId: "KovZpZAEkdoA",
   },
   {

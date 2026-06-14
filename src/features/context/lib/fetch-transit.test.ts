@@ -24,7 +24,6 @@ describe("fetchTransit", () => {
     cacheControls.entries.forEach((entry) => entry.clear());
     vi.stubGlobal("fetch", vi.fn());
     process.env.NYC_511_API_KEY = "test-key";
-    delete process.env.NYCGRID_API_KEY;
   });
 
   it("returns relevant alerts for matched subway lines", async () => {
