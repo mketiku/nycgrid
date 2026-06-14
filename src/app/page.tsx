@@ -178,6 +178,12 @@ export default function LandingPage() {
         </a>
         <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <Link
+            href="/postcard"
+            className="font-mono text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
+          >
+            Today&apos;s postcard
+          </Link>
+          <Link
             href="/about"
             className="font-mono text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors"
           >
