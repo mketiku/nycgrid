@@ -286,7 +286,7 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
           maxLength={40}
-          placeholder="add a caption (optional)"
+          placeholder="caption your share link (optional)"
           aria-label="Shot caption"
           className="font-mono text-xs px-3 min-h-[44px] rounded border border-[var(--color-border)] bg-transparent text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
         />
