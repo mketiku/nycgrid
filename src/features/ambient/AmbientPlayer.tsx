@@ -6,10 +6,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AmbientHUD } from "./AmbientHUD";
 import { AmbientOverlay } from "./AmbientOverlay";
+import { useAmbientRotation } from "./useAmbientRotation";
 import { AnimatePresence, motion } from "motion/react";
 import { Check, Headphones, Loader2, Mic2, Music2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { cameraImageUrl, windowedProxiedImageUrl } from "@/lib/cameras/types";
+import { cameraImageUrl } from "@/lib/cameras/types";
 import type { Camera } from "@/lib/cameras/types";
 import { trackAmbientHeartbeat } from "@/lib/analytics/session";
 import { getCameraLore } from "@/lib/cameras/lore";
@@ -20,9 +21,7 @@ import { initVoices } from "@/lib/podcast/speech";
 import type { ChannelId } from "@/lib/podcast/types";
 import { FEATURED_CAMERAS } from "@/features/context/lib/featured-cameras";
 import { CAMERA_COUNT } from "@/lib/cameras/data";
-import { areaBalancedFeaturedShuffle } from "./lib/shuffle";
 
-const CAMERA_DWELL_MS = 25_000;
 const IDLE_MS = 4_000;
 
 type AudioMode = "noise" | "radio" | "podcast";
@@ -225,9 +224,6 @@ const PODCAST_CHANNELS: { id: ChannelId; name: string; desc: string }[] = [
   { id: "lost-signal-numbers", name: "Lost Signal", desc: "Intercepted broadcast" },
 ];
 
-const FRAME_REFRESH_MS = 30_000;
-const PRELOAD_AHEAD = 2;
-const SLOT_LOAD_TIMEOUT_MS = 8_000;
 const LORE_DWELL_MS = 10_000;
 const LORE_FADE_MS = 700;
 
@@ -247,9 +243,6 @@ const featuredDisplayNames = new Map<string, string>(
   FEATURED_CAMERAS.map((cam) => [cam.id, cam.displayName])
 );
 
-const KB_VARIANTS = ["kb-zoom-in", "kb-zoom-out", "kb-pan-left", "kb-pan-right"] as const;
-type KBVariant = (typeof KB_VARIANTS)[number];
-
 function wmoDescription(code: number): string {
   if (code === 0) return "Clear";
   if (code <= 2) return "Partly cloudy";
@@ -265,11 +258,6 @@ function wmoDescription(code: number): string {
 }
 
 const FEATURED_IDS = new Set(FEATURED_CAMERAS.map((c) => c.id));
-
-function pickKB(last: KBVariant | null): KBVariant {
-  const options = last !== null ? KB_VARIANTS.filter((v) => v !== last) : [...KB_VARIANTS];
-  return options[Math.floor(Math.random() * options.length)];
-}
 
 const AUDIO_RETRY_CONFIG = { maxAttempts: 3, initialDelayMs: 200 };
 
@@ -365,8 +353,23 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   });
   const [isMuted, setIsMuted] = useState(true);
   const toggleMute = useCallback(() => setIsMuted((v) => !v), []);
-  const [paused, setPaused] = useState(false);
-  const togglePause = useCallback(() => setPaused((p) => !p), []);
+  const {
+    currentCamera,
+    activeSlot,
+    slotSrc,
+    slotLoaded,
+    onSlotLoad: handleSlotLoad,
+    kenburnsRef0,
+    kenburnsRef1,
+    textVisible,
+    fadeDuration,
+    dwellKey,
+    skip: skipCamera,
+    paused,
+    setPaused,
+    startKenBurns,
+  } = useAmbientRotation(cameras);
+  const togglePause = useCallback(() => setPaused((p) => !p), [setPaused]);
   const [streamLoading, setStreamLoading] = useState(false);
   const [musicLoading, setMusicLoading] = useState(false);
   const [audioLoadStuck, setAudioLoadStuck] = useState(false);
@@ -399,34 +402,9 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   const podcastPause = usePodcast((s) => s.pause);
   const podcastSwitchChannel = usePodcast((s) => s.switchChannel);
   const podcastSetCamera = usePodcast((s) => s.setCamera);
-  const shuffledRef = useRef<Camera[]>([]);
-  const indexRef = useRef(0);
-  const preloadRef = useRef<HTMLImageElement[]>([]);
-  // Per-slot Ken Burns refs — each slot animates independently to avoid visible restarts
-  const kenburnsRef0 = useRef<HTMLDivElement>(null);
-  const kenburnsRef1 = useRef<HTMLDivElement>(null);
-  // Tracks whether the current pending slot load is a frame refresh (not a camera advance)
-  const isFrameRefreshRef = useRef(false);
-  const slotTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastKBRef = useRef<KBVariant | null>(null);
-  const activeSlotRef = useRef<0 | 1>(0);
-  const currentCameraRef = useRef<Camera | null>(cameras.length > 0 ? cameras[0] : null);
-
-  const [activeSlot, setActiveSlot] = useState<0 | 1>(0);
-  const [slotSrc, setSlotSrc] = useState<[string, string]>(() => {
-    if (cameras.length === 0) return ["", ""];
-    return [cameraImageUrl(cameras[0].id), cameraImageUrl(cameras[0].id)];
-  });
-  const [slotLoaded, setSlotLoaded] = useState<[boolean, boolean]>([false, false]);
-  const [currentCamera, setCurrentCamera] = useState<Camera | null>(
-    cameras.length > 0 ? cameras[0] : null
-  );
   const displayName = currentCamera
     ? (featuredDisplayNames.get(currentCamera.id) ?? currentCamera.name)
     : null;
-  const [textVisible, setTextVisible] = useState(false);
-  const [fadeDuration, setFadeDuration] = useState(1200);
-  const [dwellKey, setDwellKey] = useState(0);
   const swipeStartXRef = useRef(0);
   const swipeStartYRef = useRef(0);
   const didSwipeRef = useRef(false);
@@ -496,137 +474,6 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     };
   }, [entered, resetIdleTimer]);
 
-  const startKenBurns = useCallback((slot: 0 | 1) => {
-    const el = slot === 0 ? kenburnsRef0.current : kenburnsRef1.current;
-    if (!el) return;
-    const variant = pickKB(lastKBRef.current);
-    lastKBRef.current = variant;
-    el.style.animation = "none";
-    void el.offsetHeight;
-    el.style.animation = `${variant} ${CAMERA_DWELL_MS}ms ease-in-out forwards`;
-  }, []);
-
-  const preloadUpcoming = useCallback(() => {
-    for (const img of preloadRef.current) {
-      img.src = "";
-    }
-    preloadRef.current = [];
-    const imgs: HTMLImageElement[] = [];
-    for (let i = 1; i <= PRELOAD_AHEAD; i++) {
-      const idx = (indexRef.current + i) % shuffledRef.current.length;
-      const cam = shuffledRef.current[idx];
-      if (cam) {
-        const img = new window.Image();
-        img.src = cameraImageUrl(cam.id);
-        imgs.push(img);
-      }
-    }
-    preloadRef.current = imgs;
-  }, []);
-
-  // Initialise shuffled list and prime slot 0
-  useEffect(() => {
-    if (cameras.length === 0) return;
-    shuffledRef.current = areaBalancedFeaturedShuffle(cameras, FEATURED_IDS);
-    indexRef.current = 0;
-    isFrameRefreshRef.current = false;
-    const first = shuffledRef.current[0];
-    currentCameraRef.current = first;
-    activeSlotRef.current = 0;
-    setCurrentCamera(first);
-    setSlotSrc([cameraImageUrl(first.id), cameraImageUrl(first.id)]);
-    setSlotLoaded([false, false]);
-    setActiveSlot(0);
-    setTextVisible(false);
-    preloadUpcoming();
-  }, [cameras, preloadUpcoming]);
-
-  const handleSlotLoad = useCallback(
-    (slot: 0 | 1) => {
-      if (slotTimeoutRef.current) {
-        clearTimeout(slotTimeoutRef.current);
-        slotTimeoutRef.current = null;
-      }
-      setSlotLoaded((prev) => {
-        const updated: [boolean, boolean] = [...prev] as [boolean, boolean];
-        updated[slot] = true;
-        return updated;
-      });
-      activeSlotRef.current = slot;
-      setActiveSlot(slot);
-      setTextVisible(true);
-      if (!isFrameRefreshRef.current) {
-        startKenBurns(slot);
-      }
-    },
-    [startKenBurns]
-  );
-
-  const armSlotTimeout = useCallback((staging: 0 | 1) => {
-    if (slotTimeoutRef.current) clearTimeout(slotTimeoutRef.current);
-    slotTimeoutRef.current = setTimeout(() => {
-      slotTimeoutRef.current = null;
-      activeSlotRef.current = staging;
-      setActiveSlot(staging);
-      setSlotLoaded((prev) => {
-        const updated: [boolean, boolean] = [...prev] as [boolean, boolean];
-        updated[staging] = true;
-        return updated;
-      });
-      setTextVisible(true);
-    }, SLOT_LOAD_TIMEOUT_MS);
-  }, []);
-
-  const advanceCamera = useCallback(() => {
-    if (shuffledRef.current.length === 0) return;
-    indexRef.current = (indexRef.current + 1) % shuffledRef.current.length;
-    const next = shuffledRef.current[indexRef.current];
-    const staging: 0 | 1 = activeSlotRef.current === 0 ? 1 : 0;
-
-    isFrameRefreshRef.current = false;
-    setTextVisible(false);
-    setFadeDuration(1200);
-
-    setSlotSrc((prev) => {
-      const updated: [string, string] = [...prev] as [string, string];
-      updated[staging] = cameraImageUrl(next.id);
-      return updated;
-    });
-    setSlotLoaded((prev) => {
-      const updated: [boolean, boolean] = [...prev] as [boolean, boolean];
-      updated[staging] = false;
-      return updated;
-    });
-    currentCameraRef.current = next;
-    setCurrentCamera(next);
-    preloadUpcoming();
-    armSlotTimeout(staging);
-  }, [preloadUpcoming, armSlotTimeout]);
-
-  const skipCamera = useCallback(() => {
-    advanceCamera();
-    setDwellKey((k) => k + 1);
-  }, [advanceCamera]);
-
-  const refreshFrame = useCallback(() => {
-    const cam = currentCameraRef.current;
-    if (!cam || document.hidden) return;
-    const staging: 0 | 1 = activeSlotRef.current === 0 ? 1 : 0;
-    isFrameRefreshRef.current = true;
-    setFadeDuration(600);
-    setSlotSrc((prev) => {
-      const updated: [string, string] = [...prev] as [string, string];
-      updated[staging] = windowedProxiedImageUrl(cam.id);
-      return updated;
-    });
-    setSlotLoaded((prev) => {
-      const updated: [boolean, boolean] = [...prev] as [boolean, boolean];
-      updated[staging] = false;
-      return updated;
-    });
-    armSlotTimeout(staging);
-  }, [armSlotTimeout]);
-
   useEffect(() => {
     if (typeof window === "undefined") return;
     const mediaQuery = window.matchMedia("(pointer: coarse)");
@@ -647,18 +494,6 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     return () => mediaQuery.removeListener(handleChange);
   }, []);
 
-  useEffect(() => {
-    if (cameras.length === 0 || paused) return;
-    const timer = setInterval(advanceCamera, CAMERA_DWELL_MS);
-    return () => clearInterval(timer);
-  }, [cameras.length, advanceCamera, dwellKey, paused]);
-
-  useEffect(() => {
-    if (cameras.length === 0 || paused) return;
-    const timer = setInterval(refreshFrame, FRAME_REFRESH_MS);
-    return () => clearInterval(timer);
-  }, [cameras.length, refreshFrame, paused]);
-
   // Orientation change, foldable fold/unfold, Stage Manager resize:
   // restart Ken Burns so the animation fits the new viewport geometry
   useEffect(() => {
@@ -667,7 +502,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     const handleResize = () => {
       if (debounceId) clearTimeout(debounceId);
       debounceId = setTimeout(() => {
-        startKenBurns(activeSlotRef.current);
+        startKenBurns(activeSlot);
         resetIdleTimer();
       }, 150);
     };
@@ -676,7 +511,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
       window.removeEventListener("resize", handleResize);
       if (debounceId) clearTimeout(debounceId);
     };
-  }, [entered, startKenBurns, resetIdleTimer]);
+  }, [entered, activeSlot, startKenBurns, resetIdleTimer]);
 
   // Fetch NYC weather on entry, then refresh every 30 minutes
   useEffect(() => {
