@@ -11,6 +11,7 @@
 import { writeFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
+import { sanitizeCameraName } from "./sanitize-camera-names.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUTPUT = join(__dirname, "../src/lib/cameras/data.ts");
@@ -32,17 +33,23 @@ if (!Array.isArray(raw) || raw.length === 0) {
   process.exit(1);
 }
 
+let sanitizedCount = 0;
 const cameras = raw
   .filter((c) => c.id && c.latitude && c.longitude)
-  .map((c) => ({
-    id: String(c.id),
-    name: String(c.name),
-    latitude: parseFloat(c.latitude),
-    longitude: parseFloat(c.longitude),
-    area: c.area ?? "Unknown",
-    isOnline: c.isOnline === "true" || c.isOnline === true,
-    imageUrl: `https://webcams.nyctmc.org/api/cameras/${c.id}/image`,
-  }))
+  .map((c) => {
+    const rawName = String(c.name);
+    const name = sanitizeCameraName(rawName);
+    if (name !== rawName) sanitizedCount++;
+    return {
+      id: String(c.id),
+      name,
+      latitude: parseFloat(c.latitude),
+      longitude: parseFloat(c.longitude),
+      area: c.area ?? "Unknown",
+      isOnline: c.isOnline === "true" || c.isOnline === true,
+      imageUrl: `https://webcams.nyctmc.org/api/cameras/${c.id}/image`,
+    };
+  })
   .sort((a, b) => a.id.localeCompare(b.id));
 
 if (cameras.length < MIN_CAMERAS) {
@@ -59,6 +66,20 @@ if (cameras.length > MAX_CAMERAS) {
       `Response looks unexpectedly large. Aborting.`
   );
   process.exit(1);
+}
+
+const emptyNames = cameras.filter((c) => !c.name.trim());
+if (emptyNames.length > 0) {
+  console.error(
+    `Safety check failed: ${emptyNames.length} camera(s) have empty names after sanitization:`,
+  );
+  for (const c of emptyNames) console.error(`  id=${c.id} area=${c.area}`);
+  process.exit(1);
+}
+
+if (process.env.GITHUB_OUTPUT) {
+  const { appendFileSync } = await import("fs");
+  appendFileSync(process.env.GITHUB_OUTPUT, `sanitized_count=${sanitizedCount}\n`);
 }
 
 const cameraLines = cameras.map((c) => "  " + JSON.stringify(c) + ",").join("\n");
@@ -80,4 +101,4 @@ export function getCameraById(id: string): Camera | undefined {
 `;
 
 writeFileSync(OUTPUT, ts);
-console.log(`✓ Wrote ${cameras.length} cameras to src/lib/cameras/data.ts`);
+console.log(`✓ Wrote ${cameras.length} cameras to src/lib/cameras/data.ts (${sanitizedCount} names sanitized)`);
