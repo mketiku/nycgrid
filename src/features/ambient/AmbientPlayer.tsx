@@ -1,31 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAmbientWellness } from "@/features/chicken-wings";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { AmbientHUD } from "./AmbientHUD";
+import { AmbientOverlay } from "./AmbientOverlay";
+import { useAmbientRotation } from "./useAmbientRotation";
 import { AnimatePresence, motion } from "motion/react";
-import {
-  ArrowRight,
-  AudioWaveform,
-  Check,
-  Headphones,
-  Info,
-  Loader2,
-  MapPin,
-  Mic2,
-  Music2,
-  Pause,
-  Play,
-  Radio,
-  SkipForward,
-  Volume2,
-  VolumeX,
-  WifiOff,
-  X,
-} from "lucide-react";
+import { Check, Headphones, Loader2, Mic2, Music2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { cameraImageUrl, windowedProxiedImageUrl } from "@/lib/cameras/types";
+import { cameraImageUrl } from "@/lib/cameras/types";
 import type { Camera } from "@/lib/cameras/types";
 import { trackAmbientHeartbeat } from "@/lib/analytics/session";
 import { getCameraLore } from "@/lib/cameras/lore";
@@ -36,9 +21,8 @@ import { initVoices } from "@/lib/podcast/speech";
 import type { ChannelId } from "@/lib/podcast/types";
 import { FEATURED_CAMERAS } from "@/features/context/lib/featured-cameras";
 import { CAMERA_COUNT } from "@/lib/cameras/data";
-import { areaBalancedFeaturedShuffle } from "./lib/shuffle";
+import type { ActiveEventContext } from "@/features/events/types";
 
-const CAMERA_DWELL_MS = 25_000;
 const IDLE_MS = 4_000;
 
 type AudioMode = "noise" | "radio" | "podcast";
@@ -241,9 +225,6 @@ const PODCAST_CHANNELS: { id: ChannelId; name: string; desc: string }[] = [
   { id: "lost-signal-numbers", name: "Lost Signal", desc: "Intercepted broadcast" },
 ];
 
-const FRAME_REFRESH_MS = 30_000;
-const PRELOAD_AHEAD = 2;
-const SLOT_LOAD_TIMEOUT_MS = 8_000;
 const LORE_DWELL_MS = 10_000;
 const LORE_FADE_MS = 700;
 
@@ -263,9 +244,6 @@ const featuredDisplayNames = new Map<string, string>(
   FEATURED_CAMERAS.map((cam) => [cam.id, cam.displayName])
 );
 
-const KB_VARIANTS = ["kb-zoom-in", "kb-zoom-out", "kb-pan-left", "kb-pan-right"] as const;
-type KBVariant = (typeof KB_VARIANTS)[number];
-
 function wmoDescription(code: number): string {
   if (code === 0) return "Clear";
   if (code <= 2) return "Partly cloudy";
@@ -281,11 +259,6 @@ function wmoDescription(code: number): string {
 }
 
 const FEATURED_IDS = new Set(FEATURED_CAMERAS.map((c) => c.id));
-
-function pickKB(last: KBVariant | null): KBVariant {
-  const options = last !== null ? KB_VARIANTS.filter((v) => v !== last) : [...KB_VARIANTS];
-  return options[Math.floor(Math.random() * options.length)];
-}
 
 const AUDIO_RETRY_CONFIG = { maxAttempts: 3, initialDelayMs: 200 };
 
@@ -381,8 +354,29 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   });
   const [isMuted, setIsMuted] = useState(true);
   const toggleMute = useCallback(() => setIsMuted((v) => !v), []);
-  const [paused, setPaused] = useState(false);
-  const togglePause = useCallback(() => setPaused((p) => !p), []);
+  const [activeEventContexts, setActiveEventContexts] = useState<ActiveEventContext[]>([]);
+  const eventCameraIds = useMemo(
+    () => activeEventContexts.flatMap((ctx) => ctx.cameraIds),
+    [activeEventContexts]
+  );
+  const eventPhase = activeEventContexts[0]?.events[0]?.phase ?? "arrival";
+  const {
+    currentCamera,
+    activeSlot,
+    slotSrc,
+    slotLoaded,
+    onSlotLoad: handleSlotLoad,
+    kenburnsRef0,
+    kenburnsRef1,
+    textVisible,
+    fadeDuration,
+    dwellKey,
+    skip: skipCamera,
+    paused,
+    setPaused,
+    startKenBurns,
+  } = useAmbientRotation(cameras, eventCameraIds, eventPhase);
+  const togglePause = useCallback(() => setPaused((p) => !p), [setPaused]);
   const [streamLoading, setStreamLoading] = useState(false);
   const [musicLoading, setMusicLoading] = useState(false);
   const [audioLoadStuck, setAudioLoadStuck] = useState(false);
@@ -415,34 +409,14 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   const podcastPause = usePodcast((s) => s.pause);
   const podcastSwitchChannel = usePodcast((s) => s.switchChannel);
   const podcastSetCamera = usePodcast((s) => s.setCamera);
-  const shuffledRef = useRef<Camera[]>([]);
-  const indexRef = useRef(0);
-  const preloadRef = useRef<HTMLImageElement[]>([]);
-  // Per-slot Ken Burns refs — each slot animates independently to avoid visible restarts
-  const kenburnsRef0 = useRef<HTMLDivElement>(null);
-  const kenburnsRef1 = useRef<HTMLDivElement>(null);
-  // Tracks whether the current pending slot load is a frame refresh (not a camera advance)
-  const isFrameRefreshRef = useRef(false);
-  const slotTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastKBRef = useRef<KBVariant | null>(null);
-  const activeSlotRef = useRef<0 | 1>(0);
-  const currentCameraRef = useRef<Camera | null>(cameras.length > 0 ? cameras[0] : null);
-
-  const [activeSlot, setActiveSlot] = useState<0 | 1>(0);
-  const [slotSrc, setSlotSrc] = useState<[string, string]>(() => {
-    if (cameras.length === 0) return ["", ""];
-    return [cameraImageUrl(cameras[0].id), cameraImageUrl(cameras[0].id)];
-  });
-  const [slotLoaded, setSlotLoaded] = useState<[boolean, boolean]>([false, false]);
-  const [currentCamera, setCurrentCamera] = useState<Camera | null>(
-    cameras.length > 0 ? cameras[0] : null
-  );
   const displayName = currentCamera
     ? (featuredDisplayNames.get(currentCamera.id) ?? currentCamera.name)
     : null;
-  const [textVisible, setTextVisible] = useState(false);
-  const [fadeDuration, setFadeDuration] = useState(1200);
-  const [dwellKey, setDwellKey] = useState(0);
+  const currentVenueEvent = useMemo(() => {
+    if (!currentCamera) return null;
+    const ctx = activeEventContexts.find((c) => c.cameraIds.includes(currentCamera.id));
+    return ctx?.events[0] ?? null;
+  }, [currentCamera, activeEventContexts]);
   const swipeStartXRef = useRef(0);
   const swipeStartYRef = useRef(0);
   const didSwipeRef = useRef(false);
@@ -512,137 +486,6 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     };
   }, [entered, resetIdleTimer]);
 
-  const startKenBurns = useCallback((slot: 0 | 1) => {
-    const el = slot === 0 ? kenburnsRef0.current : kenburnsRef1.current;
-    if (!el) return;
-    const variant = pickKB(lastKBRef.current);
-    lastKBRef.current = variant;
-    el.style.animation = "none";
-    void el.offsetHeight;
-    el.style.animation = `${variant} ${CAMERA_DWELL_MS}ms ease-in-out forwards`;
-  }, []);
-
-  const preloadUpcoming = useCallback(() => {
-    for (const img of preloadRef.current) {
-      img.src = "";
-    }
-    preloadRef.current = [];
-    const imgs: HTMLImageElement[] = [];
-    for (let i = 1; i <= PRELOAD_AHEAD; i++) {
-      const idx = (indexRef.current + i) % shuffledRef.current.length;
-      const cam = shuffledRef.current[idx];
-      if (cam) {
-        const img = new window.Image();
-        img.src = cameraImageUrl(cam.id);
-        imgs.push(img);
-      }
-    }
-    preloadRef.current = imgs;
-  }, []);
-
-  // Initialise shuffled list and prime slot 0
-  useEffect(() => {
-    if (cameras.length === 0) return;
-    shuffledRef.current = areaBalancedFeaturedShuffle(cameras, FEATURED_IDS);
-    indexRef.current = 0;
-    isFrameRefreshRef.current = false;
-    const first = shuffledRef.current[0];
-    currentCameraRef.current = first;
-    activeSlotRef.current = 0;
-    setCurrentCamera(first);
-    setSlotSrc([cameraImageUrl(first.id), cameraImageUrl(first.id)]);
-    setSlotLoaded([false, false]);
-    setActiveSlot(0);
-    setTextVisible(false);
-    preloadUpcoming();
-  }, [cameras, preloadUpcoming]);
-
-  const handleSlotLoad = useCallback(
-    (slot: 0 | 1) => {
-      if (slotTimeoutRef.current) {
-        clearTimeout(slotTimeoutRef.current);
-        slotTimeoutRef.current = null;
-      }
-      setSlotLoaded((prev) => {
-        const updated: [boolean, boolean] = [...prev] as [boolean, boolean];
-        updated[slot] = true;
-        return updated;
-      });
-      activeSlotRef.current = slot;
-      setActiveSlot(slot);
-      setTextVisible(true);
-      if (!isFrameRefreshRef.current) {
-        startKenBurns(slot);
-      }
-    },
-    [startKenBurns]
-  );
-
-  const armSlotTimeout = useCallback((staging: 0 | 1) => {
-    if (slotTimeoutRef.current) clearTimeout(slotTimeoutRef.current);
-    slotTimeoutRef.current = setTimeout(() => {
-      slotTimeoutRef.current = null;
-      activeSlotRef.current = staging;
-      setActiveSlot(staging);
-      setSlotLoaded((prev) => {
-        const updated: [boolean, boolean] = [...prev] as [boolean, boolean];
-        updated[staging] = true;
-        return updated;
-      });
-      setTextVisible(true);
-    }, SLOT_LOAD_TIMEOUT_MS);
-  }, []);
-
-  const advanceCamera = useCallback(() => {
-    if (shuffledRef.current.length === 0) return;
-    indexRef.current = (indexRef.current + 1) % shuffledRef.current.length;
-    const next = shuffledRef.current[indexRef.current];
-    const staging: 0 | 1 = activeSlotRef.current === 0 ? 1 : 0;
-
-    isFrameRefreshRef.current = false;
-    setTextVisible(false);
-    setFadeDuration(1200);
-
-    setSlotSrc((prev) => {
-      const updated: [string, string] = [...prev] as [string, string];
-      updated[staging] = cameraImageUrl(next.id);
-      return updated;
-    });
-    setSlotLoaded((prev) => {
-      const updated: [boolean, boolean] = [...prev] as [boolean, boolean];
-      updated[staging] = false;
-      return updated;
-    });
-    currentCameraRef.current = next;
-    setCurrentCamera(next);
-    preloadUpcoming();
-    armSlotTimeout(staging);
-  }, [preloadUpcoming, armSlotTimeout]);
-
-  const skipCamera = useCallback(() => {
-    advanceCamera();
-    setDwellKey((k) => k + 1);
-  }, [advanceCamera]);
-
-  const refreshFrame = useCallback(() => {
-    const cam = currentCameraRef.current;
-    if (!cam || document.hidden) return;
-    const staging: 0 | 1 = activeSlotRef.current === 0 ? 1 : 0;
-    isFrameRefreshRef.current = true;
-    setFadeDuration(600);
-    setSlotSrc((prev) => {
-      const updated: [string, string] = [...prev] as [string, string];
-      updated[staging] = windowedProxiedImageUrl(cam.id);
-      return updated;
-    });
-    setSlotLoaded((prev) => {
-      const updated: [boolean, boolean] = [...prev] as [boolean, boolean];
-      updated[staging] = false;
-      return updated;
-    });
-    armSlotTimeout(staging);
-  }, [armSlotTimeout]);
-
   useEffect(() => {
     if (typeof window === "undefined") return;
     const mediaQuery = window.matchMedia("(pointer: coarse)");
@@ -663,18 +506,6 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     return () => mediaQuery.removeListener(handleChange);
   }, []);
 
-  useEffect(() => {
-    if (cameras.length === 0 || paused) return;
-    const timer = setInterval(advanceCamera, CAMERA_DWELL_MS);
-    return () => clearInterval(timer);
-  }, [cameras.length, advanceCamera, dwellKey, paused]);
-
-  useEffect(() => {
-    if (cameras.length === 0 || paused) return;
-    const timer = setInterval(refreshFrame, FRAME_REFRESH_MS);
-    return () => clearInterval(timer);
-  }, [cameras.length, refreshFrame, paused]);
-
   // Orientation change, foldable fold/unfold, Stage Manager resize:
   // restart Ken Burns so the animation fits the new viewport geometry
   useEffect(() => {
@@ -683,7 +514,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     const handleResize = () => {
       if (debounceId) clearTimeout(debounceId);
       debounceId = setTimeout(() => {
-        startKenBurns(activeSlotRef.current);
+        startKenBurns(activeSlot);
         resetIdleTimer();
       }, 150);
     };
@@ -692,7 +523,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
       window.removeEventListener("resize", handleResize);
       if (debounceId) clearTimeout(debounceId);
     };
-  }, [entered, startKenBurns, resetIdleTimer]);
+  }, [entered, activeSlot, startKenBurns, resetIdleTimer]);
 
   // Fetch NYC weather on entry, then refresh every 30 minutes
   useEffect(() => {
@@ -727,6 +558,29 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   useEffect(() => {
     weatherCodeRef.current = weatherCode;
   }, [weatherCode]);
+
+  // Fetch active event contexts from the API route
+  useEffect(() => {
+    if (!entered) return;
+    let cancelled = false;
+    const fetchActive = async () => {
+      try {
+        const res = await fetch("/api/events/active");
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (!cancelled) setActiveEventContexts(data);
+      } catch {
+        // silent — ambient mode doesn't require events
+      }
+    };
+    void fetchActive();
+    // Refresh every 30 minutes
+    const interval = setInterval(fetchActive, 30 * 60 * 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [entered]);
 
   // Lore: show first fact after a delay then cycle; state resets are handled during render above
   useEffect(() => {
@@ -1366,94 +1220,16 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
       )}
 
       {/* Mobile tap overlay */}
-      <AnimatePresence>
-        {overlayVisible && currentCamera && (
-          <motion.div
-            key="overlay"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 12 }}
-            transition={{ duration: 0.2 }}
-            data-testid="ambient-mobile-overlay"
-            className="absolute inset-x-4 bottom-20 overflow-hidden rounded-2xl portrait-tablet:bottom-24 landscape-mobile:bottom-4 sm:left-1/2 sm:right-auto sm:w-[min(calc(100vw-2rem),28rem)] sm:-translate-x-1/2"
-            style={{
-              backgroundColor: "rgba(10,10,10,0.85)",
-              backdropFilter: "blur(12px)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              marginBottom: "env(safe-area-inset-bottom)",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex flex-col gap-4 p-4 portrait-tablet:p-5 landscape-mobile:flex-row landscape-mobile:items-stretch landscape-mobile:gap-3 landscape-mobile:p-3">
-              {/* Left column: camera info + lore */}
-              <div className="flex-1 min-w-0 flex flex-col gap-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-mono text-sm font-bold text-white leading-tight">
-                      {displayName}
-                    </p>
-                    <p
-                      className="font-mono text-xs tracking-widest uppercase mt-1"
-                      style={{ color: "#39ff14" }}
-                    >
-                      {currentCamera.area}
-                    </p>
-                    {weatherTemp !== undefined && (
-                      <p className="font-mono text-xs text-white/50 mt-1">
-                        {weatherTemp}°F ·{" "}
-                        {weatherCode !== undefined ? wmoDescription(weatherCode) : ""}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => setOverlayVisible(false)}
-                    aria-label="Dismiss"
-                    className="w-8 h-8 flex items-center justify-center rounded-full text-white/40 hover:text-white transition-colors shrink-0"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                {(() => {
-                  const fact = getCameraLore(currentCamera.id)[loreFactIndex] ?? null;
-                  return fact ? (
-                    <div className="border-t border-white/8 pt-3">
-                      <p
-                        className="font-mono text-[9px] uppercase tracking-widest mb-1"
-                        style={{
-                          color: LORE_CATEGORY_COLOR[fact.category] ?? "rgba(255,255,255,0.5)",
-                        }}
-                      >
-                        {fact.category}
-                      </p>
-                      <p className="max-w-[32ch] font-mono text-xs leading-relaxed text-white/70">
-                        {fact.fact}
-                      </p>
-                    </div>
-                  ) : null;
-                })()}
-              </div>
-              {/* Right column: action buttons */}
-              <div className="flex flex-col gap-2 landscape-mobile:w-36 landscape-mobile:justify-center landscape-mobile:shrink-0">
-                <Link
-                  href={`/camera/${currentCamera.id}`}
-                  className="flex items-center justify-center gap-2 rounded-xl py-3 font-mono text-sm font-semibold text-black transition-opacity active:opacity-80"
-                  style={{ backgroundColor: "#39ff14" }}
-                >
-                  <ArrowRight className="w-4 h-4" />
-                  View
-                </Link>
-                <Link
-                  href="/explore"
-                  className="flex items-center justify-center gap-2 rounded-xl py-3 font-mono text-sm font-medium text-white/70 hover:text-white transition-colors border border-white/10"
-                >
-                  <MapPin className="w-4 h-4" />
-                  Open in map
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <AmbientOverlay
+        visible={overlayVisible}
+        onClose={() => setOverlayVisible(false)}
+        camera={currentCamera}
+        displayName={displayName}
+        loreFactIndex={loreFactIndex}
+        weatherTemp={weatherTemp}
+        weatherCode={weatherCode}
+        venueEvent={currentVenueEvent}
+      />
 
       {/* Controls — top right */}
       <div
@@ -1467,123 +1243,34 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
         }}
         onMouseLeave={resetIdleTimer}
       >
-        <div
-          className="flex items-center gap-1 px-2 py-2 rounded-2xl"
-          style={{
-            backgroundColor: "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(10px)",
-            border: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
-          {/* Audio mode picker button */}
-          <button
-            onClick={() => setPickerOpen((v) => !v)}
-            aria-label="Choose audio"
-            className="h-9 flex items-center gap-1.5 px-3 rounded-xl font-mono text-xs text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-          >
-            {audioMode === "noise" ? (
-              <Music2 className="w-4 h-4" />
-            ) : audioMode === "podcast" ? (
-              <Mic2 className="w-4 h-4" />
-            ) : (
-              <Radio className="w-4 h-4" />
-            )}
-            {(() => {
-              const name =
-                audioMode === "noise"
-                  ? "Ambient"
-                  : audioMode === "podcast"
-                    ? (PODCAST_CHANNELS.find((c) => c.id === podcastChannelId)?.name ?? "Podcast")
-                    : (ALL_STREAMS[stationIndex]?.name ?? "Radio");
-              return (
-                <>
-                  <span className="hidden sm:inline">
-                    {showStuck ? "Failed" : isAudioLoading ? "Buffering…" : name}
-                  </span>
-                  {showStuck ? (
-                    <WifiOff
-                      className="w-3.5 h-3.5 shrink-0"
-                      style={{ color: "rgba(255,255,255,0.4)" }}
-                      aria-hidden
-                    />
-                  ) : isAudioLoading ? (
-                    <Loader2
-                      className="w-3.5 h-3.5 shrink-0 animate-spin"
-                      style={{ color: "#39ff14" }}
-                      aria-hidden
-                    />
-                  ) : !isMuted ? (
-                    <AudioWaveform
-                      className="w-3.5 h-3.5 shrink-0"
-                      style={{ color: "#39ff14" }}
-                      aria-hidden
-                    />
-                  ) : null}
-                </>
-              );
-            })()}
-          </button>
-
-          {/* Mute / pause-play — episodes behave like podcasts (finite content) */}
-          <button
-            onClick={toggleMute}
-            aria-label={isMuted ? "Unmute" : "Mute"}
-            className="w-9 h-9 flex items-center justify-center rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-          >
-            {audioMode === "podcast" ||
-            (audioMode === "radio" && ALL_STREAMS[stationIndex]?.loop) ? (
-              isMuted ? (
-                <Play className="w-5 h-5" />
-              ) : (
-                <Pause className="w-5 h-5" />
-              )
-            ) : isMuted ? (
-              <VolumeX className="w-5 h-5" />
-            ) : (
-              <Volume2 className="w-5 h-5" />
-            )}
-          </button>
-
-          <div className="w-px h-5 bg-white/10 mx-1" />
-
-          <button
-            onClick={togglePause}
-            aria-label={paused ? "Resume" : "Pause"}
-            aria-pressed={paused}
-            className="h-9 flex items-center gap-1.5 px-3 rounded-xl font-mono text-xs text-white/60 hover:text-white hover:bg-white/10 transition-colors aria-pressed:bg-white/10 aria-pressed:text-white"
-          >
-            {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-            <span className="hidden sm:inline">{paused ? "Resume" : "Pause"}</span>
-          </button>
-
-          <button
-            onClick={skipCamera}
-            aria-label="Next camera"
-            className="h-9 flex items-center gap-1.5 px-3 rounded-xl font-mono text-xs text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-          >
-            <SkipForward className="w-4 h-4" />
-            <span className="hidden sm:inline">Skip</span>
-          </button>
-
-          <button
-            onClick={handleInfoToggle}
-            aria-label={infoVisible ? "Hide location info" : "Show location info"}
-            aria-pressed={infoVisible}
-            className="flex h-9 items-center gap-1.5 rounded-xl px-3 font-mono text-xs text-white/60 transition-colors hover:bg-white/10 hover:text-white aria-pressed:bg-white/10 aria-pressed:text-white"
-          >
-            <Info className="h-4 w-4" />
-            <span className="hidden sm:inline">Info</span>
-          </button>
-
-          <Link
-            href="/explore"
-            aria-label="Exit ambient mode"
-            className="h-9 flex items-center gap-1.5 px-3 rounded-xl font-mono text-xs text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-          >
-            <X className="h-4 w-4" />
-            <span className="hidden sm:inline">Exit</span>
-          </Link>
-        </div>
+        <AmbientHUD
+          paused={paused}
+          onTogglePause={togglePause}
+          onSkip={skipCamera}
+          isMuted={isMuted}
+          onToggleMute={toggleMute}
+          onOpenPicker={() => setPickerOpen((v) => !v)}
+          audioModeName={
+            audioMode === "noise"
+              ? "Ambient"
+              : audioMode === "podcast"
+                ? (PODCAST_CHANNELS.find((c) => c.id === podcastChannelId)?.name ?? "Podcast")
+                : (ALL_STREAMS[stationIndex]?.name ?? "Radio")
+          }
+          streamLoading={streamLoading}
+          musicLoading={musicLoading}
+          audioLoadStuck={audioLoadStuck}
+          cameraCount={cameras.length}
+          currentCameraName={displayName}
+          audioModeIcon={audioMode}
+          isFiniteContent={
+            audioMode === "podcast" ||
+            (audioMode === "radio" && (ALL_STREAMS[stationIndex]?.loop ?? false))
+          }
+          infoVisible={infoVisible}
+          onInfoToggle={handleInfoToggle}
+          isAudioLoading={isAudioLoading}
+        />
 
         {/* Audio picker popover */}
         <AnimatePresence>

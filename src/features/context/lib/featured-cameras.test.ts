@@ -27,3 +27,25 @@ describe("featured-cameras", () => {
     expect(featured).toHaveLength(0);
   });
 });
+
+import { FEATURED_CAMERAS } from "./featured-cameras";
+
+describe("venue cameras", () => {
+  it("includes MSG camera", () => {
+    expect(FEATURED_CAMERAS.some((c) => c.id === "6a85384f-d82e-4bff-b5f1-15c22cca70e6")).toBe(
+      true
+    );
+  });
+
+  it("includes Yankee Stadium camera", () => {
+    expect(FEATURED_CAMERAS.some((c) => c.id === "ad051a78-9c50-43b3-bb71-83b091acd818")).toBe(
+      true
+    );
+  });
+
+  it("includes Citi Field camera", () => {
+    expect(FEATURED_CAMERAS.some((c) => c.id === "39b42007-16d8-4302-8b8c-602bbb9e9683")).toBe(
+      true
+    );
+  });
+});

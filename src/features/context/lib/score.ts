@@ -37,6 +37,13 @@ export function computeScore(
 
   if (signals.events.length > 0) score += 30;
 
+  if (signals.venueEvent) {
+    const { phase } = signals.venueEvent;
+    if (phase === "arrival") score += 60;
+    else if (phase === "during") score += 30;
+    else if (phase === "departure") score += 45;
+  }
+
   if (signals.weather) {
     const { temperature, description } = signals.weather;
     if (tags.includes("beach") && temperature >= 78) score += 25;

@@ -18,6 +18,7 @@ const mockContext: CameraContextData = {
     nextLowTime: "2026-04-21T21:00:00Z",
   },
   buses: [{ line: "M15", destination: "Downtown Manhattan", minutesAway: 5 }],
+  venueEvent: null,
 };
 
 const mockCamera: FeaturedCamera = {
@@ -62,16 +63,44 @@ describe("ContextPanel", () => {
     expect(screen.queryByText(/Apple Maps/i)).toBeNull();
   });
 
+  it("shows venue event row when venueEvent is present", () => {
+    const contextWithEvent: CameraContextData = {
+      ...mockContext,
+      venueEvent: {
+        venueId: "msg",
+        venueName: "Madison Square Garden",
+        eventName: "Knicks vs Celtics",
+        category: "sports" as const,
+        startIso: "2024-06-15T23:30:00Z",
+        endIso: "2024-06-16T03:00:00Z",
+        phase: "arrival" as const,
+        emoji: "🏀",
+        url: "https://www.espn.com/nba/game/_/gameId/401585723",
+      },
+    };
+    render(<ContextPanel camera={mockCamera} context={contextWithEvent} />);
+    expect(screen.getByText("Knicks vs Celtics")).toBeDefined();
+    expect(screen.getByText("Starting soon")).toBeDefined();
+    expect(screen.getByText("Madison Square Garden")).toBeDefined();
+  });
+
+  it("does not show venue event row when venueEvent is null", () => {
+    render(<ContextPanel camera={mockCamera} context={mockContext} />);
+    expect(screen.queryByText("Starting soon")).toBeNull();
+    expect(screen.queryByText("Underway")).toBeNull();
+  });
+
   it("renders fallback text when no context is available", () => {
-    const emptyContext = {
+    const emptyContext: CameraContextData = {
       weather: null,
       events: [],
       transitAlerts: [],
       citibike: null,
       tides: null,
       buses: [],
+      venueEvent: null,
     };
-    render(<ContextPanel camera={mockCamera} context={emptyContext as CameraContextData} />);
+    render(<ContextPanel camera={mockCamera} context={emptyContext} />);
     expect(screen.getByText(/No live context available/i)).toBeDefined();
   });
 });

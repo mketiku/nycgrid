@@ -27,6 +27,7 @@ import { applySurveillanceOverlay } from "./canvas/surveillance";
 
 interface PhotoboothClientProps {
   camera: CameraType;
+  venueEvent?: { emoji: string; eventName: string; phase: string } | null;
 }
 
 const FRAMES: { id: FrameType; label: string; shots: number; icon: React.ReactNode }[] = [
@@ -36,7 +37,7 @@ const FRAMES: { id: FrameType; label: string; shots: number; icon: React.ReactNo
   { id: "cinema", label: "Cinema", shots: 1, icon: <Clapperboard className="w-3.5 h-3.5" /> },
 ];
 
-export function PhotoboothClient({ camera }: PhotoboothClientProps) {
+export function PhotoboothClient({ camera, venueEvent }: PhotoboothClientProps) {
   const [frameType, setFrameType] = useState<FrameType>("filmstrip");
   const [caption, setCaption] = useState("");
   const [showBoroughStamp, setShowBoroughStamp] = useState(false);
@@ -77,7 +78,11 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
     } else if (frameType === "polaroid") {
       baseCompose = (shots) => composePolaroid(shots[0], caption, camera.name);
     } else if (frameType === "strip3") {
-      baseCompose = (shots) => composeStrip3(shots, camera.name, camera.area, overlayOptions);
+      baseCompose = (shots) =>
+        composeStrip3(shots, camera.name, camera.area, {
+          ...overlayOptions,
+          eventStamp: venueEvent ?? null,
+        });
     } else {
       baseCompose = (shots) => composeCinema(shots[0], camera.name, camera.area, overlayOptions);
     }
@@ -102,6 +107,7 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
     showBoroughStamp,
     showNycWatermark,
     surveillanceMode,
+    venueEvent,
   ]);
 
   const makeFilename = useCallback(

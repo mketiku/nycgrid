@@ -233,6 +233,30 @@ const FEATURED_CONFIGS: FeaturedCameraConfig[] = [
     nearestSubwayLines: [],
     lore: "Richmond Avenue runs through the heart of Staten Island, just east of the Staten Island Greenbelt — a 3,000-acre continuous forest preserve and the largest natural area in New York City. More deer live in the Greenbelt than anywhere else in the five boroughs, and the trails inside feel nothing like the city surrounding them.",
   },
+
+  // ── Venue Cameras ─────────────────────────────────────────────────────────────
+
+  {
+    id: "6a85384f-d82e-4bff-b5f1-15c22cca70e6",
+    displayName: "8th Ave @ 33rd St",
+    tags: ["venue", "commute"],
+    nearestSubwayLines: ["1", "2", "3", "A", "C", "E"],
+    lore: "Madison Square Garden is 120 meters north. On game nights, the crowd builds here before tipoff and clears out in waves after the final buzzer.",
+  },
+  {
+    id: "ad051a78-9c50-43b3-bb71-83b091acd818",
+    displayName: "Gerard Ave @ E 161 St",
+    tags: ["venue"],
+    nearestSubwayLines: ["B", "D", "4"],
+    lore: "Yankee Stadium is 255 meters west. The 4, B, and D trains discharge thousands of fans here before first pitch. Post-game, the area empties fast.",
+  },
+  {
+    id: "39b42007-16d8-4302-8b8c-602bbb9e9683",
+    displayName: "Northern Blvd @ 114 St",
+    tags: ["venue"],
+    nearestSubwayLines: ["7"],
+    lore: "The closest traffic camera to Citi Field, 832 meters southeast. Mets game days fill Northern Blvd heading toward the 7 train.",
+  },
 ];
 
 export function buildFeaturedCameras(allCameras: typeof CAMERAS): FeaturedCamera[] {

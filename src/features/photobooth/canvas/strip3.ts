@@ -102,6 +102,48 @@ function drawBoroughStamp(
   ctx.restore();
 }
 
+function drawEventStamp(
+  ctx: CanvasRenderingContext2D,
+  stamp: { emoji: string; eventName: string; phase: string },
+  x: number,
+  y: number,
+  w: number,
+  h: number
+): void {
+  const PAD = 10;
+  const STAMP_H = 32;
+  const stampY = y + h - STAMP_H - PAD;
+
+  ctx.fillStyle = "rgba(0,0,0,0.65)";
+  ctx.beginPath();
+  ctx.roundRect(x + PAD, stampY, w - PAD * 2, STAMP_H, 4);
+  ctx.fill();
+
+  ctx.fillStyle = "#f97316";
+  ctx.beginPath();
+  ctx.roundRect(x + PAD, stampY, 3, STAMP_H, 2);
+  ctx.fill();
+
+  ctx.font = "16px serif";
+  ctx.textBaseline = "middle";
+  ctx.fillText(stamp.emoji, x + PAD + 8, stampY + STAMP_H / 2);
+
+  ctx.font = "bold 11px 'JetBrains Mono', monospace";
+  ctx.fillStyle = "#ffffff";
+  const name = stamp.eventName.length > 28 ? stamp.eventName.slice(0, 27) + "…" : stamp.eventName;
+  ctx.fillText(name, x + PAD + 28, stampY + 10);
+
+  ctx.font = "9px 'JetBrains Mono', monospace";
+  ctx.fillStyle = "#f97316";
+  const phaseLabel =
+    stamp.phase === "arrival"
+      ? "STARTING SOON"
+      : stamp.phase === "during"
+        ? "UNDERWAY"
+        : "JUST ENDED";
+  ctx.fillText(phaseLabel, x + PAD + 28, stampY + 22);
+}
+
 function drawNycWatermark(
   ctx: CanvasRenderingContext2D,
   photoX: number,
@@ -166,6 +208,7 @@ function drawFooter(ctx: CanvasRenderingContext2D, cameraName: string, area: str
 export interface Strip3Options {
   showBoroughStamp?: boolean;
   showNycWatermark?: boolean;
+  eventStamp?: { emoji: string; eventName: string; phase: string } | null;
 }
 
 export async function composeStrip3(
@@ -194,9 +237,14 @@ export async function composeStrip3(
       drawNycWatermark(ctx, photoX, photoY, SHOT_W, SHOT_H);
     }
 
-    // Borough stamp only on the last shot to avoid repetition
-    if (options.showBoroughStamp && i === shots.slice(0, 3).length - 1) {
-      drawBoroughStamp(ctx, area, photoX, photoY, SHOT_W, SHOT_H);
+    // Borough stamp and event stamp only on the last shot to avoid repetition
+    if (i === shots.slice(0, 3).length - 1) {
+      if (options.showBoroughStamp) {
+        drawBoroughStamp(ctx, area, photoX, photoY, SHOT_W, SHOT_H);
+      }
+      if (options.eventStamp) {
+        drawEventStamp(ctx, options.eventStamp, photoX, photoY, SHOT_W, SHOT_H);
+      }
     }
   });
 

@@ -709,3 +709,44 @@ describe("AmbientPlayer", () => {
     expect(screen.getByTestId("ambient-controls")).toBeDefined();
   });
 });
+
+describe("AmbientPlayer — overlay and skip (characterization)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    push.mockReset();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ json: vi.fn().mockResolvedValue({}) }));
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+      cb(0);
+      return 1;
+    });
+    vi.spyOn(HTMLMediaElement.prototype, "play").mockResolvedValue(undefined);
+    vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => undefined);
+    Object.defineProperty(document, "hidden", {
+      configurable: true,
+      value: false,
+    });
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })) as typeof window.matchMedia;
+  });
+
+  it("shows Start button before entering ambient", () => {
+    render(<AmbientPlayer cameras={mockCameras} />);
+    expect(screen.getByRole("button", { name: /Start ambient mode/i })).toBeInTheDocument();
+  });
+
+  it("enters ambient mode after clicking Start", async () => {
+    render(<AmbientPlayer cameras={mockCameras} />);
+    fireEvent.click(screen.getByRole("button", { name: /Start ambient mode/i }));
+    await waitFor(() => {
+      expect(screen.queryByRole("button", { name: /Start ambient mode/i })).toBeNull();
+    });
+  });
+});

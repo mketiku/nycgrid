@@ -188,7 +188,7 @@ describe("PhotoboothClient", () => {
       [firstShot, secondShot, thirdShot],
       "Delancey St",
       "Manhattan",
-      { showBoroughStamp: true, showNycWatermark: true }
+      { showBoroughStamp: true, showNycWatermark: true, eventStamp: null }
     );
 
     fireEvent.click(screen.getByRole("button", { name: /cinema/i }));
