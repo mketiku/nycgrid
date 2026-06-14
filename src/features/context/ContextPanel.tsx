@@ -8,14 +8,15 @@ interface ContextPanelProps {
 }
 
 export function ContextPanel({ camera, context }: ContextPanelProps) {
-  const { weather, events, transitAlerts, citibike, tides, buses } = context;
+  const { weather, events, transitAlerts, citibike, tides, buses, venueEvent } = context;
   const hasAnyContext =
     weather ||
     events.length > 0 ||
     transitAlerts.length > 0 ||
     citibike ||
     tides ||
-    buses.length > 0;
+    buses.length > 0 ||
+    !!venueEvent;
 
   return (
     <div className="border border-[var(--color-border)] bg-[var(--color-surface)] rounded-lg overflow-hidden">
@@ -26,6 +27,8 @@ export function ContextPanel({ camera, context }: ContextPanelProps) {
       </div>
 
       <div className="divide-y divide-[var(--color-border)]">
+        {venueEvent && <VenueEventRow event={venueEvent} />}
+
         {weather && (
           <ContextRow
             icon={<Cloud className="w-3.5 h-3.5" />}
@@ -86,6 +89,44 @@ export function ContextPanel({ camera, context }: ContextPanelProps) {
               No live context available
             </p>
           </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function VenueEventRow({ event }: { event: NonNullable<CameraContextData["venueEvent"]> }) {
+  const phaseLabel =
+    event.phase === "arrival"
+      ? "Starting soon"
+      : event.phase === "during"
+        ? "Underway"
+        : "Just ended";
+  return (
+    <div className="px-4 py-3 flex items-start gap-3" style={{ borderLeft: "2px solid #f97316" }}>
+      <span className="mt-0.5 shrink-0 text-lg leading-none">{event.emoji}</span>
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <span
+          className="font-mono text-[10px] uppercase tracking-widest"
+          style={{ color: "#f97316" }}
+        >
+          {phaseLabel}
+        </span>
+        <span className="font-mono text-xs text-[var(--color-text-primary)] leading-snug">
+          {event.eventName}
+        </span>
+        <span className="font-mono text-[10px] text-[var(--color-text-muted)]">
+          {event.venueName}
+        </span>
+        {event.url && (
+          <a
+            href={event.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-[10px] text-[var(--color-accent)] hover:underline mt-0.5"
+          >
+            View event →
+          </a>
         )}
       </div>
     </div>
