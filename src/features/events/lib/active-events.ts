@@ -105,17 +105,18 @@ export async function getActiveEventsForVenue(
 export async function getAllActiveEventContexts(
   now: Date = new Date()
 ): Promise<ActiveEventContext[]> {
-  const contexts: ActiveEventContext[] = [];
-  for (const venue of VENUES) {
-    const events = await getActiveEventsForVenue(venue, now);
-    if (events.length > 0) {
-      contexts.push({
+  const results = await Promise.all(
+    VENUES.map(async (venue) => {
+      const events = await getActiveEventsForVenue(venue, now);
+      if (events.length === 0) return null;
+      const ctx: ActiveEventContext = {
         venueId: venue.id,
         venueName: venue.name,
         events,
         cameraIds: venue.cameraIds,
-      });
-    }
-  }
-  return contexts;
+      };
+      return ctx;
+    })
+  );
+  return results.filter((c): c is ActiveEventContext => c !== null);
 }
