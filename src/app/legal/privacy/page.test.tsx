@@ -7,7 +7,7 @@ describe("PrivacyPage", () => {
     render(<PrivacyPage />);
     expect(screen.getByText("Privacy Policy")).toBeDefined();
     expect(screen.getByText(/Last updated:/)).toBeDefined();
-    expect(screen.getByText(/Nothing deliberately/)).toBeDefined();
+    expect(screen.getByText(/No accounts/)).toBeDefined();
     expect(screen.getByRole("link", { name: "Open a GitHub issue" })).toHaveAttribute(
       "href",
       "https://github.com/mketiku/nycgrid/issues"
