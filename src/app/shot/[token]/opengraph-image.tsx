@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { CAMERAS } from "@/lib/cameras/data";
 import { decodeShotToken } from "@/lib/shot/token";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const alt = "A live NYC traffic-camera shot — nycgrid";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -70,7 +70,6 @@ export default async function Image({ params }: ImageProps) {
       }}
     >
       {frameSrc && (
-         
         <img
           src={frameSrc}
           alt=""
