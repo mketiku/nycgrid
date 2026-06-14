@@ -6,6 +6,7 @@ import { cameraImageUrl, windowedProxiedImageUrl } from "@/lib/cameras/types";
 import type { Camera } from "@/lib/cameras/types";
 import { FEATURED_CAMERAS } from "@/features/context/lib/featured-cameras";
 import { areaBalancedFeaturedShuffle } from "./lib/shuffle";
+import { buildEventQueue } from "./lib/event-queue";
 
 const CAMERA_DWELL_MS = 25_000;
 const FRAME_REFRESH_MS = 30_000;
@@ -39,7 +40,11 @@ export interface UseAmbientRotationReturn {
   startKenBurns: (slot: 0 | 1) => void;
 }
 
-export function useAmbientRotation(cameras: Camera[]): UseAmbientRotationReturn {
+export function useAmbientRotation(
+  cameras: Camera[],
+  eventCameraIds: string[] = [],
+  eventPhase: "arrival" | "during" | "departure" = "arrival"
+): UseAmbientRotationReturn {
   const [paused, setPaused] = useState(false);
 
   const shuffledRef = useRef<Camera[]>([]);
@@ -98,10 +103,14 @@ export function useAmbientRotation(cameras: Camera[]): UseAmbientRotationReturn 
     preloadRef.current = imgs;
   }, []);
 
+  // Stable string key so the effect only re-runs when the actual IDs change, not reference identity
+  const eventCameraIdsKey = eventCameraIds.join(",");
+
   // Initialise shuffled list and prime slot 0
   useEffect(() => {
     if (cameras.length === 0) return;
-    shuffledRef.current = areaBalancedFeaturedShuffle(cameras, FEATURED_IDS);
+    const shuffled = areaBalancedFeaturedShuffle(cameras, FEATURED_IDS);
+    shuffledRef.current = buildEventQueue(shuffled, cameras, eventCameraIds, eventPhase);
     indexRef.current = 0;
     isFrameRefreshRef.current = false;
     const first = shuffledRef.current[0];
@@ -113,7 +122,7 @@ export function useAmbientRotation(cameras: Camera[]): UseAmbientRotationReturn 
     setActiveSlot(0);
     setTextVisible(false);
     preloadUpcoming();
-  }, [cameras, preloadUpcoming]);
+  }, [cameras, preloadUpcoming, eventCameraIdsKey, eventPhase]);
 
   const armSlotTimeout = useCallback((staging: 0 | 1) => {
     if (slotTimeoutRef.current) clearTimeout(slotTimeoutRef.current);
