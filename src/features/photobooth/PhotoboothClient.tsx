@@ -20,6 +20,7 @@ import { composeStrip3 } from "./canvas/strip3";
 import { composeCinema } from "./canvas/cinema";
 import { useMyShots } from "@/hooks/useMyShots";
 import { trackSelfie } from "@/lib/analytics/session";
+import { encodeShotToken } from "@/lib/shot/token";
 import type { Camera as CameraType } from "@/lib/cameras/types";
 import { useCheesecode } from "@/features/chicken-wings";
 import { applySurveillanceOverlay } from "./canvas/surveillance";
@@ -127,12 +128,13 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
     if (!blob) return;
     const filename = makeFilename();
     const file = new File([blob], filename, { type: "image/png" });
+    const token = encodeShotToken(camera.id, frameType, caption);
     if (navigator.canShare?.({ files: [file] })) {
       try {
         await navigator.share({
           files: [file],
           title: `nycgrid — ${camera.name}`,
-          url: `${window.location.origin}/camera/${camera.id}`,
+          url: `${window.location.origin}/shot/${token}`,
         });
         trackSelfie();
       } catch {
@@ -148,7 +150,7 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
       URL.revokeObjectURL(url);
       trackSelfie();
     }
-  }, [phase, makeFilename, camera.name, camera.id]);
+  }, [phase, makeFilename, camera.name, camera.id, frameType, caption]);
 
   const isActive = phase.status === "countdown";
   const isDone = phase.status === "result";
@@ -276,6 +278,19 @@ export function PhotoboothClient({ camera }: PhotoboothClientProps) {
           <div className="absolute inset-0 bg-white opacity-80 pointer-events-none" />
         )}
       </div>
+
+      {/* Result caption input */}
+      {isDone && (
+        <input
+          type="text"
+          value={caption}
+          onChange={(e) => setCaption(e.target.value)}
+          maxLength={40}
+          placeholder="add a caption (optional)"
+          aria-label="Shot caption"
+          className="font-mono text-xs px-3 min-h-[44px] rounded border border-[var(--color-border)] bg-transparent text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+        />
+      )}
 
       {/* Actions */}
       <div className="flex items-center justify-center gap-3">

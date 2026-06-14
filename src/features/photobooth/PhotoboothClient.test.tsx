@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PhotoboothClient } from "./PhotoboothClient";
 import type { CapturePhase } from "./useCapture";
 import type { Camera } from "@/lib/cameras/types";
+import { encodeShotToken } from "@/lib/shot/token";
 
 const mockUseCapture = vi.fn();
 const mockUseMyShots = vi.fn();
@@ -274,14 +275,43 @@ describe("PhotoboothClient", () => {
     fireEvent.click(screen.getByRole("button", { name: "Share" }));
     await waitFor(() => expect(share).toHaveBeenCalledTimes(1));
     const sharePayload = (share.mock.calls[0] as unknown as [unknown] | undefined)?.[0];
+    const expectedToken = encodeShotToken("cam-12345678", "filmstrip", "");
     expect(sharePayload).toMatchObject({
       title: "nycgrid — Delancey St",
-      url: expect.stringContaining("/camera/cam-12345678"),
+      url: expect.stringContaining(`/shot/${expectedToken}`),
       files: [expect.objectContaining({ name: "nycgrid-filmstrip-cam-1234-1712345678901.png" })],
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Retake" }));
     expect(reset).toHaveBeenCalledTimes(1);
+  });
+
+  it("share on result screen uses /shot/<token> URL with caption from caption input", async () => {
+    const canvas = createResultCanvas();
+    phase = { status: "result", canvas };
+
+    const share = vi.fn(() => Promise.resolve());
+    Object.defineProperty(navigator, "canShare", {
+      configurable: true,
+      value: vi.fn(() => true),
+    });
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: share,
+    });
+
+    renderClient();
+
+    const captionInput = screen.getByRole("textbox", { name: /shot caption/i });
+    fireEvent.change(captionInput, { target: { value: "Times Square midnight" } });
+
+    fireEvent.click(screen.getByRole("button", { name: "Share" }));
+    await waitFor(() => expect(share).toHaveBeenCalledTimes(1));
+
+    const expectedToken = encodeShotToken("cam-12345678", "filmstrip", "Times Square midnight");
+    expect(share).toHaveBeenCalledWith(
+      expect.objectContaining({ url: expect.stringContaining(`/shot/${expectedToken}`) })
+    );
   });
 
   it("autosaves once per completed result and resets after returning to idle", () => {
