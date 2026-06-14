@@ -48,8 +48,13 @@ export function ShotClient({ camera, frameType, caption }: ShotClientProps) {
     <div className="flex flex-col gap-6 max-w-2xl mx-auto w-full">
       <div className="flex items-center justify-between font-mono text-xs text-[var(--color-text-muted)]">
         <span className="tracking-widest uppercase">
-          {camera.name} · {camera.area} ·{" "}
-          <span className="text-[var(--color-accent)]">LIVE NOW</span>
+          {camera.name} · {camera.area}
+          {camera.isOnline && (
+            <>
+              {" "}
+              · <span className="text-[var(--color-accent)]">LIVE NOW</span>
+            </>
+          )}
         </span>
         {!camera.isOnline && (
           <span className="uppercase tracking-widest text-[var(--color-text-muted)]">offline</span>
@@ -57,7 +62,12 @@ export function ShotClient({ camera, frameType, caption }: ShotClientProps) {
       </div>
 
       <div className="relative rounded border border-[var(--color-border)] overflow-hidden bg-[var(--color-elevated)]">
-        <canvas ref={canvasRef} className="w-full h-auto block" />
+        <canvas
+          ref={canvasRef}
+          role="img"
+          aria-label={`Live camera frame: ${camera.name}, ${camera.area}`}
+          className="w-full h-auto block"
+        />
         {!loaded && (
           <div
             data-testid="shot-scanline"

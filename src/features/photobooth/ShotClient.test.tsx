@@ -23,6 +23,7 @@ describe("ShotClient", () => {
 
     expect(screen.getByText(/LIVE NOW/i)).toBeInTheDocument();
     expect(screen.getByText("midtown 3am")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: /live camera frame/i })).toBeInTheDocument();
 
     const cta = screen.getByRole("link", { name: /shoot this corner/i });
     expect(cta).toHaveAttribute("href", `/photobooth/${camera.id}`);
@@ -37,5 +38,6 @@ describe("ShotClient", () => {
     render(<ShotClient camera={{ ...camera, isOnline: false }} frameType="polaroid" caption="" />);
     expect(screen.getByText(/offline/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /shoot this corner/i })).toBeInTheDocument();
+    expect(screen.queryByText(/live now/i)).not.toBeInTheDocument();
   });
 });
