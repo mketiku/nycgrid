@@ -20,6 +20,7 @@ import { composeStrip3 } from "./canvas/strip3";
 import { composeCinema } from "./canvas/cinema";
 import { useMyShots } from "@/hooks/useMyShots";
 import { trackSelfie } from "@/lib/analytics/session";
+import { capturePhotoTaken } from "@/lib/analytics/posthog";
 import { encodeShotToken } from "@/lib/shot/token";
 import type { Camera as CameraType } from "@/lib/cameras/types";
 import { useCheesecode } from "@/features/chicken-wings";
@@ -126,7 +127,8 @@ export function PhotoboothClient({ camera, venueEvent }: PhotoboothClientProps) 
     a.download = makeFilename();
     a.click();
     trackSelfie();
-  }, [phase, makeFilename]);
+    capturePhotoTaken(camera.id);
+  }, [phase, makeFilename, camera.id]);
 
   const handleShare = useCallback(async () => {
     if (phase.status !== "result") return;
@@ -143,6 +145,7 @@ export function PhotoboothClient({ camera, venueEvent }: PhotoboothClientProps) 
           url: `${window.location.origin}/shot/${token}`,
         });
         trackSelfie();
+        capturePhotoTaken(camera.id);
       } catch {
         // user cancelled share — no-op
       }
@@ -155,6 +158,7 @@ export function PhotoboothClient({ camera, venueEvent }: PhotoboothClientProps) 
       a.click();
       URL.revokeObjectURL(url);
       trackSelfie();
+      capturePhotoTaken(camera.id);
     }
   }, [phase, makeFilename, camera.name, camera.id, frameType, caption]);
 
