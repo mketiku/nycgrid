@@ -9,6 +9,9 @@ import { MOBILE_NAV_CLEARANCE_CLASS } from "@/components/layout/mobileNav";
 import { PersistentMap } from "@/features/map/PersistentMap";
 import { ChickenWingProvider } from "@/features/chicken-wings";
 import { Analytics } from "@vercel/analytics/next";
+import { Suspense } from "react";
+import { PostHogProvider } from "@/components/PostHogProvider";
+import { PostHogPageView } from "@/components/PostHogPageView";
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
@@ -68,21 +71,26 @@ export default function RootLayout({
           Skip to content
         </a>
         <QueryProvider>
-          <ThemeProvider>
-            <PersistentMap />
-            <ChickenWingProvider />
-            <Analytics />
-            <AppNav />
-            <div id="main-content" tabIndex={-1} className="flex-1 outline-none">
-              {children}
-            </div>
-            <div
-              data-testid="app-shell-footer"
-              className={`empty:hidden desktop-layout:pb-0 ${MOBILE_NAV_CLEARANCE_CLASS}`}
-            >
-              <AppFooter />
-            </div>
-          </ThemeProvider>
+          <PostHogProvider>
+            <Suspense fallback={null}>
+              <PostHogPageView />
+            </Suspense>
+            <ThemeProvider>
+              <PersistentMap />
+              <ChickenWingProvider />
+              <Analytics />
+              <AppNav />
+              <div id="main-content" tabIndex={-1} className="flex-1 outline-none">
+                {children}
+              </div>
+              <div
+                data-testid="app-shell-footer"
+                className={`empty:hidden desktop-layout:pb-0 ${MOBILE_NAV_CLEARANCE_CLASS}`}
+              >
+                <AppFooter />
+              </div>
+            </ThemeProvider>
+          </PostHogProvider>
         </QueryProvider>
       </body>
     </html>

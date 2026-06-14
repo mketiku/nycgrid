@@ -10,11 +10,13 @@
 import { ASSETS_CDN } from "../assets/cdn";
 
 const VERCEL_ANALYTICS_ORIGIN = "https://va.vercel-scripts.com";
+const POSTHOG_SCRIPT_ORIGIN = "https://us-assets.i.posthog.com";
+const POSTHOG_INGEST_ORIGIN = "https://us.i.posthog.com";
 
 export function buildCSP(isProd: boolean): string {
   const scriptSrc = isProd
-    ? `script-src 'self' 'unsafe-inline' ${VERCEL_ANALYTICS_ORIGIN}`
-    : `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${VERCEL_ANALYTICS_ORIGIN}`;
+    ? `script-src 'self' 'unsafe-inline' ${VERCEL_ANALYTICS_ORIGIN} ${POSTHOG_SCRIPT_ORIGIN}`
+    : `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${VERCEL_ANALYTICS_ORIGIN} ${POSTHOG_SCRIPT_ORIGIN}`;
 
   return [
     "default-src 'self'",
@@ -26,7 +28,7 @@ export function buildCSP(isProd: boolean): string {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://webcams.nyctmc.org https://api.maptiler.com https://*.cartocdn.com https://*.basemaps.cartocdn.com https://img.youtube.com",
     "font-src 'self' data: https://fonts.gstatic.com",
-    `connect-src 'self' https://api.maptiler.com https://*.cartocdn.com https://*.basemaps.cartocdn.com https://tiles.openfreemap.org https://api.open-meteo.com ${VERCEL_ANALYTICS_ORIGIN}`,
+    `connect-src 'self' https://api.maptiler.com https://*.cartocdn.com https://*.basemaps.cartocdn.com https://tiles.openfreemap.org https://api.open-meteo.com ${VERCEL_ANALYTICS_ORIGIN} ${POSTHOG_INGEST_ORIGIN}`,
     "worker-src blob:",
     `media-src 'self' blob: https://fm939.wnyc.org https://stream.wqxr.org ${ASSETS_CDN}/`,
     "frame-src 'none'",
