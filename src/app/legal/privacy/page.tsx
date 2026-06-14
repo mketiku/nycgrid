@@ -9,7 +9,7 @@ export default function PrivacyPage() {
   return (
     <>
       <h1>Privacy Policy</h1>
-      <p className="lead">Last updated: April 2026</p>
+      <p className="lead">Last updated: June 2026</p>
 
       <p>
         NYC Grid is a free, open exploration tool built on 100% public data. We collect as little as
@@ -40,8 +40,17 @@ export default function PrivacyPage() {
         The app is hosted on Vercel. Like any web host, Vercel may process standard metadata,
         including IP address, user agent, and requested URL, in order to serve the app, operate the
         platform, and troubleshoot failures. We use Vercel Analytics to count visitors and page
-        views — it collects no cookies, no fingerprints, and no personal data. We do not run
-        third-party client-side analytics or error-monitoring scripts.
+        views — it collects no cookies, no fingerprints, and no personal data.
+      </p>
+
+      <h2>Product analytics</h2>
+      <p>
+        We use PostHog to understand how features are used — for example, whether people who open
+        the map go on to view a camera feed. PostHog records behavioural events such as page views,
+        camera interactions, ambient mode entry, and photobooth use. It does not collect your name,
+        email address, or IP address. No cookies are set. The only data stored on your device is a
+        random anonymous identifier in your browser&apos;s <code>localStorage</code>, which cannot
+        be linked to you as a person. Session recordings are disabled.
       </p>
 
       <h2>Third-party services</h2>
@@ -61,6 +70,10 @@ export default function PrivacyPage() {
         <li>
           <strong>Google Fonts</strong> — JetBrains Mono and Inter typefaces are loaded from
           Google&apos;s CDN.
+        </li>
+        <li>
+          <strong>PostHog</strong> — product analytics (US region). Events are sent to{" "}
+          <code>us.i.posthog.com</code>. No cookies; no PII.
         </li>
       </ul>
 

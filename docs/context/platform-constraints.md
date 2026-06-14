@@ -175,3 +175,15 @@ NycGrid relies on `localStorage` and `sessionStorage` for persistence. To preven
 - **CSP coupling**: The `media-src` directive in `src/lib/security/headers.ts` must match the tag in `src/lib/assets/cdn.ts`. A mismatch silently blocks playback in production. When bumping the CDN tag, update both files in the same commit.
 - **Adding new assets workflow**: (1) push files to `nycgrid-assets`, (2) cut a new semver tag, (3) update `ASSETS_CDN` in `src/lib/assets/cdn.ts`, (4) update `media-src` in `src/lib/security/headers.ts` — see `docs/setup/ambient-audio-episodes.md` for the full episode-specific workflow.
 - **Failure mode**: Audio simply won't load — ambient mode degrades to camera slideshow only, no errors surface to the user.
+
+---
+
+## PostHog Analytics
+
+- **What's collected**: Behavioural events only — `map_camera_clicked`, `camera_feed_viewed`, `camera_feed_dwell`, `ambient_started`, `photo_taken`, `postcard_viewed`, `frame_diff_used`, and `$pageview` (route changes). No PII, no user identity.
+- **What's disabled**: Session recordings (`disable_session_recording: true`), autocapture (`autocapture: false`).
+- **Persistence**: `localStorage` — stores one random anonymous UUID (`posthog_distinct_id`). No cookies. This enables cross-page funnel stitching without identifying individuals.
+- **Volume estimate**: ~5–25 events per active session. Well within PostHog's free tier (1M events/month).
+- **Privacy posture**: No cookies. The only localStorage key is a random UUID with no PII attached. Users cannot be identified across devices or browsers.
+- **Ingest host**: `https://us.i.posthog.com` — US region. CSP: `script-src` includes `https://us-assets.i.posthog.com`; `connect-src` includes `https://us.i.posthog.com`.
+- **Failure mode**: PostHog failures are caught by the wrapper (`src/lib/analytics/posthog.ts`) and silently no-op — analytics never affect product behaviour.
