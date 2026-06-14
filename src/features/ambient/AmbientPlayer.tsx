@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAmbientWellness } from "@/features/chicken-wings";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -21,6 +21,7 @@ import { initVoices } from "@/lib/podcast/speech";
 import type { ChannelId } from "@/lib/podcast/types";
 import { FEATURED_CAMERAS } from "@/features/context/lib/featured-cameras";
 import { CAMERA_COUNT } from "@/lib/cameras/data";
+import type { ActiveEventContext } from "@/features/events/types";
 
 const IDLE_MS = 4_000;
 
@@ -353,6 +354,12 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   });
   const [isMuted, setIsMuted] = useState(true);
   const toggleMute = useCallback(() => setIsMuted((v) => !v), []);
+  const [activeEventContexts, setActiveEventContexts] = useState<ActiveEventContext[]>([]);
+  const eventCameraIds = useMemo(
+    () => activeEventContexts.flatMap((ctx) => ctx.cameraIds),
+    [activeEventContexts]
+  );
+  const eventPhase = activeEventContexts[0]?.events[0]?.phase ?? "arrival";
   const {
     currentCamera,
     activeSlot,
@@ -368,7 +375,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     paused,
     setPaused,
     startKenBurns,
-  } = useAmbientRotation(cameras);
+  } = useAmbientRotation(cameras, eventCameraIds, eventPhase);
   const togglePause = useCallback(() => setPaused((p) => !p), [setPaused]);
   const [streamLoading, setStreamLoading] = useState(false);
   const [musicLoading, setMusicLoading] = useState(false);
@@ -405,6 +412,11 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   const displayName = currentCamera
     ? (featuredDisplayNames.get(currentCamera.id) ?? currentCamera.name)
     : null;
+  const currentVenueEvent = useMemo(() => {
+    if (!currentCamera) return null;
+    const ctx = activeEventContexts.find((c) => c.cameraIds.includes(currentCamera.id));
+    return ctx?.events[0] ?? null;
+  }, [currentCamera, activeEventContexts]);
   const swipeStartXRef = useRef(0);
   const swipeStartYRef = useRef(0);
   const didSwipeRef = useRef(false);
@@ -546,6 +558,29 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   useEffect(() => {
     weatherCodeRef.current = weatherCode;
   }, [weatherCode]);
+
+  // Fetch active event contexts from the API route
+  useEffect(() => {
+    if (!entered) return;
+    let cancelled = false;
+    const fetchActive = async () => {
+      try {
+        const res = await fetch("/api/events/active");
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (!cancelled) setActiveEventContexts(data);
+      } catch {
+        // silent — ambient mode doesn't require events
+      }
+    };
+    void fetchActive();
+    // Refresh every 30 minutes
+    const interval = setInterval(fetchActive, 30 * 60 * 1000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [entered]);
 
   // Lore: show first fact after a delay then cycle; state resets are handled during render above
   useEffect(() => {
@@ -1193,6 +1228,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
         loreFactIndex={loreFactIndex}
         weatherTemp={weatherTemp}
         weatherCode={weatherCode}
+        venueEvent={currentVenueEvent}
       />
 
       {/* Controls — top right */}

@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, MapPin, X } from "lucide-react";
 import type { Camera } from "@/lib/cameras/types";
 import { getCameraLore } from "@/lib/cameras/lore";
+import type { VenueEvent } from "@/features/events/types";
 
 const LORE_CATEGORY_COLOR: Record<string, string> = {
   history: "#39ff14",
@@ -40,6 +41,7 @@ export interface AmbientOverlayProps {
   loreFactIndex: number;
   weatherTemp: number | undefined;
   weatherCode: number | undefined;
+  venueEvent?: VenueEvent | null;
 }
 
 export function AmbientOverlay({
@@ -50,6 +52,7 @@ export function AmbientOverlay({
   loreFactIndex,
   weatherTemp,
   weatherCode,
+  venueEvent,
 }: AmbientOverlayProps) {
   return (
     <AnimatePresence>
@@ -99,6 +102,27 @@ export function AmbientOverlay({
                   <X className="w-4 h-4" />
                 </button>
               </div>
+              {venueEvent && (
+                <div
+                  className="border-t border-white/8 pt-3"
+                  style={{ borderColor: "rgba(249,115,22,0.2)" }}
+                >
+                  <p
+                    className="font-mono text-[9px] uppercase tracking-widest mb-1"
+                    style={{ color: "#f97316" }}
+                  >
+                    {venueEvent.phase === "arrival" && "Starting soon"}
+                    {venueEvent.phase === "during" && "Underway"}
+                    {venueEvent.phase === "departure" && "Just ended"}
+                  </p>
+                  <p className="font-mono text-xs text-white/80">
+                    {venueEvent.emoji} {venueEvent.eventName}
+                  </p>
+                  <p className="font-mono text-[10px] text-white/40 mt-0.5">
+                    {venueEvent.venueName}
+                  </p>
+                </div>
+              )}
               {(() => {
                 const fact = getCameraLore(camera.id)[loreFactIndex] ?? null;
                 return fact ? (
