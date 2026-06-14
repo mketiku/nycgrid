@@ -1,4 +1,5 @@
 import type { Camera } from "@/lib/cameras/types";
+import type { VenueEvent } from "@/features/events/types";
 
 export interface WeatherData {
   temperature: number;
@@ -48,6 +49,7 @@ export interface CameraContextData {
   citibike: CitibikeData | null;
   tides: TideData | null;
   buses: BusArrival[];
+  venueEvent: VenueEvent | null;
 }
 
 export type CameraTag =

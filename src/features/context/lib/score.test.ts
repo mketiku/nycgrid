@@ -9,6 +9,7 @@ const empty: CameraContextData = {
   citibike: null,
   tides: null,
   buses: [],
+  venueEvent: null,
 };
 
 describe("computeScore", () => {
@@ -81,6 +82,7 @@ describe("computeScore", () => {
       citibike: null,
       tides: null,
       buses: [],
+      venueEvent: null,
     };
     // 30 (event) + 25 (beach + hot)
     expect(computeScore(["beach"], signals)).toBe(55);

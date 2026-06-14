@@ -18,6 +18,7 @@ const mockContext: CameraContextData = {
     nextLowTime: "2026-04-21T21:00:00Z",
   },
   buses: [{ line: "M15", destination: "Downtown Manhattan", minutesAway: 5 }],
+  venueEvent: null,
 };
 
 const mockCamera: FeaturedCamera = {
@@ -63,15 +64,16 @@ describe("ContextPanel", () => {
   });
 
   it("renders fallback text when no context is available", () => {
-    const emptyContext = {
+    const emptyContext: CameraContextData = {
       weather: null,
       events: [],
       transitAlerts: [],
       citibike: null,
       tides: null,
       buses: [],
+      venueEvent: null,
     };
-    render(<ContextPanel camera={mockCamera} context={emptyContext as CameraContextData} />);
+    render(<ContextPanel camera={mockCamera} context={emptyContext} />);
     expect(screen.getByText(/No live context available/i)).toBeDefined();
   });
 });

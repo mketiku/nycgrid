@@ -21,5 +21,13 @@ export async function fetchCameraContext(camera: FeaturedCamera): Promise<Camera
     isTunnel ? [] : fetchBusArrivals(camera.latitude, camera.longitude),
   ]);
 
-  return { weather, events, citibike, transitAlerts, tides: tides ?? null, buses };
+  return {
+    weather,
+    events,
+    citibike,
+    transitAlerts,
+    tides: tides ?? null,
+    buses,
+    venueEvent: null,
+  };
 }
