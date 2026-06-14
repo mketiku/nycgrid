@@ -148,7 +148,7 @@ describe("/api/camera-image/[id]", () => {
     expect(response.headers.get("Access-Control-Allow-Origin")).toBeNull();
   });
 
-  it("returns 502 when upstream fetch is not ok", async () => {
+  it("returns 404 JSON when upstream returns 404 (camera removed)", async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: false,
       status: 404,
@@ -157,6 +157,24 @@ describe("/api/camera-image/[id]", () => {
     const response = await GET(
       new NextRequest(`http://localhost/api/camera-image/${cameraId}`, {
         headers: { "x-real-ip": "192.0.2.30" },
+      }),
+      { params: Promise.resolve({ id: cameraId }) }
+    );
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("Content-Type")).toContain("application/json");
+    expect(await response.json()).toEqual({ error: "camera_unavailable" });
+  });
+
+  it("returns 502 when upstream returns a non-404 error", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 503,
+    } as Response);
+
+    const response = await GET(
+      new NextRequest(`http://localhost/api/camera-image/${cameraId}`, {
+        headers: { "x-real-ip": "192.0.2.35" },
       }),
       { params: Promise.resolve({ id: cameraId }) }
     );

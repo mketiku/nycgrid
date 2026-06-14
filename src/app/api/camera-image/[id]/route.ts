@@ -50,6 +50,14 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     });
 
     if (!res.ok) {
+      if (res.status === 404) {
+        const headers = buildRateLimitHeaders(perCameraLimit);
+        headers.set("Content-Type", "application/json");
+        return new NextResponse(JSON.stringify({ error: "camera_unavailable" }), {
+          status: 404,
+          headers,
+        });
+      }
       return new NextResponse("Camera unavailable", {
         status: 502,
         headers: buildRateLimitHeaders(perCameraLimit),

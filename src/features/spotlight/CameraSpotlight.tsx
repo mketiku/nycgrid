@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Shuffle, Navigation, Info } from "lucide-react";
+import { SpotlightImage } from "./SpotlightImage";
 import { FEATURED_CAMERAS } from "@/features/context/lib/featured-cameras";
 import { fetchCameraContext } from "@/features/context/lib/fetch-context";
 import { computeScore } from "@/features/context/lib/score";
@@ -46,11 +47,9 @@ export async function CameraSpotlight() {
       >
         {/* Live thumbnail */}
         <div className="aspect-video w-full relative bg-[var(--color-elevated)]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <SpotlightImage
             src={`/api/camera-image/${spotlight.id}`}
             alt={`Live view of ${spotlight.displayName}`}
-            className="w-full h-full object-cover"
           />
           <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/60 backdrop-blur-sm">
             <span

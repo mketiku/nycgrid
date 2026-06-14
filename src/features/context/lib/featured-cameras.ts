@@ -68,13 +68,6 @@ const FEATURED_CONFIGS: FeaturedCameraConfig[] = [
     lore: "The GWB has more lanes of traffic than any bridge in the world — 14 total. Le Corbusier called it 'the most beautiful bridge in the world.' The little red lighthouse underneath, built in 1880, was saved from demolition by public outcry after a children's book made it famous.",
   },
   {
-    id: "5c4582a7-6492-41ac-9bac-fa872878117b",
-    displayName: "West Street, Downtown",
-    tags: ["landmark", "waterfront"],
-    nearestSubwayLines: ["1", "2", "3", "4", "5", "A", "C", "E", "R", "W"],
-    lore: "Lower Manhattan's western edge was built progressively outward into the Hudson River over three centuries of landfill — the ground here didn't exist when the Dutch arrived in 1626. This stretch of West Street was once the heart of New York's maritime economy, where tall ships unloaded cargo from around the world.",
-  },
-  {
     id: "7cfc551d-403d-46a8-aa74-89f472b7136b",
     displayName: "Battery Park",
     tags: ["waterfront", "landmark"],
