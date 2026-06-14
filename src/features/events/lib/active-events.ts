@@ -56,16 +56,22 @@ export async function getActiveEventsForVenue(
   for (const dateStr of dates) {
     const fmtDate = dateStr.replace(/-/g, "");
 
-    if (venue.espnSport) {
-      const sports = await fetchSportsEvents(venue.espnSport, fmtDate);
-      for (const e of sports) {
-        rawEvents.push({
-          startIso: e.startIso,
-          name: e.name,
-          url: e.url,
-          category: "sports",
-          emoji: emojiForSport(venue.espnSport),
-        });
+    if (venue.espnSports && venue.espnSports.length > 0) {
+      const allSports = await Promise.all(
+        venue.espnSports.map((sport) =>
+          fetchSportsEvents(sport, fmtDate).then((events) => events.map((e) => ({ ...e, sport })))
+        )
+      );
+      for (const sportEvents of allSports) {
+        for (const e of sportEvents) {
+          rawEvents.push({
+            startIso: e.startIso,
+            name: e.name,
+            url: e.url,
+            category: "sports",
+            emoji: emojiForSport(e.sport),
+          });
+        }
       }
     }
 

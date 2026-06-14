@@ -12,8 +12,8 @@ export interface Venue {
   radiusKm: number;
   /** camera IDs pre-selected as the nearest to this venue */
   cameraIds: string[];
-  /** ESPN sport slug for sports venues, e.g. "basketball/nba" */
-  espnSport?: string;
+  /** ESPN sport slugs for sports venues, e.g. ["basketball/nba", "hockey/nhl"] */
+  espnSports?: string[];
   /** Ticketmaster attraction ID for this venue */
   tmId?: string;
 }

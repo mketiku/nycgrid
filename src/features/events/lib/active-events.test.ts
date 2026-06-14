@@ -34,7 +34,7 @@ const MSG_VENUE: Venue = {
   tier: "tier1",
   radiusKm: 0.5,
   cameraIds: ["6a85384f-d82e-4bff-b5f1-15c22cca70e6"],
-  espnSport: "basketball/nba",
+  espnSports: ["basketball/nba", "hockey/nhl"],
   tmId: "KovZpZAEdntA",
 };
 
@@ -73,14 +73,17 @@ describe("computeEventPhase", () => {
 
 describe("getActiveEventsForVenue", () => {
   it("returns VenueEvent when ESPN has a game in the arrival phase", async () => {
-    mockFetchSports.mockResolvedValue([
-      {
-        id: "g1",
-        name: "Knicks vs Celtics",
-        startIso: GAME_START,
-        url: "https://espn.com/game/g1",
-      },
-    ]);
+    // NBA call returns the Knicks game; NHL call returns nothing
+    mockFetchSports
+      .mockResolvedValueOnce([
+        {
+          id: "g1",
+          name: "Knicks vs Celtics",
+          startIso: GAME_START,
+          url: "https://espn.com/game/g1",
+        },
+      ])
+      .mockResolvedValueOnce([]);
 
     // now = 22:00 UTC = arrival phase (1.5h before 23:30)
     const now = new Date("2024-06-15T22:00:00Z");
@@ -112,11 +115,11 @@ describe("getActiveEventsForVenue", () => {
     const now = new Date("2024-06-16T06:00:00Z");
     await getActiveEventsForVenue(MSG_VENUE, now);
 
-    // Should have been called twice: today + yesterday
-    expect(mockFetchSports).toHaveBeenCalledTimes(2);
-    const calls = mockFetchSports.mock.calls.map((c) => c[1]);
-    expect(calls).toContain("20240615");
-    expect(calls).toContain("20240616");
+    // 2 sports (nba + nhl) × 2 dates (today + yesterday) = 4 calls
+    expect(mockFetchSports).toHaveBeenCalledTimes(4);
+    const dates = mockFetchSports.mock.calls.map((c) => c[1]);
+    expect(dates).toContain("20240615");
+    expect(dates).toContain("20240616");
   });
 
   it("only queries today when NY hour >= 3", async () => {
@@ -127,14 +130,14 @@ describe("getActiveEventsForVenue", () => {
     const now = new Date("2024-06-15T14:00:00Z");
     await getActiveEventsForVenue(MSG_VENUE, now);
 
-    expect(mockFetchSports).toHaveBeenCalledTimes(1);
+    expect(mockFetchSports).toHaveBeenCalledTimes(2);
   });
 
-  it("falls back to TM events when espnSport is not set", async () => {
+  it("falls back to TM events when espnSports is not set", async () => {
     const concertVenue: Venue = {
       ...MSG_VENUE,
       id: "concert-hall",
-      espnSport: undefined,
+      espnSports: undefined,
       tmId: "KovZpZAEdFtA",
     };
     mockFetchTM.mockResolvedValue([
@@ -165,7 +168,7 @@ describe("getAllActiveEventContexts", () => {
     const now = new Date("2024-06-15T22:00:00Z");
     const contexts = await getAllActiveEventContexts(now);
 
-    // Only MSG and other NBA venues will match — others have no espnSport or different sport
+    // Only MSG and other NBA venues will match — others have no espnSports or different sport
     const msgContext = contexts.find((c) => c.venueId === "msg");
     expect(msgContext).toBeDefined();
     expect(msgContext!.cameraIds).toContain("6a85384f-d82e-4bff-b5f1-15c22cca70e6");

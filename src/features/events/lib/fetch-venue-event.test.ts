@@ -25,7 +25,7 @@ const MOCK_VENUE = {
   tier: "tier1" as const,
   radiusKm: 0.5,
   cameraIds: ["6a85384f-d82e-4bff-b5f1-15c22cca70e6"],
-  espnSport: "basketball/nba",
+  espnSports: ["basketball/nba"],
 };
 
 const MOCK_EVENT = {

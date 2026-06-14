@@ -33,7 +33,5 @@ export function isNYHourBefore(hour: number, date: Date = new Date()): boolean {
 }
 
 export function addHours(isoString: string, hours: number): string {
-  const d = new Date(isoString);
-  d.setUTCHours(d.getUTCHours() + hours);
-  return d.toISOString();
+  return new Date(new Date(isoString).getTime() + hours * 3_600_000).toISOString();
 }

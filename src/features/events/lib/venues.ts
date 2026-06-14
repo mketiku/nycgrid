@@ -10,7 +10,7 @@ export const VENUES: Venue[] = [
     tier: "tier1",
     radiusKm: 0.5,
     cameraIds: ["6a85384f-d82e-4bff-b5f1-15c22cca70e6"],
-    espnSport: "basketball/nba",
+    espnSports: ["basketball/nba", "hockey/nhl"],
     tmId: "KovZpZAEdntA",
   },
   {
@@ -22,7 +22,7 @@ export const VENUES: Venue[] = [
     tier: "tier1",
     radiusKm: 0.5,
     cameraIds: ["ad051a78-9c50-43b3-bb71-83b091acd818"],
-    espnSport: "baseball/mlb",
+    espnSports: ["baseball/mlb"],
     tmId: "KovZpZAEkAkA",
   },
   {
@@ -34,7 +34,7 @@ export const VENUES: Venue[] = [
     tier: "tier1",
     radiusKm: 1.0,
     cameraIds: ["39b42007-16d8-4302-8b8c-602bbb9e9683"],
-    espnSport: "baseball/mlb",
+    espnSports: ["baseball/mlb"],
     tmId: "KovZpZAEkdoA",
   },
   {
@@ -46,7 +46,7 @@ export const VENUES: Venue[] = [
     tier: "tier1",
     radiusKm: 0.5,
     cameraIds: [],
-    espnSport: "basketball/nba",
+    espnSports: ["basketball/nba", "hockey/nhl"],
     tmId: "KovZpZAEAbEA",
   },
   {
@@ -58,7 +58,7 @@ export const VENUES: Venue[] = [
     tier: "tier1",
     radiusKm: 1.0,
     cameraIds: [],
-    espnSport: "football/nfl",
+    espnSports: ["football/nfl"],
   },
   {
     id: "madison-sq-park",
