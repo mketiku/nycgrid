@@ -22,6 +22,7 @@ jobs:
           node-version: "20"
 
       - name: Fetch camera list
+        id: fetch
         timeout-minutes: 1
         run: node scripts/fetch-cameras.mjs
 
@@ -50,6 +51,7 @@ jobs:
           OLD: ${{ steps.diff.outputs.old_count }}
           NEW: ${{ steps.diff.outputs.new_count }}
           DELTA: ${{ steps.diff.outputs.delta }}
+          SANITIZED: ${{ steps.fetch.outputs.sanitized_count }}
         run: |
           BRANCH="chore/refresh-camera-list"
           git config user.name "github-actions[bot]"
@@ -63,6 +65,7 @@ jobs:
 
           - Automated weekly refresh of the NYC DOT camera list via the DOT webcams API
           - ${OLD} → ${NEW} cameras (${DELTA})
+          - ${SANITIZED} camera names sanitized (DOT equipment codes, numeric suffixes, C-code highway names)
 
           ## Test plan
 
