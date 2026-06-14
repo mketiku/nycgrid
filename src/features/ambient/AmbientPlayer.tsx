@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { cameraImageUrl } from "@/lib/cameras/types";
 import type { Camera } from "@/lib/cameras/types";
 import { trackAmbientHeartbeat } from "@/lib/analytics/session";
+import { captureAmbientStarted } from "@/lib/analytics/posthog";
 import { getCameraLore } from "@/lib/cameras/lore";
 import type { CameraFact } from "@/lib/cameras/lore";
 import { usePodcast } from "@/hooks/usePodcast";
@@ -874,6 +875,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   // Ambient time tracking — heartbeat every 60 s, only after user has entered
   useEffect(() => {
     if (!entered) return;
+    captureAmbientStarted();
     const id = setInterval(() => trackAmbientHeartbeat(60), 60_000);
     return () => clearInterval(id);
   }, [entered]);
