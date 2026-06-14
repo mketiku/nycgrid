@@ -15,8 +15,13 @@ describe("sanitizeCaption", () => {
     expect(sanitizeCaption("a".repeat(60))).toHaveLength(40);
   });
 
+  // angle brackets, parens, and slashes are all stripped, leaving only the safe chars
   it("strips disallowed characters", () => {
     expect(sanitizeCaption("hi <script>alert(1)</script>")).toBe("hi scriptalert1script");
+  });
+
+  it("collapses internal whitespace", () => {
+    expect(sanitizeCaption("midtown   3am")).toBe("midtown 3am");
   });
 
   it("returns empty string for non-string or empty input", () => {

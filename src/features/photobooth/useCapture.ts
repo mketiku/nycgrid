@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 
-export type FrameType = "filmstrip" | "polaroid" | "strip3" | "cinema";
+export type { FrameType } from "@/lib/shot/frames";
 
 export type CapturePhase =
   | { status: "idle" }
