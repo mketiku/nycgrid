@@ -44,6 +44,7 @@ import { CoverageToggle, useCoverageLayer } from "@/features/coverage-gap";
 import { YourStats } from "@/features/stats/YourStats";
 import { findNearestCamera } from "@/lib/cameras/geo";
 import { useFavourites } from "@/hooks/useFavourites";
+import { captureMapCameraClick } from "@/lib/analytics/posthog";
 
 type LocateState = "idle" | "locating" | "error";
 
@@ -188,6 +189,7 @@ export function MapView({
     (camera: Camera | null) => {
       setSelectedCamera(camera);
       pushParams({ camera: camera?.id ?? null });
+      if (camera) captureMapCameraClick(camera.id, camera.area);
     },
     [pushParams]
   );
