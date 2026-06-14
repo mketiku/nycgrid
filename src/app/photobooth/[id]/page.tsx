@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { ArrowLeft } from "lucide-react";
 import { CAMERAS } from "@/lib/cameras/data";
 import { PhotoboothPreflight } from "@/features/photobooth/PhotoboothPreflight";
+import { fetchVenueEvent } from "@/features/events/lib/fetch-venue-event";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -29,6 +30,11 @@ export default async function PhotoboothPage({ params }: PageProps) {
   const camera = CAMERAS.find((c) => c.id === id);
   if (!camera) notFound();
 
+  const rawVenueEvent = await fetchVenueEvent(camera.id);
+  const venueEvent = rawVenueEvent
+    ? { emoji: rawVenueEvent.emoji, eventName: rawVenueEvent.eventName, phase: rawVenueEvent.phase }
+    : null;
+
   return (
     <div className="min-h-screen flex flex-col">
       <div className="border-b border-[var(--color-border)] px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
@@ -45,7 +51,7 @@ export default async function PhotoboothPage({ params }: PageProps) {
       </div>
 
       <div className="flex-1 px-4 sm:px-6 py-8">
-        <PhotoboothPreflight camera={camera} />
+        <PhotoboothPreflight camera={camera} venueEvent={venueEvent} />
       </div>
     </div>
   );

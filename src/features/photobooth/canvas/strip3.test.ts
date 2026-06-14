@@ -71,6 +71,25 @@ describe("composeStrip3", () => {
     expect(draw.args.slice(5)).toEqual([48, 36, 704, 396]);
   });
 
+  it("renders with eventStamp without throwing", async () => {
+    installRecordingCanvasContext();
+
+    const canvas = await composeStrip3(
+      [createMockImage(1600, 900), createMockImage(1600, 900), createMockImage(1600, 900)],
+      "Madison Square Garden",
+      "Midtown",
+      {
+        eventStamp: {
+          emoji: "🏀",
+          eventName: "Knicks vs Celtics",
+          phase: "arrival",
+        },
+      }
+    );
+    expect(canvas.width).toBe(800);
+    expect(canvas.height).toBeGreaterThan(0);
+  });
+
   it("uses the taller-image crop branch and applies optional watermark/stamp behavior", async () => {
     const disabledRecorder = installRecordingCanvasContext();
 

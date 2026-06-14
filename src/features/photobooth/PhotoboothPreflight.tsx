@@ -36,11 +36,12 @@ const TERMS =
 
 interface PhotoboothPreflightProps {
   camera: Camera;
+  venueEvent?: { emoji: string; eventName: string; phase: string } | null;
 }
 
 const STORAGE_KEY = "nycgrid-photobooth-agreed";
 
-export function PhotoboothPreflight({ camera }: PhotoboothPreflightProps) {
+export function PhotoboothPreflight({ camera, venueEvent }: PhotoboothPreflightProps) {
   const [agreed, setAgreed] = useState(false);
   const [ready, setReady] = useState(() => {
     /* c8 ignore next */
@@ -49,7 +50,7 @@ export function PhotoboothPreflight({ camera }: PhotoboothPreflightProps) {
   });
 
   if (ready) {
-    return <PhotoboothClient camera={camera} />;
+    return <PhotoboothClient camera={camera} venueEvent={venueEvent} />;
   }
 
   return (
