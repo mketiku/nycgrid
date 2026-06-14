@@ -74,6 +74,64 @@ describe("computeScore", () => {
     expect(computeScore(["commute"], empty, false)).toBe(0);
   });
 
+  it("adds 60 for arrival phase venueEvent", () => {
+    const signals: CameraContextData = {
+      ...empty,
+      venueEvent: {
+        venueId: "v1",
+        venueName: "MSG",
+        eventName: "Knicks vs Celtics",
+        category: "sports",
+        startIso: "2026-06-14T23:00:00Z",
+        endIso: "2026-06-15T01:30:00Z",
+        phase: "arrival",
+        emoji: "🏀",
+        url: null,
+      },
+    };
+    expect(computeScore(["venue"], signals)).toBe(60);
+  });
+
+  it("adds 30 for during phase venueEvent", () => {
+    const signals: CameraContextData = {
+      ...empty,
+      venueEvent: {
+        venueId: "v1",
+        venueName: "MSG",
+        eventName: "Knicks vs Celtics",
+        category: "sports",
+        startIso: "2026-06-14T23:00:00Z",
+        endIso: "2026-06-15T01:30:00Z",
+        phase: "during",
+        emoji: "🏀",
+        url: null,
+      },
+    };
+    expect(computeScore(["venue"], signals)).toBe(30);
+  });
+
+  it("adds 45 for departure phase venueEvent", () => {
+    const signals: CameraContextData = {
+      ...empty,
+      venueEvent: {
+        venueId: "v1",
+        venueName: "MSG",
+        eventName: "Knicks vs Celtics",
+        category: "sports",
+        startIso: "2026-06-14T23:00:00Z",
+        endIso: "2026-06-15T01:30:00Z",
+        phase: "departure",
+        emoji: "🏀",
+        url: null,
+      },
+    };
+    expect(computeScore(["venue"], signals)).toBe(45);
+  });
+
+  it("does not add venueEvent score when venueEvent is null", () => {
+    expect(computeScore(["venue"], empty)).toBe(0);
+  });
+
   it("stacks multiple signals", () => {
     const signals: CameraContextData = {
       events: [{ name: "Concert", startTime: "2026-04-21T20:00:00", borough: "Brooklyn" }],
