@@ -13,51 +13,60 @@ interface PostcardClientProps {
 
 export function PostcardClient({ camera, conditions }: PostcardClientProps) {
   return (
-    <div className="flex flex-col gap-6 max-w-2xl mx-auto w-full">
-      <div className="flex items-center justify-between font-mono text-xs text-[var(--color-text-muted)]">
-        <span className="tracking-widest uppercase">
-          {camera.displayName} · {camera.area}
-        </span>
-        {conditions && (
-          <span
-            data-testid="postcard-conditions"
-            className="text-[var(--color-accent)] tracking-widest"
-          >
-            {conditions}
+    <div className="w-full max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-start gap-6">
+      {/* Camera image — takes most of the width on desktop */}
+      <div className="sm:flex-1 rounded border border-[var(--color-border)] overflow-hidden">
+        <CameraImage camera={camera} className="w-full aspect-[4/3]" />
+      </div>
+
+      {/* Sidebar: location, conditions, lore, actions */}
+      <div className="sm:w-56 flex flex-col gap-5">
+        <div className="flex flex-col gap-1 font-mono text-xs">
+          <span className="tracking-widest uppercase text-[var(--color-text-muted)]">
+            {camera.displayName}
           </span>
+          <span className="tracking-widest uppercase text-[var(--color-text-muted)]">
+            {camera.area}
+          </span>
+          {conditions && (
+            <span
+              data-testid="postcard-conditions"
+              className="mt-1 text-[var(--color-accent)] tracking-widest"
+            >
+              {conditions}
+            </span>
+          )}
+        </div>
+
+        {camera.lore && (
+          <p className="italic text-sm text-[var(--color-text-secondary)] leading-relaxed">
+            {camera.lore}
+          </p>
         )}
-      </div>
 
-      <div className="rounded border border-[var(--color-border)] overflow-hidden">
-        <CameraImage camera={camera} className="w-full h-auto block" />
-      </div>
-
-      {camera.lore && (
-        <p className="italic text-base text-[var(--color-text)] leading-relaxed">{camera.lore}</p>
-      )}
-
-      <div className="flex flex-wrap gap-2">
-        <Link
-          href={`/camera/${camera.id}`}
-          className="flex items-center gap-2 font-mono text-xs min-h-[44px] px-4 rounded border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[var(--color-elevated)] transition-colors uppercase tracking-widest"
-        >
-          <MapPin className="w-4 h-4" />
-          View this camera
-        </Link>
-        <Link
-          href={`/photobooth/${camera.id}`}
-          className="flex items-center gap-2 font-mono text-xs min-h-[44px] px-4 rounded border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors uppercase tracking-widest"
-        >
-          <CameraIcon className="w-4 h-4" />
-          Take a shot
-        </Link>
-        <Link
-          href="/explore"
-          className="flex items-center gap-2 font-mono text-xs min-h-[44px] px-4 rounded border border-[var(--color-border)] text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors uppercase tracking-widest"
-        >
-          <Compass className="w-4 h-4" />
-          Explore the grid
-        </Link>
+        <div className="flex flex-col gap-2">
+          <Link
+            href={`/camera/${camera.id}`}
+            className="flex items-center gap-2 font-mono text-xs min-h-[44px] px-4 rounded border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[var(--color-elevated)] transition-colors uppercase tracking-widest"
+          >
+            <MapPin className="w-4 h-4" />
+            View this camera
+          </Link>
+          <Link
+            href={`/photobooth/${camera.id}`}
+            className="flex items-center gap-2 font-mono text-xs min-h-[44px] px-4 rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-colors uppercase tracking-widest"
+          >
+            <CameraIcon className="w-4 h-4" />
+            Take a shot
+          </Link>
+          <Link
+            href="/explore"
+            className="flex items-center gap-2 font-mono text-xs min-h-[44px] px-4 rounded border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-colors uppercase tracking-widest"
+          >
+            <Compass className="w-4 h-4" />
+            Explore the grid
+          </Link>
+        </div>
       </div>
     </div>
   );

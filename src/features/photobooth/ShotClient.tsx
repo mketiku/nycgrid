@@ -86,7 +86,7 @@ export function ShotClient({ camera, frameType, caption }: ShotClientProps) {
         className="flex items-center justify-center gap-2 font-mono text-sm min-h-[44px] rounded border border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[var(--color-elevated)] transition-colors uppercase tracking-widest"
       >
         <CameraIcon className="w-4 h-4" />
-        Shoot this corner
+        Take your shot
       </Link>
     </div>
   );
