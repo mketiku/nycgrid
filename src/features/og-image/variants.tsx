@@ -4,7 +4,14 @@ import { CAMERA_COUNT } from "@/lib/cameras/data";
 export const OG_IMAGE_SIZE = { width: 1200, height: 630 };
 export const OG_IMAGE_CONTENT_TYPE = "image/png";
 
-export type OgVariant = "city-atlas" | "ambient-postcard" | "signal-mosaic";
+export type OgVariant = "city-atlas" | "ambient-postcard" | "signal-mosaic" | "event";
+
+export interface VenueEventMeta {
+  emoji: string;
+  eventName: string;
+  venueName: string;
+  phase: "arrival" | "during" | "departure";
+}
 
 export const OG_VARIANTS: Array<{
   id: OgVariant;
@@ -829,13 +836,102 @@ function renderSignalMosaic(): React.ReactElement {
   );
 }
 
-export function renderOgVariant(variant: OgVariant) {
+function renderEventVariant(event: VenueEventMeta): React.ReactElement {
+  const phaseLabel =
+    event.phase === "arrival"
+      ? "STARTING SOON"
+      : event.phase === "during"
+        ? "UNDERWAY NOW"
+        : "JUST ENDED";
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        position: "relative",
+        overflow: "hidden",
+        background: "#0a0a0a",
+        color: "#ffffff",
+      }}
+    >
+      {/* Orange left accent bar */}
+      <div
+        style={{
+          position: "absolute",
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: 6,
+          background: "#f97316",
+          display: "flex",
+        }}
+      />
+      {/* Content */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          padding: "0 80px",
+          gap: 24,
+        }}
+      >
+        {/* Phase label */}
+        <div
+          style={{
+            display: "flex",
+            fontFamily: "monospace",
+            fontSize: 20,
+            letterSpacing: "0.2em",
+            color: "#f97316",
+          }}
+        >
+          {phaseLabel}
+        </div>
+        {/* Emoji + event name */}
+        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
+          <span style={{ fontSize: 80, display: "flex" }}>{event.emoji}</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div
+              style={{
+                fontFamily: "monospace",
+                fontSize: 48,
+                fontWeight: 700,
+                color: "#ffffff",
+                lineHeight: 1.1,
+                display: "flex",
+              }}
+            >
+              {event.eventName}
+            </div>
+            <div
+              style={{
+                fontFamily: "monospace",
+                fontSize: 24,
+                color: "rgba(255,255,255,0.5)",
+                display: "flex",
+              }}
+            >
+              {event.venueName} · nycgrid
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  ) as unknown as React.ReactElement;
+}
+
+export function renderOgVariant(variant: OgVariant, eventMeta?: VenueEventMeta) {
   const element =
-    variant === "ambient-postcard"
-      ? renderAmbientPostcard()
-      : variant === "signal-mosaic"
-        ? renderSignalMosaic()
-        : renderCityAtlas();
+    variant === "event" && eventMeta
+      ? renderEventVariant(eventMeta)
+      : variant === "ambient-postcard"
+        ? renderAmbientPostcard()
+        : variant === "signal-mosaic"
+          ? renderSignalMosaic()
+          : renderCityAtlas();
 
   return new ImageResponse(element, OG_IMAGE_SIZE);
 }
