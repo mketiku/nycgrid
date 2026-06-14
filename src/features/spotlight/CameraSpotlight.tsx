@@ -84,6 +84,26 @@ export async function CameraSpotlight() {
             </div>
           </div>
 
+          {spotlight.context.venueEvent && (
+            <div
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-mono text-[10px] uppercase tracking-widest w-fit"
+              style={{
+                backgroundColor: "rgba(249,115,22,0.12)",
+                border: "1px solid rgba(249,115,22,0.25)",
+                color: "#f97316",
+              }}
+            >
+              <span>{spotlight.context.venueEvent.emoji}</span>
+              <span>
+                {spotlight.context.venueEvent.phase === "arrival" && "Starting soon"}
+                {spotlight.context.venueEvent.phase === "during" && "Underway now"}
+                {spotlight.context.venueEvent.phase === "departure" && "Just ended"}
+                {" · "}
+                {spotlight.context.venueEvent.eventName}
+              </span>
+            </div>
+          )}
+
           <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed min-h-[5.5rem]">
             {spotlight.lore}
           </p>

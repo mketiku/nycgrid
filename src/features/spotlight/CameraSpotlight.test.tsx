@@ -126,6 +126,43 @@ describe("CameraSpotlight", () => {
     dateNowSpy.mockRestore();
   });
 
+  it("shows event badge when venueEvent is present", async () => {
+    mockFeaturedCameras.push({
+      id: "cam-msg",
+      displayName: "Madison Square Garden",
+      area: "Midtown",
+      latitude: 40.7505,
+      longitude: -73.9934,
+      tags: ["venue"],
+      isOnline: true,
+      lore: "The world's most famous arena.",
+    });
+
+    vi.mocked(mockFetchCameraContext).mockResolvedValue({
+      weather: null,
+      events: [],
+      transitAlerts: [],
+      citibike: null,
+      tides: null,
+      buses: [],
+      venueEvent: {
+        venueId: "msg",
+        venueName: "Madison Square Garden",
+        eventName: "Knicks vs Celtics",
+        category: "sports",
+        startIso: "2024-06-15T23:30:00Z",
+        endIso: "2024-06-16T03:00:00Z",
+        phase: "arrival",
+        emoji: "🏀",
+        url: null,
+      },
+    });
+
+    const { container } = render(await CameraSpotlight());
+    expect(container.textContent).toContain("Knicks vs Celtics");
+    expect(container.textContent).toContain("Starting soon");
+  });
+
   it("returns null when there are no eligible cameras", async () => {
     mockFeaturedCameras.push(
       {
