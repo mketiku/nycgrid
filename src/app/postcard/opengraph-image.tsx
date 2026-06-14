@@ -62,7 +62,6 @@ export default async function Image() {
       }}
     >
       {frameSrc && (
-         
         <img
           src={frameSrc}
           alt=""

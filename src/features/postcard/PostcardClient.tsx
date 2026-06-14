@@ -32,7 +32,9 @@ export function PostcardClient({ camera, conditions }: PostcardClientProps) {
         <CameraImage camera={camera} className="w-full h-auto block" />
       </div>
 
-      <p className="italic text-base text-[var(--color-text)] leading-relaxed">{camera.lore}</p>
+      {camera.lore && (
+        <p className="italic text-base text-[var(--color-text)] leading-relaxed">{camera.lore}</p>
+      )}
 
       <div className="flex flex-wrap gap-2">
         <Link
