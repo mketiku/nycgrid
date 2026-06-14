@@ -12,6 +12,11 @@ import type { DiffResult } from "@/features/camera-feed/FrameDiff";
 import { useFrameBuffer } from "@/features/camera-feed/useFrameBuffer";
 import { useGifExport } from "@/features/camera-feed/useGifExport";
 import { trackCameraView, trackGifExport } from "@/lib/analytics/session";
+import {
+  captureCameraFeedView,
+  captureCameraFeedDwell,
+  captureFrameDiffUsed,
+} from "@/lib/analytics/posthog";
 import type { Camera } from "@/lib/cameras/types";
 
 interface CameraDetailClientProps {
@@ -47,6 +52,14 @@ export function CameraDetailClient({
 
   useEffect(() => {
     trackCameraView(camera.id, camera.area);
+    captureCameraFeedView(camera.id, camera.area);
+  }, [camera.id, camera.area]);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      captureCameraFeedDwell(camera.id, camera.area, 30);
+    }, 30_000);
+    return () => clearInterval(id);
   }, [camera.id, camera.area]);
 
   const { captureFrame, getFrames, getCount, minFrames } = useFrameBuffer();
@@ -164,7 +177,13 @@ export function CameraDetailClient({
           <CameraIcon className="w-3.5 h-3.5" />
           Photobooth
         </Link>
-        <FrameDiff camera={camera} onDiffResult={setDiffResult} />
+        <FrameDiff
+          camera={camera}
+          onDiffResult={(result) => {
+            setDiffResult(result);
+            if (result) captureFrameDiffUsed(camera.id);
+          }}
+        />
         <button
           onClick={() => void share()}
           className="flex items-center gap-1.5 font-mono text-xs px-3 min-h-[44px] rounded border transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
