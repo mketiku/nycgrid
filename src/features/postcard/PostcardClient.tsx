@@ -1,10 +1,11 @@
-// src/features/postcard/PostcardClient.tsx
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { Camera as CameraIcon, MapPin, Compass } from "lucide-react";
 import { CameraImage } from "@/features/camera-feed/CameraImage";
 import type { FeaturedCamera } from "@/features/context/types";
+import { capturePostcardViewed } from "@/lib/analytics/posthog";
 
 interface PostcardClientProps {
   camera: FeaturedCamera;
@@ -12,6 +13,10 @@ interface PostcardClientProps {
 }
 
 export function PostcardClient({ camera, conditions }: PostcardClientProps) {
+  useEffect(() => {
+    capturePostcardViewed(camera.id, camera.displayName);
+  }, [camera.id, camera.displayName]);
+
   return (
     <div className="w-full max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-start gap-6">
       {/* Camera image — takes most of the width on desktop */}
