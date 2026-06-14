@@ -293,7 +293,12 @@ If any task is overnight-eligible, append after its section:
 
 ## Step 5 — Write and print
 
-1. Write the file to `PLAN_OF_DAY.md` in the project root (overwrite if it exists).
+1. Write the file to `PLAN_OF_DAY.md` in the project root (overwrite if it exists). **Use Bash with a heredoc — do NOT use the Write tool**, because the Write tool requires reading the file first and will fail on first run. Use:
+   ```bash
+   cat > PLAN_OF_DAY.md << 'PLANEOF'
+   ...content...
+   PLANEOF
+   ```
 2. Print the full contents to the terminal.
 3. If any task is overnight-eligible, print a prompt asking for approval before queuing.
 
