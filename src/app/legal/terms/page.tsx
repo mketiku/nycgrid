@@ -9,7 +9,7 @@ export default function TermsPage() {
   return (
     <>
       <h1>Terms of Use</h1>
-      <p className="lead">Last updated: April 2026</p>
+      <p className="lead">Last updated: June 2026</p>
 
       <p>
         By using nycgrid (&ldquo;the Service&rdquo;) you agree to these terms. If you don&apos;t

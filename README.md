@@ -50,6 +50,7 @@ Full setup instructions for every service are in `docs/setup/`:
 | NYC Open Data (events) | Optional       | [docs/setup/nyc-open-data.md](./docs/setup/nyc-open-data.md) |
 | 511NY (transit alerts) | Optional       | [docs/setup/transit.md](./docs/setup/transit.md)             |
 | MTA BusTime (buses)    | Optional       | [docs/setup/bustime.md](./docs/setup/bustime.md)             |
+| Ticketmaster (events)  | Optional       | [docs/setup/ticketmaster.md](./docs/setup/ticketmaster.md)   |
 
 Map tiles are served by [OpenFreeMap](https://openfreemap.org) — no key needed. See [docs/setup/maptiler.md](./docs/setup/maptiler.md) if you prefer MapTiler.
 

@@ -19,8 +19,12 @@ export default function PrivacyPage() {
       <h2>What we collect</h2>
       <ul>
         <li>
-          <strong>Nothing deliberately.</strong> There are no accounts, no sign-ups, and no login.
-          We do not ask for your name, email, or any personal identifier.
+          <strong>No accounts.</strong> There are no sign-ups and no login. We do not ask for your
+          name, email, or any personal identifier.
+        </li>
+        <li>
+          <strong>Anonymous usage events</strong> via PostHog — see the Product analytics section
+          below.
         </li>
         <li>
           <strong>Theme preference</strong> is stored in your browser&apos;s{" "}
@@ -68,7 +72,7 @@ export default function PrivacyPage() {
           tile CDN as with any mapping service.
         </li>
         <li>
-          <strong>Google Fonts</strong> — JetBrains Mono and Inter typefaces are loaded from
+          <strong>Google Fonts</strong> — JetBrains Mono and Space Grotesk typefaces are loaded from
           Google&apos;s CDN.
         </li>
         <li>
