@@ -32,10 +32,12 @@ export async function GET(request: Request) {
   }
 
   const data = await fetchEvents(borough);
-  const headers = buildRateLimitHeaders(rateLimit);
   // Borough event data is identical for all users — safe to cache publicly.
   // If this endpoint ever returns user-specific or auth-gated data, revert to
   // "private" or add Vary: Authorization to prevent cross-user cache poisoning.
-  headers.set("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=300");
-  return NextResponse.json(data, { headers });
+  return NextResponse.json(data, {
+    headers: buildRateLimitHeaders(rateLimit, {
+      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=300",
+    }),
+  });
 }

@@ -38,7 +38,9 @@ export async function GET(request: Request) {
   }
 
   const data = await fetchWeather(lat, lng);
-  const headers = buildRateLimitHeaders(rateLimit);
-  headers.set("Cache-Control", "public, s-maxage=600, stale-while-revalidate=60");
-  return NextResponse.json(data, { headers });
+  return NextResponse.json(data, {
+    headers: buildRateLimitHeaders(rateLimit, {
+      "Cache-Control": "public, s-maxage=600, stale-while-revalidate=60",
+    }),
+  });
 }

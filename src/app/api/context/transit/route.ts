@@ -38,7 +38,9 @@ export async function GET(request: Request) {
   }
 
   const data = await fetchTransit(subwayLines);
-  const headers = buildRateLimitHeaders(rateLimit);
-  headers.set("Cache-Control", "public, s-maxage=120, stale-while-revalidate=30");
-  return NextResponse.json(data, { headers });
+  return NextResponse.json(data, {
+    headers: buildRateLimitHeaders(rateLimit, {
+      "Cache-Control": "public, s-maxage=120, stale-while-revalidate=30",
+    }),
+  });
 }

@@ -51,11 +51,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     if (!res.ok) {
       if (res.status === 404) {
-        const headers = buildRateLimitHeaders(perCameraLimit);
-        headers.set("Content-Type", "application/json");
         return new NextResponse(JSON.stringify({ error: "camera_unavailable" }), {
           status: 404,
-          headers,
+          headers: buildRateLimitHeaders(perCameraLimit, { "Content-Type": "application/json" }),
         });
       }
       return new NextResponse("Camera unavailable", {
@@ -65,13 +63,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     const buffer = await res.arrayBuffer();
-    const headers = buildRateLimitHeaders(perCameraLimit);
-    headers.set("Content-Type", "image/jpeg");
     // 10s CDN cache aligned with the Data Cache revalidate window and the
     // fixed-window ?t= timestamps clients use — collapses all users in the same
     // 10s bucket to a single upstream DOT fetch.
-    headers.set("Cache-Control", "public, s-maxage=10, stale-while-revalidate=5");
-    return new NextResponse(buffer, { headers });
+    return new NextResponse(buffer, {
+      headers: buildRateLimitHeaders(perCameraLimit, {
+        "Content-Type": "image/jpeg",
+        "Cache-Control": "public, s-maxage=10, stale-while-revalidate=5",
+      }),
+    });
   } catch {
     return new NextResponse("Upstream error", {
       status: 502,

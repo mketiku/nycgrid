@@ -83,12 +83,16 @@ export function takeRateLimitToken(
   };
 }
 
-export function buildRateLimitHeaders(result: RateLimitResult): Headers {
+export function buildRateLimitHeaders(
+  result: RateLimitResult,
+  extra?: Record<string, string>
+): Headers {
   return new Headers({
     "X-RateLimit-Limit": String(result.limit),
     "X-RateLimit-Remaining": String(result.remaining),
     "X-RateLimit-Reset": String(Math.floor(result.resetAt / 1000)),
     "Retry-After": String(result.retryAfterSeconds),
+    ...extra,
   });
 }
 
