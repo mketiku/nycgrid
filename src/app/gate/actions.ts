@@ -1,8 +1,9 @@
 "use server";
 
 import { timingSafeEqual } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { takeRateLimitToken } from "@/lib/security/rate-limit";
 
 function sanitizeFrom(from: string | null): string {
   if (!from) return "/";
@@ -26,6 +27,7 @@ function passwordsMatch(input: string | null, expected: string): boolean {
   return timingSafeEqual(pa, pb) && a.length === b.length;
 }
 
+// react-doctor-disable-next-line react-doctor/server-auth-actions -- this IS the auth action; password check + rate limit are the guard
 export async function enterGate(
   prevState: { error: string | null },
   formData: FormData
@@ -40,11 +42,27 @@ export async function enterGate(
     return { error: "Gate not configured" };
   }
 
+  const requestHeaders = await headers();
+  const rateLimit = takeRateLimitToken(requestHeaders, {
+    namespace: "gate-attempt",
+    limit: 5,
+    windowMs: 60_000,
+  });
+  if (!rateLimit.allowed) {
+    return { error: "Too many attempts. Try again later." };
+  }
+
+  // Short-circuit if the session cookie is already valid — no need to re-authenticate.
+  const cookieStore = await cookies();
+  const existing = cookieStore.get("nycgrid_session");
+  if (existing?.value === gateToken) {
+    redirect(from);
+  }
+
   if (!passwordsMatch(password, gatePassword)) {
     return { error: "Incorrect password" };
   }
 
-  const cookieStore = await cookies();
   cookieStore.set("nycgrid_session", gateToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

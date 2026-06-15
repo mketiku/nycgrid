@@ -435,18 +435,20 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     setControlsVisibleState(v);
   }, []);
 
-  const resetIdleTimerRef = useRef<() => void>(() => {});
-  // Defined after pickerOpenRef/overlayVisibleRef are declared so it captures them by ref
-  useEffect(() => {
-    resetIdleTimerRef.current = () => {
-      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
-      setControlsVisible(true);
-      if (pickerOpenRef.current || overlayVisibleRef.current) return;
-      idleTimerRef.current = setTimeout(() => setControlsVisible(false), IDLE_MS);
-    };
-  });
+  // pickerOpenRef and overlayVisibleRef are refs, so reading .current at call time
+  // is always fresh — no stale-closure risk, no effect needed.
+  const resetIdleTimer = useCallback(() => {
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    setControlsVisible(true);
+    if (pickerOpenRef.current || overlayVisibleRef.current) return;
+    idleTimerRef.current = setTimeout(() => setControlsVisible(false), IDLE_MS);
+  }, [setControlsVisible]);
 
-  const resetIdleTimer = useCallback(() => resetIdleTimerRef.current(), []);
+  useEffect(() => {
+    return () => {
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    };
+  }, []);
   const [showLore, setShowLore] = useState(false);
   const [loreFactIndex, setLoreFactIndex] = useState(0);
   const [loreVisible, setLoreVisible] = useState(false);
@@ -465,6 +467,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     if (pickerOpen) {
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- controls must show immediately when picker closes
       resetIdleTimer();
     }
   }, [pickerOpen, resetIdleTimer]);
@@ -474,6 +477,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     if (overlayVisible) {
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- controls must show immediately when overlay closes
       resetIdleTimer();
     }
   }, [overlayVisible, resetIdleTimer]);
@@ -481,6 +485,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
   // Start idle timer when the player is entered; clean up on unmount
   useEffect(() => {
     if (!entered) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- controls must be visible immediately on first entry
     resetIdleTimer();
     return () => {
       if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
@@ -919,7 +924,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
       if (target?.closest?.("input, textarea, [contenteditable]")) return;
       // Capture visibility before reset so Escape can check the pre-key state
       const wasControlsVisible = controlsVisibleRef.current;
-      resetIdleTimerRef.current();
+      resetIdleTimer();
       switch (e.code) {
         case "Space":
           e.preventDefault();
