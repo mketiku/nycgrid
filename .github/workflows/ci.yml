@@ -3,9 +3,10 @@
 #  Stack: Next.js + React + TypeScript + ESLint + Vitest
 #
 #  Job DAG:
-#    actionlint ──► preflight ─┬──► lint ────┐
-#                               ├──► typecheck─┼──► deploy-preview (PRs)
-#                               └──► unit ────┘──► deploy (main) ──► smoke ──► rollback?
+#    actionlint ──► preflight ─┬──► lint ────────┐
+#                               ├──► typecheck────┼──► deploy-preview (PRs)
+#                               ├──► unit ────────┘──► deploy (main) ──► smoke ──► rollback?
+#                               └──► react-doctor (non-blocking, PRs only)
 # ================================================================
 
 name: CI / Quality Gate
@@ -122,6 +123,38 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Run TypeScript compiler
         run: bun run typecheck
+
+  react-doctor:
+    name: React Doctor (advisory)
+    runs-on: ubuntu-latest
+    needs: [preflight]
+    if: github.event_name == 'pull_request'
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.12"
+      - name: Cache node_modules
+        id: cache-modules
+        uses: actions/cache@v5
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
+      - name: Install dependencies
+        if: steps.cache-modules.outputs.cache-hit != 'true'
+        env:
+          HUSKY: "0"
+        run: bun install --frozen-lockfile
+      - name: Run React Doctor
+        env:
+          REACT_DOCTOR_PARALLEL: "4"
+        run: bun run doctor --scope changed --base origin/${{ github.base_ref }} --no-telemetry --annotations --blocking error
 
   unit-test:
     name: Unit & Integration Tests
