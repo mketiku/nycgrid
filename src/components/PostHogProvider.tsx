@@ -7,9 +7,14 @@ import { useEffect } from "react";
 const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
 
+export function shouldInitializePostHogForHost(hostname: string): boolean {
+  return hostname === "nycgrid.mketiku.com";
+}
+
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!KEY) return;
+    if (!shouldInitializePostHogForHost(window.location.hostname)) return;
     posthog.init(KEY, {
       api_host: HOST,
       disable_session_recording: true,
