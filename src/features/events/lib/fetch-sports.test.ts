@@ -19,6 +19,10 @@ const MOCK_ESPN_RESPONSE = {
           venue: { address: { city: "New York", state: "NY" } },
           status: { type: { completed: false } },
           links: [{ href: "https://www.espn.com/nba/game/_/gameId/401585723" }],
+          competitors: [
+            { homeAway: "home", team: { displayName: "New York Knicks" } },
+            { homeAway: "away", team: { displayName: "Boston Celtics" } },
+          ],
         },
       ],
     },
@@ -31,6 +35,10 @@ const MOCK_ESPN_RESPONSE = {
           venue: { address: { city: "Los Angeles", state: "CA" } },
           status: { type: { completed: true } },
           links: [],
+          competitors: [
+            { homeAway: "home", team: { displayName: "Los Angeles Lakers" } },
+            { homeAway: "away", team: { displayName: "Golden State Warriors" } },
+          ],
         },
       ],
     },
@@ -65,8 +73,21 @@ describe("fetchSportsEvents", () => {
       name: "New York Knicks vs Boston Celtics",
       startIso: "2024-06-15T23:30:00Z",
       url: "https://www.espn.com/nba/game/_/gameId/401585723",
+      homeTeam: "New York Knicks",
     });
     expect(result[1].url).toBeNull(); // empty links array
+    expect(result[1].homeTeam).toBe("Los Angeles Lakers");
+  });
+
+  it("sets homeTeam to null when competitors are missing", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        events: [{ id: "x", name: "A at B", date: "2024-06-15T23:30:00Z", competitions: [{}] }],
+      }),
+    });
+    const result = await fetchSportsEvents("baseball/mlb", "20240615");
+    expect(result[0].homeTeam).toBeNull();
   });
 
   it("returns empty array when fetch fails", async () => {

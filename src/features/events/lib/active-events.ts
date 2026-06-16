@@ -38,6 +38,17 @@ interface RawEvent {
   emoji: string;
 }
 
+// ESPN returns full city names ("New York Mets"); config may use a nickname or
+// different casing. Match the home team only — away games are already filtered out.
+function homeTeamMatches(homeTeam: string | null, configTeams: string[]): boolean {
+  if (!homeTeam) return false;
+  const h = homeTeam.toLowerCase();
+  return configTeams.some((team) => {
+    const c = team.toLowerCase();
+    return h.includes(c) || c.includes(h);
+  });
+}
+
 export async function getActiveEventsForVenue(
   venue: Venue,
   now: Date = new Date()
@@ -64,7 +75,7 @@ export async function getActiveEventsForVenue(
       );
       for (const sportEvents of allSports) {
         for (const e of sportEvents) {
-          if (venue.espnHomeTeams && !venue.espnHomeTeams.some((team) => e.name.includes(team))) {
+          if (venue.espnHomeTeams && !homeTeamMatches(e.homeTeam, venue.espnHomeTeams)) {
             continue;
           }
           rawEvents.push({
@@ -92,8 +103,20 @@ export async function getActiveEventsForVenue(
     }
   }
 
-  const results: VenueEvent[] = [];
+  // A home game can appear in both the ESPN and Ticketmaster feeds for venues
+  // configured with both. Same venue + same hour = same event; keep the first
+  // (ESPN runs before TM, giving the richer "<Away> at <Home>" name and sport emoji).
+  const deduped: RawEvent[] = [];
+  const seenHours = new Set<number>();
   for (const e of rawEvents) {
+    const hourBucket = Math.round(new Date(e.startIso).getTime() / 3_600_000);
+    if (seenHours.has(hourBucket)) continue;
+    seenHours.add(hourBucket);
+    deduped.push(e);
+  }
+
+  const results: VenueEvent[] = [];
+  for (const e of deduped) {
     const phase = computeEventPhase(e.startIso, nowIso);
     if (!phase) continue;
     results.push({

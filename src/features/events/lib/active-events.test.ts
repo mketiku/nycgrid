@@ -95,6 +95,7 @@ describe("getActiveEventsForVenue", () => {
           name: "Knicks vs Celtics",
           startIso: GAME_START,
           url: "https://espn.com/game/g1",
+          homeTeam: null,
         },
       ])
       .mockResolvedValueOnce([]);
@@ -113,7 +114,7 @@ describe("getActiveEventsForVenue", () => {
 
   it("returns empty array when no events are in an active phase", async () => {
     mockFetchSports.mockResolvedValue([
-      { id: "g1", name: "Knicks vs Celtics", startIso: GAME_START, url: null },
+      { id: "g1", name: "Knicks vs Celtics", startIso: GAME_START, url: null, homeTeam: null },
     ]);
     // now is 5h after start — past the departure window
     const now = new Date("2024-06-16T04:30:00Z");
@@ -155,12 +156,14 @@ describe("getActiveEventsForVenue", () => {
         name: "San Diego Padres at Baltimore Orioles",
         startIso: GAME_START,
         url: null,
+        homeTeam: "Baltimore Orioles",
       },
       {
         id: "g2",
         name: "Chicago Cubs at New York Mets",
         startIso: GAME_START,
         url: "https://espn.com/game/g2",
+        homeTeam: "New York Mets",
       },
     ]);
 
@@ -169,6 +172,71 @@ describe("getActiveEventsForVenue", () => {
 
     expect(events).toHaveLength(1);
     expect(events[0].eventName).toBe("Chicago Cubs at New York Mets");
+  });
+
+  it("filters out Mets AWAY games even though the name contains the home team", async () => {
+    // Mets are away at Cincinnati — no traffic at Citi Field, must not show
+    mockFetchSports.mockResolvedValueOnce([
+      {
+        id: "g1",
+        name: "New York Mets at Cincinnati Reds",
+        startIso: GAME_START,
+        url: "https://espn.com/game/g1",
+        homeTeam: "Cincinnati Reds",
+      },
+    ]);
+
+    const now = new Date("2024-06-15T22:00:00Z"); // arrival phase
+    const events = await getActiveEventsForVenue(CITI_FIELD_VENUE, now);
+
+    expect(events).toHaveLength(0);
+  });
+
+  it("matches the home team case-insensitively and by nickname", async () => {
+    mockFetchSports.mockResolvedValueOnce([
+      {
+        id: "g1",
+        name: "Chicago Cubs at Mets",
+        startIso: GAME_START,
+        url: null,
+        homeTeam: "mets", // lowercase nickname — must still match "New York Mets"
+      },
+    ]);
+
+    const now = new Date("2024-06-15T22:00:00Z"); // arrival phase
+    const events = await getActiveEventsForVenue(CITI_FIELD_VENUE, now);
+
+    expect(events).toHaveLength(1);
+  });
+
+  it("dedupes the same game reported by both ESPN and Ticketmaster", async () => {
+    // Citi Field has both espnSports and tmId — a Mets home game appears in both feeds.
+    mockFetchSports.mockResolvedValueOnce([
+      {
+        id: "g1",
+        name: "Chicago Cubs at New York Mets",
+        startIso: GAME_START,
+        url: "https://espn.com/game/g1",
+        homeTeam: "New York Mets",
+      },
+    ]);
+    mockFetchTM.mockResolvedValueOnce([
+      {
+        id: "tm-1",
+        name: "New York Mets vs Chicago Cubs",
+        startIso: GAME_START,
+        url: "https://ticketmaster.com/event/tm-1",
+        category: "sports",
+      },
+    ]);
+
+    const now = new Date("2024-06-15T22:00:00Z"); // arrival phase
+    const events = await getActiveEventsForVenue(CITI_FIELD_VENUE, now);
+
+    expect(events).toHaveLength(1);
+    // ESPN entry wins — richer "<Away> at <Home>" name and ⚾ emoji
+    expect(events[0].eventName).toBe("Chicago Cubs at New York Mets");
+    expect(events[0].emoji).toBe("⚾");
   });
 
   it("falls back to TM events when espnSports is not set", async () => {
@@ -199,7 +267,7 @@ describe("getActiveEventsForVenue", () => {
 describe("getAllActiveEventContexts", () => {
   it("returns one context per venue with active events", async () => {
     mockFetchSports.mockResolvedValue([
-      { id: "g1", name: "Knicks vs Celtics", startIso: GAME_START, url: null },
+      { id: "g1", name: "Knicks vs Celtics", startIso: GAME_START, url: null, homeTeam: null },
     ]);
     mockFetchTM.mockResolvedValue([]);
 
