@@ -28,7 +28,7 @@ export function buildCSP(isProd: boolean): string {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https://webcams.nyctmc.org https://api.maptiler.com https://*.cartocdn.com https://*.basemaps.cartocdn.com https://img.youtube.com",
     "font-src 'self' data: https://fonts.gstatic.com",
-    `connect-src 'self' https://api.maptiler.com https://*.cartocdn.com https://*.basemaps.cartocdn.com https://tiles.openfreemap.org https://api.open-meteo.com ${VERCEL_ANALYTICS_ORIGIN} ${POSTHOG_INGEST_ORIGIN}`,
+    `connect-src 'self' https://api.maptiler.com https://*.cartocdn.com https://*.basemaps.cartocdn.com https://tiles.openfreemap.org https://api.open-meteo.com ${VERCEL_ANALYTICS_ORIGIN} ${POSTHOG_INGEST_ORIGIN} ${POSTHOG_SCRIPT_ORIGIN}`,
     "worker-src blob:",
     `media-src 'self' blob: https://fm939.wnyc.org https://stream.wqxr.org ${ASSETS_CDN}/`,
     "frame-src 'none'",

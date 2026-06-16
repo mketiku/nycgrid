@@ -47,6 +47,10 @@ describe("security headers", () => {
       expect(directiveValue(prodCSP, "script-src")).toContain("https://va.vercel-scripts.com");
       expect(directiveValue(prodCSP, "connect-src")).toContain("https://va.vercel-scripts.com");
     });
+
+    it("allows PostHog asset fetches (surveys, source maps) via connect-src", () => {
+      expect(directiveValue(prodCSP, "connect-src")).toContain("https://us-assets.i.posthog.com");
+    });
   });
 
   describe("buildCSP — development", () => {
