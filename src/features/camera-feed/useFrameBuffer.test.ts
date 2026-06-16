@@ -56,6 +56,11 @@ describe("useFrameBuffer", () => {
     expect(result.current.getFrames()).toHaveLength(20);
   });
 
+  it("exposes a minFrames gate of 2 so the GIF is ready after one refresh", () => {
+    const { result } = renderHook(() => useFrameBuffer());
+    expect(result.current.minFrames).toBe(2);
+  });
+
   it("clears the buffer", () => {
     const { result } = renderHook(() => useFrameBuffer());
     const mockImg = { naturalWidth: 10, naturalHeight: 10 } as unknown as HTMLImageElement;

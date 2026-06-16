@@ -10,7 +10,7 @@ export interface CapturedFrame {
 }
 
 const MAX_FRAMES = 20;
-const MIN_FRAMES_FOR_EXPORT = 3;
+const MIN_FRAMES_FOR_EXPORT = 2;
 
 export function useFrameBuffer() {
   const framesRef = useRef<CapturedFrame[]>([]);
