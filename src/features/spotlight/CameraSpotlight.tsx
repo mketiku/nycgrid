@@ -47,10 +47,7 @@ export async function CameraSpotlight() {
       >
         {/* Live thumbnail */}
         <div className="aspect-video w-full relative bg-[var(--color-elevated)]">
-          <SpotlightImage
-            src={`/api/camera-image/${spotlight.id}`}
-            alt={`Live view of ${spotlight.displayName}`}
-          />
+          <SpotlightImage cameraId={spotlight.id} alt={`Live view of ${spotlight.displayName}`} />
           <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/60 backdrop-blur-sm">
             <span
               className="w-1.5 h-1.5 rounded-full animate-pulse"

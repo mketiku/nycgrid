@@ -1,15 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { WifiOff } from "lucide-react";
+import { proxiedImageUrl, windowedProxiedImageUrl } from "@/lib/cameras/types";
 
 interface SpotlightImageProps {
-  src: string;
+  cameraId: string;
   alt: string;
+  refreshInterval?: number;
 }
 
-export function SpotlightImage({ src, alt }: SpotlightImageProps) {
+export function SpotlightImage({ cameraId, alt, refreshInterval = 30_000 }: SpotlightImageProps) {
+  // Initial URL has no timestamp — deterministic for SSR, no hydration mismatch.
+  const [src, setSrc] = useState(() => proxiedImageUrl(cameraId));
   const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setSrc(windowedProxiedImageUrl(cameraId));
+    }, refreshInterval);
+    return () => clearInterval(id);
+  }, [cameraId, refreshInterval]);
 
   if (failed) {
     return (
@@ -27,6 +38,7 @@ export function SpotlightImage({ src, alt }: SpotlightImageProps) {
       alt={alt}
       className="w-full h-full object-cover"
       onError={() => setFailed(true)}
+      onLoad={() => setFailed(false)}
     />
   );
 }
