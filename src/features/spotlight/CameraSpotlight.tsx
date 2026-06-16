@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, Shuffle, Navigation, Info } from "lucide-react";
+import { ArrowRight, Shuffle, Film, Info } from "lucide-react";
 import { SpotlightImage } from "./SpotlightImage";
 import { FEATURED_CAMERAS } from "@/features/context/lib/featured-cameras";
 import { fetchCameraContext } from "@/features/context/lib/fetch-context";
 import { computeScore } from "@/features/context/lib/score";
-import { isVisitable, googleDirectionsUrl } from "@/features/context/lib/maps";
 
 function windowIndex(length: number): number {
   return Math.floor(Date.now() / 1_800_000) % length;
@@ -117,18 +116,14 @@ export async function CameraSpotlight() {
               <span>View</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
-            {isVisitable(spotlight.tags) && (
-              <a
-                href={googleDirectionsUrl(spotlight.latitude, spotlight.longitude)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-lg border border-[var(--color-border)] font-mono text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-colors"
-                aria-label={`Get transit directions to ${spotlight.displayName}`}
-              >
-                <Navigation className="w-4 h-4" />
-                <span className="hidden sm:inline">Plan a visit</span>
-              </a>
-            )}
+            <Link
+              href={`/camera/${spotlight.id}`}
+              className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 rounded-lg border border-[var(--color-border)] font-mono text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-colors"
+              aria-label={`Save GIF of ${spotlight.displayName}`}
+            >
+              <Film className="w-4 h-4" />
+              <span className="hidden sm:inline">Save GIF</span>
+            </Link>
             {elsewhere && (
               <Link
                 href={`/camera/${elsewhere.id}`}

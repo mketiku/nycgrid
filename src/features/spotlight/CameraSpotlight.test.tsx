@@ -1,13 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const {
-  mockFeaturedCameras,
-  mockFetchCameraContext,
-  mockComputeScore,
-  mockIsVisitable,
-  mockGoogleDirectionsUrl,
-} = vi.hoisted(() => ({
+const { mockFeaturedCameras, mockFetchCameraContext, mockComputeScore } = vi.hoisted(() => ({
   mockFeaturedCameras: [] as Array<{
     id: string;
     displayName: string;
@@ -20,8 +14,6 @@ const {
   }>,
   mockFetchCameraContext: vi.fn(),
   mockComputeScore: vi.fn(),
-  mockIsVisitable: vi.fn(),
-  mockGoogleDirectionsUrl: vi.fn(),
 }));
 
 vi.mock("@/features/context/lib/featured-cameras", () => ({
@@ -34,11 +26,6 @@ vi.mock("@/features/context/lib/fetch-context", () => ({
 
 vi.mock("@/features/context/lib/score", () => ({
   computeScore: mockComputeScore,
-}));
-
-vi.mock("@/features/context/lib/maps", () => ({
-  isVisitable: mockIsVisitable,
-  googleDirectionsUrl: mockGoogleDirectionsUrl,
 }));
 
 import { CameraSpotlight, CameraSpotlightSkeleton } from "./CameraSpotlight";
@@ -59,15 +46,9 @@ describe("CameraSpotlight", () => {
 
     mockComputeScore.mockReset();
     mockComputeScore.mockReturnValue(100);
-
-    mockIsVisitable.mockReset();
-    mockIsVisitable.mockReturnValue(false);
-
-    mockGoogleDirectionsUrl.mockReset();
-    mockGoogleDirectionsUrl.mockReturnValue("https://maps.test/directions");
   });
 
-  it("renders the live nyc grid, weather, and visit CTA for a visitable spotlight", async () => {
+  it("renders the live nyc grid, weather, and Save GIF CTA for the spotlight", async () => {
     const dateNowSpy = vi.spyOn(Date, "now").mockReturnValue(0);
 
     mockFeaturedCameras.push({
@@ -102,8 +83,6 @@ describe("CameraSpotlight", () => {
       tides: null,
       buses: [],
     });
-    mockIsVisitable.mockReturnValue(true);
-    mockGoogleDirectionsUrl.mockReturnValue("https://maps.test/brooklyn-bridge");
 
     const element = await CameraSpotlight();
 
@@ -116,9 +95,10 @@ describe("CameraSpotlight", () => {
       "/api/camera-image/cam-1"
     );
     expect(screen.getByRole("link", { name: /^View$/i })).toHaveAttribute("href", "/camera/cam-1");
-    expect(
-      screen.getByRole("link", { name: "Get transit directions to Brooklyn Bridge" })
-    ).toHaveAttribute("href", "https://maps.test/brooklyn-bridge");
+    expect(screen.getByRole("link", { name: /save gif/i })).toHaveAttribute(
+      "href",
+      "/camera/cam-1"
+    );
     expect(screen.getByRole("link", { name: /show me .* instead/i })).toHaveTextContent(
       /another view/i
     );
