@@ -1,47 +1,21 @@
 #!/usr/bin/env node
-/**
- * Orchestrates pre-commit and pre-push hook checks.
- * Usage: node scripts/run-hook-checks.mjs pre-commit | pre-push
- */
 
-import { execSync, spawnSync } from "child_process";
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { runMain } from "@mketiku/hook-checks/runner";
 
-const stage = process.argv[2];
-
-if (!stage || !["pre-commit", "pre-push"].includes(stage)) {
-  console.error("Usage: node scripts/run-hook-checks.mjs pre-commit|pre-push");
-  process.exit(1);
-}
-
-function run(label, cmd) {
-  console.log(`\n▶ ${label}`);
-  try {
-    execSync(cmd, { stdio: "inherit" });
-    console.log(`✓ ${label}`);
-  } catch {
-    console.error(`✗ ${label} failed`);
-    process.exit(1);
-  }
-}
-
-function getStagedFiles() {
-  const result = spawnSync(
-    "git",
-    ["diff", "--cached", "--name-only", "--diff-filter=ACM"],
-    { encoding: "utf8" }
-  );
-  return result.stdout.trim().split("\n").filter(Boolean);
-}
-
-function getAddedSourceFiles() {
-  const result = spawnSync(
-    "git",
-    ["diff", "--cached", "--name-only", "--diff-filter=A"],
-    { encoding: "utf8" }
-  );
-  return result.stdout.trim().split("\n").filter(Boolean);
-}
+const APP_ROUTER_BOILERPLATE = new Set([
+  "layout",
+  "loading",
+  "error",
+  "not-found",
+  "route",
+  "template",
+  "default",
+  "global-error",
+  "opengraph-image",
+]);
 
 // iOS Safari auto-zooms inputs smaller than 16px. Block commits that add
 // text-xs/text-sm on input/textarea/select within an 8-line lookahead window.
@@ -61,18 +35,6 @@ export function findSmallFontInputViolations(stagedFiles) {
   }
   return violations;
 }
-
-const APP_ROUTER_BOILERPLATE = new Set([
-  "layout",
-  "loading",
-  "error",
-  "not-found",
-  "route",
-  "template",
-  "default",
-  "global-error",
-  "opengraph-image",
-]);
 
 // New src/ files must have a co-located test file.
 // Bypass with SKIP_TEST_REQUIRED=1 for scaffolding commits.
@@ -95,7 +57,7 @@ export function findNewSourceWithoutTest(addedFiles, stagedFiles) {
       existsSync(`${base}.test.tsx`) ||
       existsSync(`${base}.test.js`) ||
       stagedFiles.some(
-        (f) => f.startsWith(base) && /\.(test|spec)\.(ts|tsx|js|jsx|mjs)$/.test(f)
+        (f) => f.startsWith(base) && /\.(test|spec)\.(ts|tsx|js|jsx|mjs)$/.test(f),
       );
 
     if (!testExists) missing.push(file);
@@ -103,44 +65,109 @@ export function findNewSourceWithoutTest(addedFiles, stagedFiles) {
   return missing;
 }
 
-if (stage === "pre-commit") {
-  const stagedFiles = getStagedFiles();
-  const addedFiles = getAddedSourceFiles();
+export const stepsByMode = {
+  "pre-commit": [
+    {
+      label: "input-font-size",
+      fn(context) {
+        const { execFileSync: exec = execFileSync, stderr = process.stderr } = context;
 
-  const fontViolations = findSmallFontInputViolations(stagedFiles);
-  if (fontViolations.length > 0) {
-    console.error("\n✗ input-font-size: iOS Safari auto-zooms inputs < 16px.");
-    console.error("  Use text-base or larger on <input>, <textarea>, <select>.");
-    for (const v of fontViolations) console.error(`  ${v.file}:${v.line}`);
+        const stagedFiles = exec(
+          "git",
+          ["diff", "--cached", "--name-only", "--diff-filter=ACM"],
+          { encoding: "utf8" },
+        )
+          .trim()
+          .split("\n")
+          .filter(Boolean);
+
+        const violations = findSmallFontInputViolations(stagedFiles);
+        if (violations.length > 0) {
+          stderr.write(
+            "\n✖ input-font-size: iOS Safari auto-zooms inputs < 16px.\n" +
+              "  Use text-base or larger on <input>, <textarea>, <select>.\n",
+          );
+          for (const v of violations) stderr.write(`  ${v.file}:${v.line}\n`);
+          throw new Error("input-font-size check failed");
+        }
+      },
+    },
+    {
+      label: "new-source-needs-test",
+      fn(context) {
+        const { execFileSync: exec = execFileSync, stderr = process.stderr, env = process.env } =
+          context;
+
+        if (env.SKIP_TEST_REQUIRED) return;
+
+        const addedFiles = exec(
+          "git",
+          ["diff", "--cached", "--name-only", "--diff-filter=A"],
+          { encoding: "utf8" },
+        )
+          .trim()
+          .split("\n")
+          .filter(Boolean);
+
+        const stagedFiles = exec(
+          "git",
+          ["diff", "--cached", "--name-only", "--diff-filter=ACM"],
+          { encoding: "utf8" },
+        )
+          .trim()
+          .split("\n")
+          .filter(Boolean);
+
+        const missing = findNewSourceWithoutTest(addedFiles, stagedFiles);
+        if (missing.length > 0) {
+          stderr.write("\n✖ new-source-needs-test: new files added without a test:\n");
+          for (const f of missing) stderr.write(`  ${f}\n`);
+          stderr.write(
+            "\n  Add a co-located *.test.ts(x) file, or set SKIP_TEST_REQUIRED=1 to bypass.\n",
+          );
+          throw new Error("new-source-needs-test check failed");
+        }
+      },
+    },
+    { label: "lint-staged", command: "bunx", args: ["lint-staged"] },
+    { label: "unit tests", command: "bun", args: ["run", "test:unit"] },
+  ],
+  "pre-push": [
+    [
+      { label: "lint", command: "bun", args: ["run", "lint"] },
+      { label: "typecheck", command: "bun", args: ["run", "typecheck"] },
+    ],
+    {
+      label: "react-doctor",
+      fn(context) {
+        const { execFileSync: exec = execFileSync, stdout = process.stdout } = context;
+
+        let fetched = true;
+        try {
+          exec("git", ["fetch", "--no-write-fetch-head", "--no-tags", "origin", "main"], {
+            stdio: "ignore",
+          });
+        } catch {
+          stdout.write("  ⚠ react-doctor (skipped — origin/main unavailable)\n");
+          fetched = false;
+        }
+
+        if (!fetched) return;
+
+        exec(
+          "bun",
+          ["run", "doctor", "--diff", "origin/main", "--no-telemetry", "--fail-on", "error"],
+          { stdio: "inherit" },
+        );
+      },
+    },
+    { label: "test + coverage", command: "bun", args: ["run", "test:coverage"] },
+  ],
+};
+
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  runMain(stepsByMode, { logDirPrefix: "nycgrid-hooks-" }).catch((error) => {
+    process.stderr.write(`${error.message}\n`);
     process.exit(1);
-  }
-  console.log("✓ input-font-size");
-
-  if (!process.env.SKIP_TEST_REQUIRED) {
-    const missing = findNewSourceWithoutTest(addedFiles, stagedFiles);
-    if (missing.length > 0) {
-      console.error("\n✗ new-source-needs-test: new files added without a test:");
-      for (const f of missing) console.error(`  ${f}`);
-      console.error(
-        "\n  Add a co-located *.test.ts(x) file, or set SKIP_TEST_REQUIRED=1 to bypass."
-      );
-      process.exit(1);
-    }
-    console.log("✓ new-source-needs-test");
-  }
-
-  run("Lint staged files", "bunx lint-staged");
-  run("Unit tests", "bun run test:unit");
+  });
 }
-
-if (stage === "pre-push") {
-  run("Lint", "bun run lint");
-  run("Typecheck", "bun run typecheck");
-  run(
-    "React Doctor",
-    "bun run doctor --diff origin/main --no-telemetry --fail-on error"
-  );
-  run("Full test suite + coverage", "bun run test:coverage");
-}
-
-console.log(`\n✅ All ${stage} checks passed.`);
