@@ -43,7 +43,7 @@ export default defineConfig({
           name: "unit",
           environment: "node",
           // featureLibUnitGlobs is listed first so vitest sees them before the broad exclude kicks in
-          include: [...featureLibUnitGlobs, "src/**/*.test.ts"],
+          include: [...featureLibUnitGlobs, "src/**/*.test.ts", "scripts/**/*.test.mjs"],
           exclude: [
             ...integrationFiles,
             // Only exclude the non-lib feature tests (lib tests are handled by featureLibUnitGlobs above)

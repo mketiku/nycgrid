@@ -367,6 +367,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     slotSrc,
     slotLoaded,
     onSlotLoad: handleSlotLoad,
+    onSlotError: handleSlotError,
     kenburnsRef0,
     kenburnsRef1,
     textVisible,
@@ -1134,6 +1135,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
             alt=""
             aria-hidden
             onLoad={() => handleSlotLoad(slot)}
+            onError={() => handleSlotError(slot)}
             className="absolute inset-0 w-full h-full object-cover"
           />
         </div>

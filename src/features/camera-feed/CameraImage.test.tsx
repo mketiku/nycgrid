@@ -2,6 +2,7 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { CameraImage } from "./CameraImage";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { Camera } from "@/lib/cameras/types";
+import { __resetDeadCameras, isCameraDead } from "@/lib/cameras/dead-registry";
 
 const mockCamera: Camera = {
   id: "123",
@@ -48,6 +49,16 @@ describe("CameraImage", () => {
     fireEvent.error(imgs[1]);
 
     expect(screen.getByText(/Feed unavailable/i)).toBeDefined();
+  });
+
+  it("marks the camera dead in the registry on image error", () => {
+    __resetDeadCameras();
+    render(<CameraImage camera={mockCamera} />);
+    const imgs = screen.getAllByRole("img", { hidden: true });
+
+    expect(isCameraDead(mockCamera.id)).toBe(false);
+    fireEvent.error(imgs[1]);
+    expect(isCameraDead(mockCamera.id)).toBe(true);
   });
 
   it("retries loading when retry button is clicked", () => {

@@ -48,6 +48,7 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@mketiku/hook-checks": "github:mketiku/hook-checks",
     "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
