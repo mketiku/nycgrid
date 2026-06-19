@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { WifiOff, RefreshCw } from "lucide-react";
 import type { Camera } from "@/lib/cameras/types";
 import { proxiedImageUrl, windowedProxiedImageUrl } from "@/lib/cameras/types";
+import { markCameraDead } from "@/lib/cameras/dead-registry";
 
 function useFrameAge(loadedAt: number | null): string | null {
   const [tick, setTick] = useState<{ loadedAt: number; age: number } | null>(null);
@@ -91,9 +92,10 @@ export function CameraImage({
   const handleError = useCallback(
     (slot: 0 | 1) => {
       if (slot !== staging) return;
+      markCameraDead(camera.id);
       setError(true);
     },
-    [staging]
+    [staging, camera.id]
   );
 
   const retry = useCallback(() => {

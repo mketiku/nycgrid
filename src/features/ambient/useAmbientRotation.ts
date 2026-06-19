@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 import { cameraImageUrl, windowedProxiedImageUrl } from "@/lib/cameras/types";
 import type { Camera } from "@/lib/cameras/types";
+import { isCameraDead, markCameraDead } from "@/lib/cameras/dead-registry";
 import { FEATURED_CAMERAS } from "@/features/context/lib/featured-cameras";
 import { areaBalancedFeaturedShuffle } from "./lib/shuffle";
 import { buildEventQueue } from "./lib/event-queue";
@@ -29,6 +30,7 @@ export interface UseAmbientRotationReturn {
   slotSrc: [string, string];
   slotLoaded: [boolean, boolean];
   onSlotLoad: (slot: 0 | 1) => void;
+  onSlotError: (slot: 0 | 1) => void;
   kenburnsRef0: RefObject<HTMLDivElement | null>;
   kenburnsRef1: RefObject<HTMLDivElement | null>;
   textVisible: boolean;
@@ -160,9 +162,21 @@ export function useAmbientRotation(
     [startKenBurns]
   );
 
+  // Step forward to the next non-dead camera. Falls back to a plain +1 step if
+  // every camera is dead, so this can never spin forever.
+  const nextAliveIndex = useCallback((from: number) => {
+    const list = shuffledRef.current;
+    const len = list.length;
+    for (let step = 1; step <= len; step++) {
+      const i = (from + step) % len;
+      if (!isCameraDead(list[i].id)) return i;
+    }
+    return (from + 1) % len;
+  }, []);
+
   const advanceCamera = useCallback(() => {
     if (shuffledRef.current.length === 0) return;
-    indexRef.current = (indexRef.current + 1) % shuffledRef.current.length;
+    indexRef.current = nextAliveIndex(indexRef.current);
     const next = shuffledRef.current[indexRef.current];
     const staging: 0 | 1 = activeSlotRef.current === 0 ? 1 : 0;
 
@@ -184,7 +198,20 @@ export function useAmbientRotation(
     setCurrentCamera(next);
     preloadUpcoming();
     armSlotTimeout(staging);
-  }, [preloadUpcoming, armSlotTimeout]);
+  }, [preloadUpcoming, armSlotTimeout, nextAliveIndex]);
+
+  // A 404 (or any image error) means this camera is decommissioned — record it
+  // so rotation skips it for the rest of the session, then move on immediately
+  // instead of dwelling on a broken frame.
+  const handleSlotError = useCallback(() => {
+    const cam = currentCameraRef.current;
+    if (cam) markCameraDead(cam.id);
+    if (slotTimeoutRef.current) {
+      clearTimeout(slotTimeoutRef.current);
+      slotTimeoutRef.current = null;
+    }
+    advanceCamera();
+  }, [advanceCamera]);
 
   const refreshFrame = useCallback(() => {
     const cam = currentCameraRef.current;
@@ -230,6 +257,7 @@ export function useAmbientRotation(
     slotSrc,
     slotLoaded,
     onSlotLoad: handleSlotLoad,
+    onSlotError: handleSlotError,
     kenburnsRef0,
     kenburnsRef1,
     textVisible,

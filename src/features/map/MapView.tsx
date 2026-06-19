@@ -43,6 +43,7 @@ import { FEATURED_CAMERAS } from "@/features/context/lib/featured-cameras";
 import { CoverageToggle, useCoverageLayer } from "@/features/coverage-gap";
 import { YourStats } from "@/features/stats/YourStats";
 import { findNearestCamera } from "@/lib/cameras/geo";
+import { isCameraDead } from "@/lib/cameras/dead-registry";
 import { useFavourites } from "@/hooks/useFavourites";
 import { captureMapCameraClick } from "@/lib/analytics/posthog";
 
@@ -389,7 +390,7 @@ export function MapView({
   );
 
   const handleSurpriseMe = useCallback(() => {
-    const online = cameras.filter((c) => c.isOnline);
+    const online = cameras.filter((c) => c.isOnline && !isCameraDead(c.id));
     if (!online.length) return;
     const pick = online[Math.floor(Math.random() * online.length)];
     flyTo([pick.longitude, pick.latitude], 15);
