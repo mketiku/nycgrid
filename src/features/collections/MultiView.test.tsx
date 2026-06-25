@@ -81,9 +81,9 @@ describe("MultiView", () => {
     fireEvent.click(screen.getByRole("button", { name: "Share" }));
 
     await waitFor(() =>
-      expect(writeText).toHaveBeenCalledWith("https://nycgrid.test/collections/custom")
+      expect(screen.getByRole("button", { name: "Copied!" })).toBeInTheDocument()
     );
-    expect(screen.getByRole("button", { name: "Copied!" })).toBeInTheDocument();
+    expect(writeText).toHaveBeenCalledWith("https://nycgrid.test/collections/custom");
   });
 
   it("falls back to prompt when clipboard write fails", async () => {
