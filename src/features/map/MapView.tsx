@@ -403,10 +403,14 @@ export function MapView({
       return;
     }
     if (navigator.permissions) {
-      const perm = await navigator.permissions.query({ name: "geolocation" as PermissionName });
-      if (perm.state === "denied") {
-        setLocateState("error");
-        return;
+      try {
+        const perm = await navigator.permissions.query({ name: "geolocation" as PermissionName });
+        if (perm.state === "denied") {
+          setLocateState("error");
+          return;
+        }
+      } catch {
+        // iOS Safari doesn't support permissions.query — fall through to getCurrentPosition
       }
     }
     setLocateState("locating");

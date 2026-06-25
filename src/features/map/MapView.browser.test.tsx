@@ -369,6 +369,32 @@ describe("MapView", () => {
     });
   });
 
+  it("proceeds to geolocation when permissions.query throws NotSupportedError (iOS Safari)", async () => {
+    const getCurrentPosition = vi.fn((success: PositionCallback) =>
+      success({ coords: { latitude: 40.71, longitude: -73.95 } } as GeolocationPosition)
+    );
+    setNavigatorValue({
+      ...originalNavigator,
+      geolocation: createGeolocationMock(getCurrentPosition),
+      permissions: {
+        query: vi
+          .fn()
+          .mockRejectedValue(
+            new DOMException("Permissions::query does not support this API", "NotSupportedError")
+          ),
+      } as unknown as Permissions,
+    } as Navigator);
+    findNearestCamera.mockReturnValue(cameras[0]);
+
+    render(<MapView cameras={cameras} />);
+    fireEvent.click(screen.getAllByRole("button", { name: /find nearest camera/i })[0]);
+
+    await waitFor(() => {
+      expect(findNearestCamera).toHaveBeenCalledWith(40.71, -73.95, cameras);
+    });
+    expect(flyTo).toHaveBeenCalledWith([-73.9, 40.7]);
+  });
+
   it("uses only online cameras for surprise me and ignores the action when none are online", () => {
     const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.99);
 
