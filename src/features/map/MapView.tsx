@@ -397,16 +397,21 @@ export function MapView({
     selectCamera(pick);
   }, [cameras, flyTo, selectCamera]);
 
+  const setLocateError = useCallback(() => {
+    setLocateState("error");
+    setTimeout(() => setLocateState((s) => (s === "error" ? "idle" : s)), 3_000);
+  }, []);
+
   const handleFindMe = useCallback(async () => {
     if (!navigator.geolocation) {
-      setLocateState("error");
+      setLocateError();
       return;
     }
     if (navigator.permissions) {
       try {
         const perm = await navigator.permissions.query({ name: "geolocation" as PermissionName });
         if (perm.state === "denied") {
-          setLocateState("error");
+          setLocateError();
           return;
         }
       } catch {
@@ -418,17 +423,17 @@ export function MapView({
       (pos) => {
         const nearest = findNearestCamera(pos.coords.latitude, pos.coords.longitude, cameras);
         if (!nearest) {
-          setLocateState("error");
+          setLocateError();
           return;
         }
         flyTo([nearest.longitude, nearest.latitude]);
         selectCamera(nearest);
         setLocateState("idle");
       },
-      () => setLocateState("error"),
+      setLocateError,
       { timeout: 10_000, maximumAge: 60_000 }
     );
-  }, [cameras, flyTo, selectCamera]);
+  }, [cameras, flyTo, selectCamera, setLocateError]);
 
   const boroughAnnouncement = useBoroughAnnouncement({
     selectedBorough,
@@ -547,6 +552,11 @@ export function MapView({
         <button
           onClick={handleFindMe}
           disabled={locateState === "locating"}
+          aria-label={
+            locateState === "error"
+              ? "Location unavailable — check browser permissions"
+              : "Find nearest camera to your location"
+          }
           title={locateState === "error" ? "Location unavailable" : "Find nearest camera"}
           className="flex items-center gap-1.5 font-mono text-xs px-3 min-h-[44px] rounded border transition-colors disabled:cursor-not-allowed shadow-sm"
           style={{
@@ -554,9 +564,6 @@ export function MapView({
               locateState === "error" ? "var(--color-elevated)" : "var(--color-surface)",
             color: locateState === "error" ? "var(--color-offline)" : "var(--color-text-primary)",
             borderColor: locateState === "error" ? "var(--color-offline)" : "var(--color-border)",
-          }}
-          onMouseLeave={() => {
-            if (locateState === "error") setLocateState("idle");
           }}
         >
           {locateState === "locating" ? (

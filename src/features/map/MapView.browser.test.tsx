@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useState } from "react";
 import { CameraBrowsePanel, MapView } from "./MapView";
@@ -367,6 +367,59 @@ describe("MapView", () => {
         screen.getAllByRole("button", { name: /location unavailable/i })[0]
       ).toBeInTheDocument();
     });
+  });
+
+  it("resets error state automatically after 3 seconds without mouse interaction", async () => {
+    vi.useFakeTimers();
+    try {
+      setNavigatorValue({
+        ...originalNavigator,
+        geolocation: createGeolocationMock((_success, error) =>
+          error!({ code: 1, message: "denied" } as GeolocationPositionError)
+        ),
+        permissions: undefined,
+      } as unknown as Navigator);
+
+      render(<MapView cameras={cameras} />);
+
+      // Error callback fires synchronously in the mock — act flushes the resulting state updates
+      await act(async () => {
+        fireEvent.click(screen.getAllByRole("button", { name: /find nearest camera/i })[0]);
+      });
+
+      expect(
+        screen.getAllByRole("button", { name: /location unavailable/i })[0]
+      ).toBeInTheDocument();
+
+      act(() => {
+        vi.advanceTimersByTime(3_000);
+      });
+
+      expect(
+        screen.getAllByRole("button", { name: /find nearest camera/i })[0]
+      ).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("mobile Find Me button has descriptive aria-label in error state", async () => {
+    setNavigatorValue({
+      ...originalNavigator,
+      geolocation: createGeolocationMock((_success, error) =>
+        error!({ code: 1, message: "denied" } as GeolocationPositionError)
+      ),
+      permissions: undefined,
+    } as unknown as Navigator);
+
+    render(<MapView cameras={cameras} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole("button", { name: /find nearest camera/i })[0]);
+    });
+
+    // Both desktop and mobile buttons should expose the descriptive label in error state
+    expect(screen.getAllByRole("button", { name: /location unavailable/i })).toHaveLength(2);
   });
 
   it("proceeds to geolocation when permissions.query throws NotSupportedError (iOS Safari)", async () => {
