@@ -21,7 +21,7 @@ const localRules = {
 };
 
 const eslintConfig = defineConfig([
-  { ignores: [".claude/**", ".next/**"] },
+  { ignores: [".claude/**", ".next/**", ".claude/worktrees/**", ".worktrees/**"] },
   ...nextVitals,
   ...nextTs,
   eslintConfigPrettier,
