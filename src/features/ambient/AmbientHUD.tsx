@@ -25,11 +25,7 @@ export interface AmbientHUDProps {
   onToggleMute: () => void;
   onOpenPicker: () => void;
   audioModeName: string;
-  streamLoading: boolean;
-  musicLoading: boolean;
   audioLoadStuck: boolean;
-  cameraCount: number;
-  currentCameraName: string | null;
   /** Which audio mode icon to show on the picker button */
   audioModeIcon: "noise" | "radio" | "podcast";
   /** True when content is finite (podcast or episode) — affects mute button icon */
@@ -47,11 +43,7 @@ export function AmbientHUD({
   onToggleMute,
   onOpenPicker,
   audioModeName,
-  streamLoading: _streamLoading,
-  musicLoading: _musicLoading,
   audioLoadStuck,
-  cameraCount: _cameraCount,
-  currentCameraName: _currentCameraName,
   audioModeIcon,
   isFiniteContent,
   infoVisible,

@@ -104,6 +104,11 @@ describe("install-actionlint", () => {
       expect(warn).toHaveBeenCalledWith(expect.stringContaining("Download failed"));
       expect(exit).toHaveBeenCalledWith(0);
     });
+
+    it("does not have error parameter in install signature", () => {
+      const installString = install.toString();
+      expect(installString).not.toContain("error = console.error");
+    });
   });
 
   describe("runCli", () => {
@@ -117,7 +122,7 @@ describe("install-actionlint", () => {
 
       try {
         await runCli({ env: {} });
-      } catch (e) {
+      } catch {
         // Expected
       }
 

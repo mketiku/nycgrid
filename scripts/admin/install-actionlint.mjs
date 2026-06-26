@@ -32,7 +32,6 @@ export async function install({
   spawnSync = defaultSpawnSync,
   log = console.log,
   warn = console.warn,
-  error = console.error,
   exit = process.exit,
   urlHelper = { fileURLToPath },
 } = {}) {

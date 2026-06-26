@@ -2,8 +2,8 @@ import { defineConfig } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import eslintConfigPrettier from "eslint-config-prettier";
-import noStoreGetStateInRender from "./eslint-rules/no-store-getstate-in-render.js";
-import noUnguardedNotification from "./eslint-rules/no-unguarded-notification.js";
+import noStoreGetStateInRender from "./eslint-rules/no-store-getstate-in-render.mjs";
+import noUnguardedNotification from "./eslint-rules/no-unguarded-notification.mjs";
 
 const localRules = {
   plugins: {
@@ -21,7 +21,7 @@ const localRules = {
 };
 
 const eslintConfig = defineConfig([
-  { ignores: [".claude/**", ".next/**", ".claude/worktrees/**", ".worktrees/**"] },
+  { ignores: [".claude/**", ".next/**", ".claude/worktrees/**", ".worktrees/**", "coverage/**"] },
   ...nextVitals,
   ...nextTs,
   eslintConfigPrettier,

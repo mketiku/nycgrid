@@ -372,7 +372,6 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     kenburnsRef1,
     textVisible,
     fadeDuration,
-    dwellKey,
     skip: skipCamera,
     paused,
     setPaused,
@@ -687,7 +686,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
       navigator.mediaSession.setActionHandler("pause", null);
       navigator.mediaSession.setActionHandler("nexttrack", null);
     };
-  }, [entered, isMuted, paused, currentCamera, skipCamera]);
+  }, [entered, isMuted, paused, currentCamera, skipCamera, setPaused]);
 
   // ─── Lo-fi music engine ────────────────────────────────────────────────────
   const getActiveMusicEl = useCallback(
@@ -951,7 +950,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [entered, togglePause, skipCamera, router, pickerOpen, overlayVisible]);
+  }, [entered, togglePause, skipCamera, router, pickerOpen, overlayVisible, resetIdleTimer]);
 
   // Android back gesture: manage a single history entry for the overlay open state.
   // Push once when an overlay opens; consume it when the overlay closes manually
@@ -991,7 +990,6 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
     setPrevIsAudioLoading(isAudioLoading);
     if (isAudioLoading) setAudioLoadStuck(false);
   }
-  const showStuck = audioLoadStuck && isAudioLoading;
   useEffect(() => {
     if (!isAudioLoading) return;
     const t = setTimeout(() => setAudioLoadStuck(true), 8_000);
@@ -1266,11 +1264,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                 ? (PODCAST_CHANNELS.find((c) => c.id === podcastChannelId)?.name ?? "Podcast")
                 : (ALL_STREAMS[stationIndex]?.name ?? "Radio")
           }
-          streamLoading={streamLoading}
-          musicLoading={musicLoading}
           audioLoadStuck={audioLoadStuck}
-          cameraCount={cameras.length}
-          currentCameraName={displayName}
           audioModeIcon={audioMode}
           isFiniteContent={
             audioMode === "podcast" ||
