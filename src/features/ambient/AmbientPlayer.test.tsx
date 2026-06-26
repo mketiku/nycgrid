@@ -1,5 +1,7 @@
 import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import fs from "fs";
+import path from "path";
 import type { Camera } from "@/lib/cameras/types";
 
 const push = vi.fn();
@@ -748,5 +750,35 @@ describe("AmbientPlayer — overlay and skip (characterization)", () => {
     await waitFor(() => {
       expect(screen.queryByRole("button", { name: /Start ambient mode/i })).toBeNull();
     });
+  });
+});
+
+describe("AmbientHUD Props Cleanliness", () => {
+  it("does not contain unused props in AmbientHUDProps interface", () => {
+    const hudPath = path.resolve(__dirname, "AmbientHUD.tsx");
+    const content = fs.readFileSync(hudPath, "utf8");
+
+    const match = content.match(/export interface AmbientHUDProps \{([\s\S]*?)\}/);
+    expect(match).not.toBeNull();
+    const interfaceContent = match![1];
+
+    expect(interfaceContent).not.toContain("streamLoading");
+    expect(interfaceContent).not.toContain("musicLoading");
+    expect(interfaceContent).not.toContain("cameraCount");
+    expect(interfaceContent).not.toContain("currentCameraName");
+  });
+
+  it("does not pass unused props from AmbientPlayer.tsx", () => {
+    const playerPath = path.resolve(__dirname, "AmbientPlayer.tsx");
+    const content = fs.readFileSync(playerPath, "utf8");
+
+    const hudRenderMatch = content.match(/<AmbientHUD([\s\S]*?)\/>/);
+    expect(hudRenderMatch).not.toBeNull();
+    const renderContent = hudRenderMatch![1];
+
+    expect(renderContent).not.toContain("streamLoading={");
+    expect(renderContent).not.toContain("musicLoading={");
+    expect(renderContent).not.toContain("cameraCount={");
+    expect(renderContent).not.toContain("currentCameraName={");
   });
 });

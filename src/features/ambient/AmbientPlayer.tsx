@@ -1266,11 +1266,7 @@ export function AmbientPlayer({ cameras }: AmbientPlayerProps) {
                 ? (PODCAST_CHANNELS.find((c) => c.id === podcastChannelId)?.name ?? "Podcast")
                 : (ALL_STREAMS[stationIndex]?.name ?? "Radio")
           }
-          streamLoading={streamLoading}
-          musicLoading={musicLoading}
           audioLoadStuck={audioLoadStuck}
-          cameraCount={cameras.length}
-          currentCameraName={displayName}
           audioModeIcon={audioMode}
           isFiniteContent={
             audioMode === "podcast" ||
