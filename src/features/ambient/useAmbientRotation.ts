@@ -112,7 +112,8 @@ export function useAmbientRotation(
   useEffect(() => {
     if (cameras.length === 0) return;
     const shuffled = areaBalancedFeaturedShuffle(cameras, FEATURED_IDS);
-    shuffledRef.current = buildEventQueue(shuffled, cameras, eventCameraIds, eventPhase);
+    const ids = eventCameraIdsKey ? eventCameraIdsKey.split(",") : [];
+    shuffledRef.current = buildEventQueue(shuffled, cameras, ids, eventPhase);
     indexRef.current = 0;
     isFrameRefreshRef.current = false;
     const first = shuffledRef.current[0];
