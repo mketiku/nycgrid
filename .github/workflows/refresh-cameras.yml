@@ -37,23 +37,16 @@ jobs:
             echo "No changes detected — camera list is up to date."
           else
             echo "changed=true" >> $GITHUB_OUTPUT
-            OLD=$(git show HEAD:src/lib/cameras/data.ts | grep -o 'cameras — [0-9]* total' | grep -o '[0-9]*')
-            NEW=$(grep -o 'cameras — [0-9]* total' src/lib/cameras/data.ts | grep -o '[0-9]*')
-            DELTA=$((NEW - OLD))
-            DELTA_STR=$([ $DELTA -ge 0 ] && echo "+$DELTA" || echo "$DELTA")
-            echo "old_count=$OLD" >> $GITHUB_OUTPUT
-            echo "new_count=$NEW" >> $GITHUB_OUTPUT
-            echo "delta=$DELTA_STR" >> $GITHUB_OUTPUT
-            echo "Changes detected: $OLD → $NEW ($DELTA_STR)"
+            echo "Changes detected: ${{ steps.fetch.outputs.old_count }} → ${{ steps.fetch.outputs.new_count }} (${{ steps.fetch.outputs.delta }})"
           fi
 
       - name: Open pull request
         if: steps.diff.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OLD: ${{ steps.diff.outputs.old_count }}
-          NEW: ${{ steps.diff.outputs.new_count }}
-          DELTA: ${{ steps.diff.outputs.delta }}
+          OLD: ${{ steps.fetch.outputs.old_count }}
+          NEW: ${{ steps.fetch.outputs.new_count }}
+          DELTA: ${{ steps.fetch.outputs.delta }}
           SANITIZED: ${{ steps.fetch.outputs.sanitized_count }}
         run: |
           BRANCH="chore/refresh-camera-list"

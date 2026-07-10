@@ -84,9 +84,19 @@ if (emptyNames.length > 0) {
   process.exit(1);
 }
 
+const oldCount = EXISTING_CAMERAS.length;
+const delta = cameras.length - oldCount;
+const deltaStr = delta >= 0 ? `+${delta}` : `${delta}`;
+
 if (process.env.GITHUB_OUTPUT) {
   const { appendFileSync } = await import("fs");
-  appendFileSync(process.env.GITHUB_OUTPUT, `sanitized_count=${sanitizedCount}\n`);
+  appendFileSync(
+    process.env.GITHUB_OUTPUT,
+    `sanitized_count=${sanitizedCount}\n` +
+      `old_count=${oldCount}\n` +
+      `new_count=${cameras.length}\n` +
+      `delta=${deltaStr}\n`
+  );
 }
 
 const neighborhoodCount = cameras.filter((c) => c.neighborhood).length;
@@ -94,7 +104,7 @@ const cameraLines = cameras.map((c) => "  " + JSON.stringify(c) + ",").join("\n"
 
 const ts = `import type { Camera } from "./types";
 
-// NYC DOT traffic cameras — ${cameras.length} total. Source: https://webcams.nyctmc.org/api/cameras
+// NYC DOT traffic cameras. Source: https://webcams.nyctmc.org/api/cameras
 export const CAMERAS: Camera[] = [
 ${cameraLines}
 ];
