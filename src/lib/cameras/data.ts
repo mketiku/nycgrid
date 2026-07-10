@@ -1,6 +1,6 @@
 import type { Camera } from "./types";
 
-// NYC DOT traffic cameras — 961 total. Source: https://webcams.nyctmc.org/api/cameras
+// NYC DOT traffic cameras. Source: https://webcams.nyctmc.org/api/cameras
 export const CAMERAS: Camera[] = [
   {
     id: "00077ee3-2c13-4674-adbd-a51b3484b0be",
@@ -6440,16 +6440,6 @@ export const CAMERAS: Camera[] = [
     isOnline: true,
     neighborhood: "New Springville-Willowbrook-Bulls Head-Travis",
     imageUrl: "https://webcams.nyctmc.org/api/cameras/ad00e0d3-02f2-4578-b0f1-b9d176d117d1/image",
-  },
-  {
-    id: "ad051a78-9c50-43b3-bb71-83b091acd818",
-    name: "Gerard Ave @ E 161 St",
-    latitude: 40.827501,
-    longitude: -73.924959,
-    area: "Bronx",
-    isOnline: true,
-    neighborhood: "Concourse-Concourse Village",
-    imageUrl: "https://webcams.nyctmc.org/api/cameras/ad051a78-9c50-43b3-bb71-83b091acd818/image",
   },
   {
     id: "ad3df063-d5d6-458c-84e7-1242060649cf",

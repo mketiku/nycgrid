@@ -237,11 +237,11 @@ const FEATURED_CONFIGS: FeaturedCameraConfig[] = [
     lore: "Madison Square Garden is 120 meters north. On game nights, the crowd builds here before tipoff and clears out in waves after the final buzzer.",
   },
   {
-    id: "ad051a78-9c50-43b3-bb71-83b091acd818",
-    displayName: "Gerard Ave @ E 161 St",
+    id: "a95f7916-24ee-4d7e-bc71-6f9f1e009f23",
+    displayName: "Grand Concourse @ 161 St",
     tags: ["venue"],
     nearestSubwayLines: ["B", "D", "4"],
-    lore: "Yankee Stadium is 255 meters west. The 4, B, and D trains discharge thousands of fans here before first pitch. Post-game, the area empties fast.",
+    lore: "Yankee Stadium is 430 meters west. The 4, B, and D trains discharge thousands of fans here before first pitch. Post-game, the area empties fast.",
   },
   {
     id: "39b42007-16d8-4302-8b8c-602bbb9e9683",

@@ -34,7 +34,7 @@ describe("venues", () => {
 
   it("Yankee Stadium has a pre-seeded camera ID", () => {
     const stadium = getVenueById("yankee-stadium");
-    expect(stadium?.cameraIds).toContain("ad051a78-9c50-43b3-bb71-83b091acd818");
+    expect(stadium?.cameraIds).toContain("a95f7916-24ee-4d7e-bc71-6f9f1e009f23");
   });
 
   it("Citi Field has a pre-seeded camera ID", () => {

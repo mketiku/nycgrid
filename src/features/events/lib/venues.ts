@@ -21,7 +21,7 @@ export const VENUES: Venue[] = [
     lng: -73.9262,
     tier: "tier1",
     radiusKm: 0.5,
-    cameraIds: ["ad051a78-9c50-43b3-bb71-83b091acd818"],
+    cameraIds: ["a95f7916-24ee-4d7e-bc71-6f9f1e009f23"],
     espnSports: ["baseball/mlb"],
     espnHomeTeams: ["New York Yankees"],
     tmId: "KovZpZAEkAkA",

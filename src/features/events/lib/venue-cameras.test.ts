@@ -15,7 +15,7 @@ const makeCamera = (id: string): Camera => ({
 describe("venue-cameras", () => {
   const fakeCameras: Camera[] = [
     makeCamera("6a85384f-d82e-4bff-b5f1-15c22cca70e6"), // MSG camera
-    makeCamera("ad051a78-9c50-43b3-bb71-83b091acd818"), // Yankee Stadium camera
+    makeCamera("a95f7916-24ee-4d7e-bc71-6f9f1e009f23"), // Yankee Stadium camera
     makeCamera("other-camera-id"),
   ];
 

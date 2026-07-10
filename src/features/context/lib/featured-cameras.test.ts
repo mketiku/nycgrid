@@ -38,7 +38,7 @@ describe("venue cameras", () => {
   });
 
   it("includes Yankee Stadium camera", () => {
-    expect(FEATURED_CAMERAS.some((c) => c.id === "ad051a78-9c50-43b3-bb71-83b091acd818")).toBe(
+    expect(FEATURED_CAMERAS.some((c) => c.id === "a95f7916-24ee-4d7e-bc71-6f9f1e009f23")).toBe(
       true
     );
   });
