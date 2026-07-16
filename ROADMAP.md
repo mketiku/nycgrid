@@ -16,7 +16,7 @@ Live map of NYC DOT cameras with per-camera context panel (weather, transit aler
 - **Accessibility pass**: Focus restoration after closing the camera panel, ARIA live regions for borough filter announcements, `aria-modal` semantics on overlays. Tracked in `docs/context/a11y-status.md`.
 - **Skeleton loaders**: High-fidelity skeletons in Gallery and camera detail panel — no blank screens during fetching.
 - **Easter eggs**: Opendata cheat code (type "opendata" to surface NYC data source links), DECLASSIFIED READING link to ghost/offline cameras, iOS shake detection permission prompt (B.R.A.K.E. MotionPrompt banner).
-- **`/postcard`**: Daily ritual page — one deterministically-selected camera per day, with current weather and a shareable OG image. (`src/app/postcard/`, `/api/og/postcard/`)
+- **`/postcard`**: Daily ritual page — one deterministically-selected camera per day, with current weather and a shareable OG image. (`src/app/postcard/`, `src/app/postcard/opengraph-image.tsx`)
 - **`/shot/[token]`**: Public share landing page for photobooth shots. Dynamic OG image embeds the live camera frame at share time. (`src/app/shot/[token]/`, `/api/og/shot/`)
 - **Event-aware camera surfacing**: Cameras near active venue events (sports, concerts) are boosted in the spotlight, ambient mode, and photobooth export. Pulls live schedule from ESPN (unofficial scoreboard API, cached 24h) and Ticketmaster Discovery API (cached 24h). (`src/features/events/`, `/api/events/`)
 
