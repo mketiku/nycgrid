@@ -1,0 +1,5 @@
+# Gitignored local files copied into every worktree Claude Code creates
+# (EnterWorktree tool, --worktree flag). Uses .gitignore syntax; only files
+# that are also gitignored are copied, so tracked files are never duplicated.
+# See: https://code.claude.com/docs/en/worktrees#copy-gitignored-files-into-worktrees
+.env*
