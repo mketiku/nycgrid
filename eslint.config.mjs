@@ -4,6 +4,7 @@ import nextTs from "eslint-config-next/typescript";
 import eslintConfigPrettier from "eslint-config-prettier";
 import noStoreGetStateInRender from "./eslint-rules/no-store-getstate-in-render.mjs";
 import noUnguardedNotification from "./eslint-rules/no-unguarded-notification.mjs";
+import noDirectSentryCapture from "./eslint-rules/no-direct-sentry-capture.mjs";
 
 const localRules = {
   plugins: {
@@ -11,12 +12,14 @@ const localRules = {
       rules: {
         "no-store-getstate-in-render": noStoreGetStateInRender,
         "no-unguarded-notification": noUnguardedNotification,
+        "no-direct-sentry-capture": noDirectSentryCapture,
       },
     },
   },
   rules: {
     "local/no-store-getstate-in-render": "error",
     "local/no-unguarded-notification": "error",
+    "local/no-direct-sentry-capture": "error",
   },
 };
 
