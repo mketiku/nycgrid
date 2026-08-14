@@ -31,15 +31,16 @@ Go to **Project → Settings → Environment Variables** and add every variable 
 
 **Optional (features degrade gracefully without these):**
 
-| Variable                  | What it enables                            |
-| ------------------------- | ------------------------------------------ |
-| `NYC_OPEN_DATA_APP_TOKEN` | Permitted events in "What's Happening Now" |
-| `NYC_511_API_KEY`         | MTA transit alerts in camera context panel |
-| `MTA_BUS_TIME_KEY`        | Bus arrivals in camera context panel       |
-| `NEXT_PUBLIC_SENTRY_DSN`  | Browser error reporting                    |
-| `SENTRY_ORG`              | Source map uploads at build time           |
-| `SENTRY_PROJECT`          | Source map uploads at build time           |
-| `SENTRY_AUTH_TOKEN`       | Source map uploads at build time           |
+| Variable                    | What it enables                                            |
+| --------------------------- | ---------------------------------------------------------- |
+| `NYC_OPEN_DATA_APP_TOKEN`   | Permitted events in "What's Happening Now"                 |
+| `NYC_511_API_KEY`           | MTA transit alerts in camera context panel                 |
+| `MTA_BUS_TIME_KEY`          | Bus arrivals in camera context panel                       |
+| `NEXT_PUBLIC_SENTRY_DSN`    | Error reporting — see [sentry.md](./sentry.md)             |
+| `NEXT_PUBLIC_ENABLE_SENTRY` | Error reporting kill switch — see [sentry.md](./sentry.md) |
+| `SENTRY_ORG`                | Source map uploads at build time                           |
+| `SENTRY_PROJECT`            | Source map uploads at build time                           |
+| `SENTRY_AUTH_TOKEN`         | Source map uploads at build time                           |
 
 > Set environment scope to **Production** for production-only values, or **All Environments** if you also want them in preview deployments.
 

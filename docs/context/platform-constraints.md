@@ -187,3 +187,15 @@ NycGrid relies on `localStorage` and `sessionStorage` for persistence. To preven
 - **Privacy posture**: No cookies. The only localStorage key is a random UUID with no PII attached. Users cannot be identified across devices or browsers.
 - **Ingest host**: `https://us.i.posthog.com` — US region. CSP: `script-src` includes `https://us-assets.i.posthog.com`; `connect-src` includes `https://us.i.posthog.com`.
 - **Failure mode**: PostHog failures are caught by the wrapper (`src/lib/analytics/posthog.ts`) and silently no-op — analytics never affect product behaviour.
+
+---
+
+## Sentry Error Monitoring
+
+- **Auth**: DSN-based, no request quota concerns — Sentry is push-only from nycgrid's side, so "undue load on an external service" doesn't apply here.
+- **What's collected**: Explicitly reported errors/warnings (`captureAppError`/`captureAppWarning`, routed through `src/lib/monitoring/sentry.ts`) plus unhandled exceptions caught by Next.js's `onRequestError`/error boundaries. No PII — no auth, no session replay, no user-identifying data in any capture call site.
+- **What's disabled**: Session Replay, `setSentryUser` (no accounts to attach), PostHog↔Sentry correlation. See `docs/setup/sentry.md` §4 for why.
+- **Sampling**: `tracesSampleRate: 0.1` (production/preview), `0` (development/CI) — performance tracing samples 1 in 10 requests, not every request.
+- **Volume estimate**: Free tier is 5,000 error events/month; nycgrid's traffic (a few hundred visitors/month) and the fact that most capture points are for expected, recoverable upstream failures (not exceptions) leaves substantial headroom.
+- **Failure mode**: `captureAppError`/`captureAppWarning` are fire-and-forget and gated behind an `enableSentry` flag + DSN check — a Sentry outage or misconfigured DSN never blocks a response or throws.
+- **Guide**: `docs/setup/sentry.md`.

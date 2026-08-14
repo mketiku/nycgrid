@@ -12,6 +12,7 @@ Everything you need to get NycGrid running locally and in production.
 | MTA BusTime            | No — bus arrivals panel     | Free (API key)    | [bustime.md](./bustime.md)             |
 | Ticketmaster           | No — venue events panel     | Free (API key)    | [ticketmaster.md](./ticketmaster.md)   |
 | MapTiler               | No — OpenFreeMap is default | Free tier         | [maptiler.md](./maptiler.md)           |
+| Sentry                 | No — error monitoring       | Free tier         | [sentry.md](./sentry.md)               |
 | NOAA / NWS Weather     | No setup — zero-config      | Free              | —                                      |
 | Citibike GBFS          | No setup — zero-config      | Free              | —                                      |
 | NOAA Tides             | No setup — zero-config      | Free              | —                                      |
@@ -36,6 +37,8 @@ NYC_OPEN_DATA_APP_TOKEN     # events panel (nyc-open-data.md)
 NYC_511_API_KEY             # subway alerts panel (transit.md)
 MTA_BUS_TIME_KEY            # bus arrivals panel (bustime.md)
 TICKETMASTER_API_KEY        # venue events panel (ticketmaster.md)
+NEXT_PUBLIC_SENTRY_DSN       # error monitoring (sentry.md)
+NEXT_PUBLIC_ENABLE_SENTRY    # error monitoring kill switch (sentry.md)
 
 # App metadata
 NEXT_PUBLIC_APP_URL         # e.g. https://nycgrid.mketiku.com
