@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import AmbientError from "./error";
+import GlobalError from "./global-error";
 
 const { captureAppErrorMock } = vi.hoisted(() => ({ captureAppErrorMock: vi.fn() }));
 
@@ -9,34 +9,31 @@ vi.mock("@/lib/monitoring/sentry", () => ({
 }));
 
 afterEach(() => {
-  vi.unstubAllEnvs();
-  vi.restoreAllMocks();
   captureAppErrorMock.mockClear();
 });
 
-describe("AmbientError", () => {
+describe("GlobalError", () => {
   it("renders recovery actions and calls reset when retry is clicked", () => {
     const reset = vi.fn();
 
-    render(<AmbientError error={new Error("boom")} reset={reset} />);
+    render(<GlobalError error={new Error("boom")} reset={reset} />);
 
-    expect(screen.getByText("Ambient mode")).toBeInTheDocument();
     expect(screen.getByText("Something went wrong.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Exit" })).toHaveAttribute("href", "/");
+    expect(screen.getByRole("link", { name: "Go home" })).toHaveAttribute("href", "/");
 
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
 
     expect(reset).toHaveBeenCalledTimes(1);
   });
 
-  it("reports the error to Sentry with ambient feature context", () => {
-    const error = new Error("ambient-failure");
+  it("reports the error to Sentry as fatal with global-error-boundary context", () => {
+    const error = new Error("root-crash");
 
-    render(<AmbientError error={error} reset={vi.fn()} />);
+    render(<GlobalError error={error} reset={vi.fn()} />);
 
     expect(captureAppErrorMock).toHaveBeenCalledWith(error, {
-      feature: "ambient",
-      level: "error",
+      feature: "global-error-boundary",
+      level: "fatal",
     });
   });
 });

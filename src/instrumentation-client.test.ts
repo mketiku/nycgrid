@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockSentryInit = vi.fn();
-const mockGetMonitoringPublicConfig = vi.fn();
+const { mockSentryInit, mockGetMonitoringPublicConfig } = vi.hoisted(() => ({
+  mockSentryInit: vi.fn(),
+  mockGetMonitoringPublicConfig: vi.fn(),
+}));
 
 vi.mock("@sentry/nextjs", () => ({
   init: mockSentryInit,

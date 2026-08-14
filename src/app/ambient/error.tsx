@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { captureAppError } from "@/lib/monitoring/sentry";
 
 export default function AmbientError({
   error,
@@ -11,9 +12,7 @@ export default function AmbientError({
   reset: () => void;
 }) {
   useEffect(() => {
-    if (process.env.NODE_ENV !== "production") {
-      console.error("[AmbientPlayer] unhandled error:", error);
-    }
+    captureAppError(error, { feature: "ambient", level: "error" });
   }, [error]);
 
   return (

@@ -1,15 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const captureExceptionMock = vi.fn(() => "mock-event-id");
-const captureMessageMock = vi.fn(() => "mock-message-event-id");
-const withScopeMock = vi.fn((callback: (scope: unknown) => void) => {
-  callback({
-    setTag: vi.fn(),
-    setLevel: vi.fn(),
-    setExtras: vi.fn(),
-  });
-});
-const flushMock = vi.fn(async () => true);
+const { captureExceptionMock, captureMessageMock, withScopeMock, flushMock } = vi.hoisted(() => ({
+  captureExceptionMock: vi.fn(() => "mock-event-id"),
+  captureMessageMock: vi.fn(() => "mock-message-event-id"),
+  withScopeMock: vi.fn((callback: (scope: unknown) => void) => {
+    callback({
+      setTag: vi.fn(),
+      setLevel: vi.fn(),
+      setExtras: vi.fn(),
+    });
+  }),
+  flushMock: vi.fn(async () => true),
+}));
 
 vi.mock("@sentry/nextjs", () => ({
   captureException: captureExceptionMock,
