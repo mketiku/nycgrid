@@ -3,6 +3,7 @@ import { CAMERAS } from "@/lib/cameras/data";
 import { computeDensity, rankByDensity } from "@/features/coverage-gap/lib/density";
 import { CD_NAMES } from "@/features/coverage-gap/lib/cd-names";
 import { buildRateLimitHeaders, takeRateLimitToken } from "@/lib/security/rate-limit";
+import { captureAppWarning } from "@/lib/monitoring/sentry";
 import type { CoverageFeature, CoverageGeoJSON } from "@/features/coverage-gap/types";
 import type { Feature, Polygon, MultiPolygon } from "geojson";
 
@@ -38,7 +39,13 @@ export async function GET(request: Request) {
     const res = await fetch(ARCGIS_URL, { next: { revalidate: 604800 } });
     if (!res.ok) throw new Error(`ArcGIS responded ${res.status}`);
     rawGeoJSON = await res.json();
-  } catch {
+  } catch (error) {
+    captureAppWarning(
+      "coverage-gap: ArcGIS fetch failed, falling back to empty FeatureCollection",
+      {
+        error: error instanceof Error ? error.message : String(error),
+      }
+    );
     return NextResponse.json({ type: "FeatureCollection", features: [] } satisfies CoverageGeoJSON);
   }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildRateLimitHeaders, takeRateLimitToken } from "@/lib/security/rate-limit";
+import { captureAppWarning } from "@/lib/monitoring/sentry";
 
 // NYC DOT camera IDs are UUIDs. Reject anything else before touching the network.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -72,7 +73,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         "Cache-Control": "public, s-maxage=10, stale-while-revalidate=5",
       }),
     });
-  } catch {
+  } catch (error) {
+    captureAppWarning("camera-image: DOT upstream request failed", {
+      cameraId: id,
+      error: error instanceof Error ? error.message : String(error),
+    });
     return new NextResponse("Upstream error", {
       status: 502,
       headers: buildRateLimitHeaders(perCameraLimit),

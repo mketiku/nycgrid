@@ -2,7 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { CAMERAS } from "@/lib/cameras/data";
 import { resetRateLimitState } from "@/lib/security/rate-limit";
+import { captureAppWarning } from "@/lib/monitoring/sentry";
 import { GET } from "./route";
+
+vi.mock("@/lib/monitoring/sentry", () => ({
+  captureAppWarning: vi.fn(),
+}));
 
 const makeId = (n: number) => `00000000-0000-0000-0000-${String(n).padStart(12, "0")}`;
 const okResponse = () =>
@@ -17,6 +22,7 @@ describe("/api/camera-image/[id]", () => {
 
   beforeEach(() => {
     resetRateLimitState();
+    vi.clearAllMocks();
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okResponse()));
   });
 
@@ -195,6 +201,11 @@ describe("/api/camera-image/[id]", () => {
 
     expect(response.status).toBe(502);
     expect(await response.text()).toBe("Upstream error");
+    expect(captureAppWarning).toHaveBeenCalledTimes(1);
+    expect(captureAppWarning).toHaveBeenCalledWith(
+      "camera-image: DOT upstream request failed",
+      expect.objectContaining({ cameraId, error: "Network failure" })
+    );
   });
 
   it("passes the configured User-Agent to upstream", async () => {
