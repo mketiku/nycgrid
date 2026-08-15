@@ -1,11 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { resetRateLimitState } from "@/lib/security/rate-limit";
+import { captureAppWarning } from "@/lib/monitoring/sentry";
 import { GET } from "./route";
+
+vi.mock("@/lib/monitoring/sentry", () => ({
+  captureAppWarning: vi.fn(),
+}));
 
 describe("/api/coverage-gap", () => {
   beforeEach(() => {
     resetRateLimitState();
+    vi.clearAllMocks();
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -84,6 +90,29 @@ describe("/api/coverage-gap", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body).toEqual({ type: "FeatureCollection", features: [] });
+    expect(captureAppWarning).toHaveBeenCalledTimes(1);
+    expect(captureAppWarning).toHaveBeenCalledWith(
+      "coverage-gap: ArcGIS fetch failed, falling back to empty FeatureCollection",
+      expect.objectContaining({ error: expect.stringContaining("503") })
+    );
+  });
+
+  it("awaits captureAppWarning before returning, so the report isn't dropped on lambda freeze", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 503 } as Response));
+    const order: string[] = [];
+    vi.mocked(captureAppWarning).mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      order.push("warned");
+    });
+
+    await GET(
+      new NextRequest("http://localhost/api/coverage-gap", {
+        headers: { "x-real-ip": "203.0.113.55" },
+      })
+    );
+    order.push("returned");
+
+    expect(order).toEqual(["warned", "returned"]);
   });
 
   it("processes community district features and ranks by density", async () => {
