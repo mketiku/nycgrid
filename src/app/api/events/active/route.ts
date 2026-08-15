@@ -9,7 +9,7 @@ export async function GET() {
     const contexts = await getAllActiveEventContexts();
     return NextResponse.json(contexts);
   } catch (error) {
-    captureAppWarning("events/active: active event context lookup failed", {
+    await captureAppWarning("events/active: active event context lookup failed", {
       error: error instanceof Error ? error.message : String(error),
     });
     return NextResponse.json([], { status: 200 });

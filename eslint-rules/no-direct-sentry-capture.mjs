@@ -6,6 +6,11 @@
 //
 // Allowed: anything inside the monitoring wrapper itself (src/lib/monitoring/**),
 // the one place permitted to import the SDK directly.
+//
+// Known gap (matches the ported parrit/oruko implementation): destructuring a
+// forbidden method off an already-imported namespace, e.g.
+// `import * as Sentry from "@sentry/nextjs"; const { captureException } = Sentry;`,
+// is not detected — only the ImportDeclaration and MemberExpression forms are.
 
 const FORBIDDEN_METHODS = new Set(["captureException", "captureMessage", "withScope"]);
 

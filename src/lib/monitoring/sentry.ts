@@ -51,13 +51,19 @@ export async function captureAppWarning(
 ): Promise<void> {
   if (!getMonitoringPublicConfig().enableSentry) return;
 
-  const { captureMessage, withScope } = await import("@sentry/nextjs");
+  const { captureMessage, withScope, flush } = await import("@sentry/nextjs");
 
   withScope((scope) => {
     scope.setLevel("warning");
     if (extra) scope.setExtras(extra);
     captureMessage(message);
   });
+
+  // Only flush on the server — Vercel freezes the lambda after the response.
+  // In the browser the SDK sends via sendBeacon and does not need manual flushing.
+  if (typeof window === "undefined") {
+    await flush(SENTRY_FLUSH_TIMEOUT_MS);
+  }
 }
 
 export async function captureAppError(

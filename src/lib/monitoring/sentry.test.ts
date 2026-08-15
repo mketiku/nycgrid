@@ -128,4 +128,13 @@ describe("captureAppWarning", () => {
 
     expect(captureMessageMock).toHaveBeenCalledTimes(1);
   });
+
+  it("flushes on the server so the warning isn't dropped when the lambda freezes after the response", async () => {
+    process.env.NEXT_PUBLIC_ENABLE_SENTRY = "true";
+    const { captureAppWarning } = await import("./sentry");
+
+    await captureAppWarning("upstream degraded");
+
+    expect(flushMock).toHaveBeenCalledTimes(1);
+  });
 });

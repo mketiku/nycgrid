@@ -40,7 +40,7 @@ export async function GET(request: Request) {
     if (!res.ok) throw new Error(`ArcGIS responded ${res.status}`);
     rawGeoJSON = await res.json();
   } catch (error) {
-    captureAppWarning(
+    await captureAppWarning(
       "coverage-gap: ArcGIS fetch failed, falling back to empty FeatureCollection",
       {
         error: error instanceof Error ? error.message : String(error),

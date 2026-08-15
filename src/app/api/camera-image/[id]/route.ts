@@ -74,7 +74,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       }),
     });
   } catch (error) {
-    captureAppWarning("camera-image: DOT upstream request failed", {
+    await captureAppWarning("camera-image: DOT upstream request failed", {
       cameraId: id,
       error: error instanceof Error ? error.message : String(error),
     });

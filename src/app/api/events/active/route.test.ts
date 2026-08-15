@@ -44,4 +44,18 @@ describe("/api/events/active", () => {
       expect.objectContaining({ error: "Ticketmaster timeout" })
     );
   });
+
+  it("awaits captureAppWarning before returning, so the report isn't dropped on lambda freeze", async () => {
+    vi.mocked(getAllActiveEventContexts).mockRejectedValue(new Error("Ticketmaster timeout"));
+    const order: string[] = [];
+    vi.mocked(captureAppWarning).mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      order.push("warned");
+    });
+
+    await GET();
+    order.push("returned");
+
+    expect(order).toEqual(["warned", "returned"]);
+  });
 });

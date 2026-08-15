@@ -97,6 +97,24 @@ describe("/api/coverage-gap", () => {
     );
   });
 
+  it("awaits captureAppWarning before returning, so the report isn't dropped on lambda freeze", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, status: 503 } as Response));
+    const order: string[] = [];
+    vi.mocked(captureAppWarning).mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      order.push("warned");
+    });
+
+    await GET(
+      new NextRequest("http://localhost/api/coverage-gap", {
+        headers: { "x-real-ip": "203.0.113.55" },
+      })
+    );
+    order.push("returned");
+
+    expect(order).toEqual(["warned", "returned"]);
+  });
+
   it("processes community district features and ranks by density", async () => {
     const minimalPolygon = {
       type: "Polygon",

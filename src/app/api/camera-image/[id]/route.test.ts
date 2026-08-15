@@ -208,6 +208,25 @@ describe("/api/camera-image/[id]", () => {
     );
   });
 
+  it("awaits captureAppWarning before returning, so the report isn't dropped on lambda freeze", async () => {
+    vi.mocked(fetch).mockRejectedValueOnce(new Error("Network failure"));
+    const order: string[] = [];
+    vi.mocked(captureAppWarning).mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      order.push("warned");
+    });
+
+    await GET(
+      new NextRequest(`http://localhost/api/camera-image/${cameraId}`, {
+        headers: { "x-real-ip": "192.0.2.33" },
+      }),
+      { params: Promise.resolve({ id: cameraId }) }
+    );
+    order.push("returned");
+
+    expect(order).toEqual(["warned", "returned"]);
+  });
+
   it("passes the configured User-Agent to upstream", async () => {
     const originalUA = process.env.NYCGRID_DOT_USER_AGENT;
     process.env.NYCGRID_DOT_USER_AGENT = "NycGridBot/1.0";
