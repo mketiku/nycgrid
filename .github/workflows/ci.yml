@@ -89,7 +89,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock', 'package.json') }}
       - name: Install dependencies
         if: steps.cache-modules.outputs.cache-hit != 'true'
         env:
@@ -115,7 +115,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock', 'package.json') }}
       - name: Install dependencies
         if: steps.cache-modules.outputs.cache-hit != 'true'
         env:
@@ -145,7 +145,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock', 'package.json') }}
       - name: Install dependencies
         if: steps.cache-modules.outputs.cache-hit != 'true'
         env:
@@ -173,7 +173,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock', 'package.json') }}
       - name: Install dependencies
         if: steps.cache-modules.outputs.cache-hit != 'true'
         env:
@@ -303,7 +303,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock', 'package.json') }}
       - name: Install dependencies
         if: steps.cache-modules.outputs.cache-hit != 'true'
         env:
