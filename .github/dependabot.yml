@@ -7,3 +7,10 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"

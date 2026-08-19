@@ -2,36 +2,64 @@ name: Dependabot Auto-merge
 
 on:
   pull_request:
+  workflow_run:
+    workflows: ["CI / Quality Gate"]
+    types: [completed]
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  auto-merge:
-    name: Auto-merge patch and minor updates
+  mark:
+    name: Approve and label patch and minor updates
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    if: github.event_name == 'pull_request' && github.actor == 'dependabot[bot]'
 
     steps:
       - name: Fetch Dependabot metadata
         id: meta
         uses: dependabot/fetch-metadata@v3
 
-      - name: Auto-approve patch and minor updates
+      - name: Approve and label patch and minor updates
         if: |
           steps.meta.outputs.update-type == 'version-update:semver-patch' ||
           steps.meta.outputs.update-type == 'version-update:semver-minor'
-        run: gh pr review --approve "$PR_URL"
+        run: |
+          gh label create automerge --color ededed --description "Merged automatically once CI passes" --force
+          gh pr review --approve "$PR_URL"
+          gh pr edit "$PR_URL" --add-label automerge
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Auto-merge patch and minor updates
-        if: |
-          steps.meta.outputs.update-type == 'version-update:semver-patch' ||
-          steps.meta.outputs.update-type == 'version-update:semver-minor'
-        run: gh pr merge --auto --squash "$PR_URL"
+  merge:
+    name: Merge once CI passes
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.actor.login == 'dependabot[bot]'
+
+    steps:
+      - name: Merge labelled pull request for this commit
         env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          NUMBER=$(gh api "repos/$REPO/commits/$SHA/pulls" \
+            --jq '[.[] | select(.state == "open")][0].number // empty')
+
+          if [ -z "$NUMBER" ]; then
+            echo "No open PR for $SHA, nothing to merge."
+            exit 0
+          fi
+
+          if ! gh pr view "$NUMBER" --json labels --jq '.labels[].name' | grep -qx "automerge"; then
+            echo "PR #$NUMBER is not labelled automerge, skipping."
+            exit 0
+          fi
+
+          gh pr merge "$NUMBER" --squash

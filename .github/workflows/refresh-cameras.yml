@@ -48,13 +48,14 @@ jobs:
           NEW: ${{ steps.fetch.outputs.new_count }}
           DELTA: ${{ steps.fetch.outputs.delta }}
           SANITIZED: ${{ steps.fetch.outputs.sanitized_count }}
+          HUSKY: 0
         run: |
           BRANCH="chore/refresh-camera-list"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -B "$BRANCH"
           git add src/lib/cameras/data.ts
-          git commit -m "chore(cameras): refresh DOT camera list [skip ci]"
+          git commit -m "chore(cameras): refresh DOT camera list"
           git push origin "$BRANCH" --force
 
           BODY="## Summary
