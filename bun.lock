@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "interesting",
+      "name": "nycgrid",
       "dependencies": {
         "@sentry/nextjs": "^10.70.0",
         "@tanstack/react-query": "^5.101.4",
