@@ -29,6 +29,9 @@ jobs:
         timeout-minutes: 1
         run: bun scripts/fetch-cameras.ts
 
+      - name: Format camera data
+        run: bunx prettier --write src/lib/cameras/data.ts
+
       - name: Check for changes
         id: diff
         run: |
