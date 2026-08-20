@@ -65,7 +65,7 @@
     "eslint-config-prettier": "^10.1.8",
     "happy-dom": "^20.9.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.4.0",
+    "lint-staged": "^17.3.0",
     "msw": "^2.13.4",
     "prettier": "^3.8.3",
     "react-doctor": "^0.5.5",
