@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { RefObject } from "react";
-import type maplibregl from "maplibre-gl";
+import type * as maplibregl from "maplibre-gl";
 import type { CoverageGeoJSON, DistrictProperties } from "./types";
 
 export default function useCoverageLayer(mapRef: RefObject<maplibregl.Map | null>) {
@@ -123,7 +123,7 @@ function applyCoverageLayer(map: maplibregl.Map, data: CoverageGeoJSON) {
     const props = e.features?.[0]?.properties as DistrictProperties | undefined;
     if (!props || !e.lngLat) return;
     const label = props.neighborhood ? `${props.name} — ${props.neighborhood}` : props.name;
-    import("maplibre-gl").then(({ default: ml }) => {
+    import("maplibre-gl").then((ml) => {
       new ml.Popup({ className: "nycgrid-popup" })
         .setLngLat(e.lngLat)
         .setHTML(

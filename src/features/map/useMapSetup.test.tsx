@@ -83,16 +83,14 @@ const { mapInstances, MockAttributionControl } = vi.hoisted(() => ({
 }));
 
 vi.mock("maplibre-gl", () => ({
-  default: {
-    Map: class {
-      constructor() {
-        const map = new MockMap();
-        mapInstances.push(map);
-        return map;
-      }
-    },
-    AttributionControl: MockAttributionControl,
+  Map: class {
+    constructor() {
+      const map = new MockMap();
+      mapInstances.push(map);
+      return map;
+    }
   },
+  AttributionControl: MockAttributionControl,
 }));
 
 const cameras: Camera[] = [
