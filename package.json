@@ -70,7 +70,7 @@
     "prettier": "^3.9.6",
     "react-doctor": "^0.5.5",
     "tailwindcss": "^4",
-    "typescript": "^5",
+    "typescript": "^7",
     "vitest": "^4.1.10"
   },
   "trustedDependencies": [
