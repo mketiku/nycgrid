@@ -5,19 +5,17 @@ import { createElement } from "react";
 import { server } from "@/test/msw-handlers";
 import { http, HttpResponse } from "msw";
 import type { RefObject } from "react";
-import type maplibregl from "maplibre-gl";
+import type * as maplibregl from "maplibre-gl";
 
 vi.mock("maplibre-gl", () => {
   return {
-    default: {
-      Popup: vi.fn().mockImplementation(function () {
-        return {
-          setLngLat: vi.fn().mockReturnThis(),
-          setHTML: vi.fn().mockReturnThis(),
-          addTo: vi.fn().mockReturnThis(),
-        };
-      }),
-    },
+    Popup: vi.fn().mockImplementation(function () {
+      return {
+        setLngLat: vi.fn().mockReturnThis(),
+        setHTML: vi.fn().mockReturnThis(),
+        addTo: vi.fn().mockReturnThis(),
+      };
+    }),
   };
 });
 
@@ -268,7 +266,7 @@ describe("useCoverageLayer", () => {
   });
 
   it("handles click on coverage-gap-fill and shows popup", async () => {
-    const { default: ml } = await import("maplibre-gl");
+    const ml = await import("maplibre-gl");
     const emptyGeoJSON = { type: "FeatureCollection", features: [] };
     server.use(http.get("/api/coverage-gap", () => HttpResponse.json(emptyGeoJSON)));
 
