@@ -67,7 +67,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
     "msw": "^2.13.4",
-    "prettier": "^3.8.3",
+    "prettier": "^3.9.6",
     "react-doctor": "^0.5.5",
     "tailwindcss": "^4",
     "typescript": "^5",
