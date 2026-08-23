@@ -24,7 +24,8 @@
     "capture:screenshots:local": "BASE_URL=http://localhost:3100 node scripts/capture-screenshots.mjs",
     "capture:video": "node scripts/capture-video.mjs",
     "capture:video:local": "BASE_URL=http://localhost:3100 node scripts/capture-video.mjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "node scripts/copy-maplibre-worker.mjs"
   },
   "engines": {
     "node": ">=24.0.0"

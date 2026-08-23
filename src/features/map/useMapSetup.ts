@@ -4,6 +4,17 @@ import { useEffect, useRef, useCallback } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { Camera, CameraArea } from "@/lib/cameras/types";
 
+// maplibre-gl v6 resolves its worker script via import.meta.url at runtime, which
+// Turbopack does not rewrite to a loadable chunk URL — it falls back to '', and the
+// browser then tries (and CSP-blocks) creating a worker from the current page URL.
+// The worker also statically imports a "maplibre-gl-shared.mjs" sibling by relative
+// path; Turbopack's `new URL(literal, import.meta.url)` asset handling hashes and
+// emits each file independently without rewriting that import, so the sibling 404s.
+// scripts/copy-maplibre-worker.mjs copies both files verbatim into public/ (via
+// postinstall) so the relative import between them stays intact; point the worker
+// there directly. See https://maplibre.org/maplibre-gl-js/docs/guides/v5-to-v6-migration-guide/
+maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
+
 const CARTO_DARK = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 const CARTO_LIGHT = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
 const OFM_GLYPHS = "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf";
