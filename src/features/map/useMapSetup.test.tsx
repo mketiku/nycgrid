@@ -91,6 +91,7 @@ vi.mock("maplibre-gl", () => ({
     }
   },
   AttributionControl: MockAttributionControl,
+  setWorkerUrl: vi.fn(),
 }));
 
 const cameras: Camera[] = [
