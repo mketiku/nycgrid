@@ -1,11 +1,6 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git -C * show *)",
-      "Bash(git -C * log *)",
-      "Bash(git -C * diff *)",
-      "Bash(git -C * status)",
-      "Bash(git -C * status *)",
       "Bash(git *)",
       "Bash(git add *)",
       "Bash(git rm *)",
