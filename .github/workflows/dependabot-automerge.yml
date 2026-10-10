@@ -26,11 +26,13 @@ jobs:
           steps.meta.outputs.update-type == 'version-update:semver-patch' ||
           steps.meta.outputs.update-type == 'version-update:semver-minor'
         run: |
-          gh label create automerge --color ededed --description "Merged automatically once CI passes" --force
+          gh label create automerge --repo "$REPO" --color ededed --description "Merged automatically once CI passes" --force
           gh pr review --approve "$PR_URL"
           gh pr edit "$PR_URL" --add-label automerge
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
+          # No checkout in this job, so gh cannot infer the repo from a local .git
+          REPO: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   merge:
