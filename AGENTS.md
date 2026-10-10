@@ -67,7 +67,7 @@ Wrap each side-effect in its own `try/catch` — or use `void fn().catch(() => .
 - **Endpoint**: `https://webcams.nyctmc.org/api/cameras/{id}/image` — returns a JPEG snapshot.
 - **No auth required**: Public API. Do not add auth headers.
 - **Cache-busting on live view**: Append `?t=${Date.now()}` to force fresh frames. Use `setInterval` with a minimum refresh rate of 15s (DOT integration guide requirement) — do not hammer the DOT API.
-- **Camera data**: Lives in `src/lib/cameras/data.ts` as a typed static array. Source: NYC DOT open data. Do not fetch the camera list dynamically — it's stable and large; a static file is faster and cheaper.
+- **Camera data**: Lives in `src/lib/cameras/data.ts` as a typed static array. Source: NYC DOT open data. Do not fetch the camera list dynamically — it's stable and large; a static file is faster and cheaper. The `Refresh camera list` workflow regenerates it weekly, and the `nycgrid-camera-bot` GitHub App opens and auto-merges the PR once CI passes (setup: `docs/setup/camera-refresh-bot.md`).
 - **Respect the source**: These are public traffic cameras. The photobooth feature is a creative use of public data. Do not build features that aggregate or surveil individuals.
 
 ### Camera image URL strategy
