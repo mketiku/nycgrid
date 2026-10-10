@@ -4,19 +4,20 @@ Everything you need to get NycGrid running locally and in production.
 
 ## Services at a glance
 
-| Service                | Required?                   | Cost              | Guide                                  |
-| ---------------------- | --------------------------- | ----------------- | -------------------------------------- |
-| Vercel                 | For production              | Free (Hobby plan) | [vercel.md](./vercel.md)               |
-| NYC Open Data          | No — events panel           | Free (app token)  | [nyc-open-data.md](./nyc-open-data.md) |
-| 511NY (transit alerts) | No — transit alerts panel   | Free (API key)    | [transit.md](./transit.md)             |
-| MTA BusTime            | No — bus arrivals panel     | Free (API key)    | [bustime.md](./bustime.md)             |
-| Ticketmaster           | No — venue events panel     | Free (API key)    | [ticketmaster.md](./ticketmaster.md)   |
-| MapTiler               | No — OpenFreeMap is default | Free tier         | [maptiler.md](./maptiler.md)           |
-| Sentry                 | No — error monitoring       | Free tier         | [sentry.md](./sentry.md)               |
-| NOAA / NWS Weather     | No setup — zero-config      | Free              | —                                      |
-| Citibike GBFS          | No setup — zero-config      | Free              | —                                      |
-| NOAA Tides             | No setup — zero-config      | Free              | —                                      |
-| ArcGIS Districts       | No setup — zero-config      | Free              | —                                      |
+| Service                | Required?                   | Cost              | Guide                                            |
+| ---------------------- | --------------------------- | ----------------- | ------------------------------------------------ |
+| Vercel                 | For production              | Free (Hobby plan) | [vercel.md](./vercel.md)                         |
+| NYC Open Data          | No — events panel           | Free (app token)  | [nyc-open-data.md](./nyc-open-data.md)           |
+| 511NY (transit alerts) | No — transit alerts panel   | Free (API key)    | [transit.md](./transit.md)                       |
+| MTA BusTime            | No — bus arrivals panel     | Free (API key)    | [bustime.md](./bustime.md)                       |
+| Ticketmaster           | No — venue events panel     | Free (API key)    | [ticketmaster.md](./ticketmaster.md)             |
+| MapTiler               | No — OpenFreeMap is default | Free tier         | [maptiler.md](./maptiler.md)                     |
+| Sentry                 | No — error monitoring       | Free tier         | [sentry.md](./sentry.md)                         |
+| Camera refresh bot     | No — weekly camera refresh  | Free (GitHub App) | [camera-refresh-bot.md](./camera-refresh-bot.md) |
+| NOAA / NWS Weather     | No setup — zero-config      | Free              | —                                                |
+| Citibike GBFS          | No setup — zero-config      | Free              | —                                                |
+| NOAA Tides             | No setup — zero-config      | Free              | —                                                |
+| ArcGIS Districts       | No setup — zero-config      | Free              | —                                                |
 
 ## Minimum viable local setup
 

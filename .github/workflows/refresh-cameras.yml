@@ -10,12 +10,25 @@ jobs:
     name: Fetch and update camera list
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Push, PR creation and merge use a GitHub App token, not GITHUB_TOKEN.
+    # Runs triggered by github-actions[bot] are held for manual approval, so
+    # CI never ran on the refresh PR. Setup: docs/setup/camera-refresh-bot.md
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
 
     steps:
+      - name: Mint GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.CAMERA_BOT_APP_ID }}
+          private-key: ${{ secrets.CAMERA_BOT_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - uses: actions/checkout@v6
+        with:
+          token: ${{ steps.app-token.outputs.token }}
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -46,7 +59,8 @@ jobs:
       - name: Open pull request
         if: steps.diff.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
           OLD: ${{ steps.fetch.outputs.old_count }}
           NEW: ${{ steps.fetch.outputs.new_count }}
           DELTA: ${{ steps.fetch.outputs.delta }}
@@ -54,8 +68,9 @@ jobs:
           HUSKY: 0
         run: |
           BRANCH="chore/refresh-camera-list"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          BOT_ID=$(gh api "/users/${APP_SLUG}%5Bbot%5D" --jq .id)
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${BOT_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
           git checkout -B "$BRANCH"
           git add src/lib/cameras/data.ts
           git commit -m "chore(cameras): refresh DOT camera list"
@@ -81,3 +96,7 @@ jobs:
               --title "chore(cameras): refresh DOT camera list (${OLD} → ${NEW})" \
               --body "$BODY"
           fi
+
+          # Merges on its own once main's required checks pass. The merge is
+          # pushed by the App, so the production deploy on main still runs.
+          gh pr merge "$BRANCH" --auto --squash
