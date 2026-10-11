@@ -1,17 +1,26 @@
-import { TriangleAlert } from "lucide-react";
+import { Megaphone, TriangleAlert } from "lucide-react";
 import type { Camera } from "@/lib/cameras/types";
 import { fetchCollisions } from "./lib/fetch-collisions";
-import type { CollisionSummary } from "./types";
+import { fetchComplaints } from "./lib/fetch-complaints";
+import type { CollisionSummary, ComplaintSummary } from "./types";
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 export async function CivicPanel({ camera }: { camera: Camera }) {
-  const collisions = await fetchCollisions(camera.latitude, camera.longitude);
-  return <CivicPanelView collisions={collisions} />;
+  const [collisions, complaints] = await Promise.all([
+    fetchCollisions(camera.latitude, camera.longitude),
+    fetchComplaints(camera.latitude, camera.longitude),
+  ]);
+  return <CivicPanelView collisions={collisions} complaints={complaints} />;
 }
 
-export function CivicPanelView({ collisions }: { collisions: CollisionSummary | null }) {
-  if (!collisions) return null;
+interface CivicPanelViewProps {
+  collisions: CollisionSummary | null;
+  complaints: ComplaintSummary | null;
+}
+
+export function CivicPanelView({ collisions, complaints }: CivicPanelViewProps) {
+  if (!collisions && !complaints) return null;
 
   return (
     <section
@@ -28,13 +37,14 @@ export function CivicPanelView({ collisions }: { collisions: CollisionSummary | 
       </div>
 
       <div className="divide-y divide-[var(--color-border)]">
-        <SafetyRow collisions={collisions} />
+        {collisions && <SafetyRow collisions={collisions} />}
+        {complaints && <ComplaintsRow complaints={complaints} />}
       </div>
 
       <p className="px-4 py-2 border-t border-[var(--color-border)] font-mono text-[10px] text-[var(--color-text-muted)]">
-        Within 150 m, past 12 months · NYPD crash reports via{" "}
+        Within 150 m · NYPD crash reports and 311 requests via{" "}
         <a
-          href="https://data.cityofnewyork.us/d/h9gi-nx95"
+          href="https://opendata.cityofnewyork.us/"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[var(--color-accent)] hover:underline"
@@ -61,7 +71,7 @@ function SafetyRow({ collisions }: { collisions: CollisionSummary }) {
       </span>
       <div className="flex flex-col gap-0.5 min-w-0">
         <span className="font-mono text-[10px] text-[var(--color-text-muted)] uppercase tracking-widest">
-          Street safety
+          Street safety · 12 mo
         </span>
         {crashes === 0 ? (
           <span className="font-mono text-xs leading-snug text-[var(--color-text-muted)]">
@@ -77,6 +87,35 @@ function SafetyRow({ collisions }: { collisions: CollisionSummary }) {
                 {`${vulnerable.join(" · ")} injured`}
               </span>
             )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ComplaintsRow({ complaints }: { complaints: ComplaintSummary }) {
+  return (
+    <div className="px-4 py-3 flex items-start gap-3">
+      <span className="mt-0.5 text-[var(--color-accent)] shrink-0">
+        <Megaphone className="w-3.5 h-3.5" aria-hidden="true" />
+      </span>
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <span className="font-mono text-[10px] text-[var(--color-text-muted)] uppercase tracking-widest">
+          311 · 30 days
+        </span>
+        {complaints.total === 0 ? (
+          <span className="font-mono text-xs leading-snug text-[var(--color-text-muted)]">
+            No street complaints
+          </span>
+        ) : (
+          <>
+            <span className="font-mono text-xs leading-snug text-[var(--color-text-primary)]">
+              {plural(complaints.total, "street complaint", "street complaints")}
+            </span>
+            <span className="font-mono text-[10px] leading-snug text-[var(--color-text-muted)]">
+              {complaints.top.map((c) => `${c.label} ${c.count}`).join(" · ")}
+            </span>
           </>
         )}
       </div>

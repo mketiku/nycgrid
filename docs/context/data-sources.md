@@ -58,6 +58,21 @@ All external data sources used by NycGrid, with their terms of use and usage con
 
 ---
 
+## NYC Open Data (Socrata) — 311 Service Requests
+
+**Dataset**: 311 Service Requests from 2010 to Present (`erm2-nwe9`)
+**URL**: https://data.cityofnewyork.us/d/erm2-nwe9
+**Auth**: Same app token as permitted events.
+**Use**: Counts of street-facing complaint types near each camera in the Civic panel. Details and the exclusion list in [civic-layers.md](../setup/civic-layers.md).
+
+**Terms**: [NYC Open Data Terms of Use](https://opendata.cityofnewyork.us/overview/#termsofuse).
+**Constraints**:
+
+- Aggregates only, allowlisted street types only; complaints about people or homes are never fetched
+- Cached 24h per camera
+
+---
+
 ## 511NY Open Data API — MTA Transit Alerts
 
 **Endpoint**: `https://api.511.org/transit/servicealerts`  
@@ -98,5 +113,6 @@ All external data sources used by NycGrid, with their terms of use and usage con
 | NYC DOT cameras          | None (img); IP auth (feeds) | Prohibited (self-imposed) | Pass-through proxy is gray area (§6) | ≥15s per camera  |
 | NYC Open Data (events)   | App token                   | No restriction            | Free for lawful use                  | 1K/hr with token |
 | NYC Open Data (crashes)  | App token                   | Aggregates only           | Free for lawful use                  | 1K/hr with token |
+| NYC Open Data (311)      | App token                   | Aggregates only           | Free for lawful use                  | 1K/hr with token |
 | 511NY (MTA alerts)       | API key                     | No restriction            | Non-commercial                       | ~30/hr actual    |
 | Tyler Tech (if in chain) | N/A                         | **Explicitly prohibited** | No redistribution                    | N/A              |

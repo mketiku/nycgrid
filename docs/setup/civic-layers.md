@@ -39,3 +39,35 @@ Any non-OK response, timeout or malformed coordinate returns `null`, and the Civ
 ### Privacy
 
 Counts only. The panel is about the street, not the people on it, consistent with the privacy rules in `AGENTS.md`.
+
+---
+
+## 311 — Street complaints
+
+**Dataset:** [311 Service Requests from 2010 to Present](https://data.cityofnewyork.us/d/erm2-nwe9) (`erm2-nwe9`), published by NYC 311 on NYC Open Data.
+
+**Query:** one grouped SoQL request per camera — counts per complaint type within 150 m over the trailing 30 days, restricted to an allowlist of street-facing types:
+
+```
+GET https://data.cityofnewyork.us/resource/erm2-nwe9.json
+  ?$select=complaint_type, count(*) as n
+  &$where=within_circle(location, {lat}, {lon}, 150) AND created_date >= '{today - 30d}' AND complaint_type in (...)
+  &$group=complaint_type
+```
+
+The panel shows the total and the top three, with plain-language labels.
+
+### What is excluded, and why
+
+The allowlist lives in `src/features/civic/lib/fetch-complaints.ts`. It covers things a traffic camera can actually see: parking, street noise, pavement, signals, lights, litter, abandoned vehicles, trees, sewers, graffiti.
+
+Left out on purpose:
+
+- **Complaints about people** — homeless person assistance, encampments, non-emergency police matters, vendor enforcement, panhandling. Showing these next to a live camera would point viewers at individuals.
+- **Complaints about a home** — residential noise and housing conditions (heat, plumbing, paint). These identify a specific building's residents, not the street.
+
+Rows outside the allowlist are also dropped client-side if Socrata ever returns one.
+
+### Terms, rate limits, failures
+
+Same as above: NYC Open Data Terms of Use, cached 24 h per camera, one request per camera per day at most, 4 s timeout, `null` on failure (the 311 row is omitted; the safety row still renders).

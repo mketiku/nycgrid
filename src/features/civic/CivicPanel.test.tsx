@@ -12,7 +12,7 @@ const collisions = {
 
 describe("CivicPanelView", () => {
   it("summarises crashes, injuries and deaths", () => {
-    render(<CivicPanelView collisions={collisions} />);
+    render(<CivicPanelView collisions={collisions} complaints={null} />);
     expect(screen.getByText("34 crashes · 22 injured · 1 killed")).toBeDefined();
     expect(screen.getByText(/7 pedestrians · 3 cyclists injured/)).toBeDefined();
   });
@@ -27,6 +27,7 @@ describe("CivicPanelView", () => {
           pedestriansInjured: 1,
           cyclistsInjured: 0,
         }}
+        complaints={null}
       />
     );
     expect(screen.getByText("1 crash · 1 injured · 1 killed")).toBeDefined();
@@ -43,13 +44,40 @@ describe("CivicPanelView", () => {
           pedestriansInjured: 0,
           cyclistsInjured: 0,
         }}
+        complaints={null}
       />
     );
     expect(screen.getByText(/No reported crashes/)).toBeDefined();
   });
 
-  it("renders nothing when crash data is unavailable", () => {
-    const { container } = render(<CivicPanelView collisions={null} />);
+  it("summarises the top 311 street complaints", () => {
+    render(
+      <CivicPanelView
+        collisions={null}
+        complaints={{
+          total: 61,
+          top: [
+            { label: "Illegal parking", count: 40 },
+            { label: "Street noise", count: 12 },
+            { label: "Potholes & pavement", count: 9 },
+          ],
+        }}
+      />
+    );
+    expect(screen.getByText("61 street complaints")).toBeDefined();
+    expect(
+      screen.getByText("Illegal parking 40 · Street noise 12 · Potholes & pavement 9")
+    ).toBeDefined();
+    expect(screen.queryByText(/Street safety/)).toBeNull();
+  });
+
+  it("says when no street complaints were filed", () => {
+    render(<CivicPanelView collisions={null} complaints={{ total: 0, top: [] }} />);
+    expect(screen.getByText(/No street complaints/)).toBeDefined();
+  });
+
+  it("renders nothing when every civic source is unavailable", () => {
+    const { container } = render(<CivicPanelView collisions={null} complaints={null} />);
     expect(container.innerHTML).toBe("");
   });
 });

@@ -111,9 +111,9 @@ NycGrid relies on `localStorage` and `sessionStorage` for persistence. To preven
 ## NYC Open Data (Socrata) — Civic Layers
 
 - **Auth**: Same `NYC_OPEN_DATA_APP_TOKEN` as permitted events
-- **Datasets**: Motor Vehicle Collisions (`h9gi-nx95`) — see `docs/setup/civic-layers.md`
+- **Datasets**: Motor Vehicle Collisions (`h9gi-nx95`), 311 Service Requests (`erm2-nwe9`) — see `docs/setup/civic-layers.md`
 - **Caching**: 24h per camera (`revalidate: 86400`)
-- **Scope**: One aggregate query per camera page, 150 m radius, trailing 12 months
+- **Scope**: One aggregate query per dataset per camera page, 150 m radius (crashes: 12 months; 311: 30 days)
 - **Timeout**: 4s
 - **Failure mode**: Returns `null` — the Civic panel is omitted
 

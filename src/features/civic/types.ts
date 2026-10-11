@@ -5,3 +5,8 @@ export interface CollisionSummary {
   pedestriansInjured: number;
   cyclistsInjured: number;
 }
+
+export interface ComplaintSummary {
+  total: number;
+  top: { label: string; count: number }[];
+}
