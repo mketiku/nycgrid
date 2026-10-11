@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { CameraPanel } from "./CameraPanel";
 import { GHOST_CAMERA_ID } from "@/lib/cameras/ghost";
@@ -78,6 +79,15 @@ describe("CameraPanel", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("server-renders a selected camera without touching window", () => {
+    vi.stubGlobal("window", undefined);
+    try {
+      expect(() => renderToString(<CameraPanel camera={camera} onClose={onClose} />)).not.toThrow();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("renders nothing when no camera is selected", () => {
