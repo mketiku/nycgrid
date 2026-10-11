@@ -325,9 +325,7 @@ function PanelNormal({
   const favourited = isFavourite(camera.id);
   const loreFacts = getCameraLore(camera.id);
 
-  const { copied, share: handleShare } = useShareUrl(
-    `${window.location.origin}/explore?camera=${camera.id}`
-  );
+  const { copied, share: handleShare } = useShareUrl(`/explore?camera=${camera.id}`);
 
   return (
     <div ref={panelRef} className="flex flex-col flex-1 min-h-0">

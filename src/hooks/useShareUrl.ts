@@ -6,7 +6,11 @@ export function useShareUrl(url?: string): { copied: boolean; share: () => Promi
   const [copied, setCopied] = useState(false);
 
   const share = useCallback(async () => {
-    const target = url ?? window.location.href;
+    const target = !url
+      ? window.location.href
+      : url.startsWith("/")
+        ? `${window.location.origin}${url}`
+        : url;
 
     if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
