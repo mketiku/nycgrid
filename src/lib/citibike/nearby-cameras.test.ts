@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from "vitest";
 import { findCamerasNearCitibike } from "./nearby-cameras";
 import { http, HttpResponse } from "msw";
