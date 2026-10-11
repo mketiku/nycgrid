@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ShotPage({ params }: PageProps) {
   const { token } = await params;
-  const { cameraId, frameType, caption } = decodeShotToken(token);
+  const { cameraId, frameType, caption, variant } = decodeShotToken(token);
   const camera = CAMERAS.find((c) => c.id === cameraId);
   if (!camera) notFound();
 
@@ -48,7 +48,7 @@ export default async function ShotPage({ params }: PageProps) {
       </div>
 
       <div className="flex-1 px-4 sm:px-6 py-8">
-        <ShotClient camera={camera} frameType={frameType} caption={caption} />
+        <ShotClient camera={camera} frameType={frameType} caption={caption} variant={variant} />
       </div>
     </div>
   );

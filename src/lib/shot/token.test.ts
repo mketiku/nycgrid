@@ -61,7 +61,26 @@ describe("encodeShotToken / decodeShotToken", () => {
     expect(decodeShotToken(`${CAM}.cinema.%E0%A4%A`).caption).toBe("");
   });
 
-  it("exposes the four real frame types", () => {
-    expect(FRAME_TYPES).toEqual(["filmstrip", "polaroid", "strip3", "cinema"]);
+  it("decodes every shareable frame type", () => {
+    for (const frame of FRAME_TYPES) {
+      expect(decodeShotToken(encodeShotToken(CAM, frame, "")).frameType).toBe(frame);
+    }
+  });
+
+  it("round-trips the subway line alongside the frame", () => {
+    const token = encodeShotToken(CAM, "subway", "", "NQRW");
+    expect(token).toBe(`${CAM}.subway:NQRW`);
+    expect(decodeShotToken(token)).toEqual({
+      cameraId: CAM,
+      frameType: "subway",
+      caption: "",
+      variant: "NQRW",
+    });
+  });
+
+  it("drops an unknown subway line and variants on other frames", () => {
+    expect(decodeShotToken(`${CAM}.subway:XYZ`)).toMatchObject({ frameType: "subway" });
+    expect(decodeShotToken(`${CAM}.subway:XYZ`).variant).toBeUndefined();
+    expect(decodeShotToken(`${CAM}.cinema:ACE`).variant).toBeUndefined();
   });
 });
