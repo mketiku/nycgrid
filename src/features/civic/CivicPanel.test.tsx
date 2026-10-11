@@ -17,6 +17,13 @@ describe("CivicPanelView", () => {
     expect(screen.getByText(/7 pedestrians · 3 cyclists injured/)).toBeDefined();
   });
 
+  it("flags a camera that sits on a Vision Zero priority corridor", () => {
+    render(
+      <CivicPanelView collisions={collisions} onPriorityCorridor complaints={null} subway={null} />
+    );
+    expect(screen.getByText("On a Vision Zero priority corridor")).toBeDefined();
+  });
+
   it("uses singular nouns for counts of one", () => {
     render(
       <CivicPanelView

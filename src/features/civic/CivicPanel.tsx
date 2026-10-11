@@ -2,27 +2,42 @@ import { Megaphone, TrainFront, TriangleAlert } from "lucide-react";
 import type { Camera } from "@/lib/cameras/types";
 import { fetchCollisions } from "./lib/fetch-collisions";
 import { fetchComplaints } from "./lib/fetch-complaints";
+import { fetchOnPriorityCorridor } from "./lib/fetch-priority-corridor";
 import { fetchSubwayArrivals } from "./lib/fetch-subway";
 import type { CollisionSummary, ComplaintSummary, StationArrivals } from "./types";
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 export async function CivicPanel({ camera }: { camera: Camera }) {
-  const [collisions, complaints, subway] = await Promise.all([
+  const [collisions, onPriorityCorridor, complaints, subway] = await Promise.all([
     fetchCollisions(camera.latitude, camera.longitude),
+    fetchOnPriorityCorridor(camera.latitude, camera.longitude),
     fetchComplaints(camera.latitude, camera.longitude),
     fetchSubwayArrivals(camera.latitude, camera.longitude),
   ]);
-  return <CivicPanelView collisions={collisions} complaints={complaints} subway={subway} />;
+  return (
+    <CivicPanelView
+      collisions={collisions}
+      onPriorityCorridor={onPriorityCorridor === true}
+      complaints={complaints}
+      subway={subway}
+    />
+  );
 }
 
 interface CivicPanelViewProps {
   collisions: CollisionSummary | null;
+  onPriorityCorridor?: boolean;
   complaints: ComplaintSummary | null;
   subway: StationArrivals[] | null;
 }
 
-export function CivicPanelView({ collisions, complaints, subway }: CivicPanelViewProps) {
+export function CivicPanelView({
+  collisions,
+  onPriorityCorridor = false,
+  complaints,
+  subway,
+}: CivicPanelViewProps) {
   const hasSubway = !!subway && subway.length > 0;
   if (!collisions && !complaints && !hasSubway) return null;
 
@@ -41,7 +56,9 @@ export function CivicPanelView({ collisions, complaints, subway }: CivicPanelVie
       </div>
 
       <div className="divide-y divide-[var(--color-border)]">
-        {collisions && <SafetyRow collisions={collisions} />}
+        {collisions && (
+          <SafetyRow collisions={collisions} onPriorityCorridor={onPriorityCorridor} />
+        )}
         {hasSubway && <SubwayRow stations={subway} />}
         {complaints && <ComplaintsRow complaints={complaints} />}
       </div>
@@ -62,7 +79,13 @@ export function CivicPanelView({ collisions, complaints, subway }: CivicPanelVie
   );
 }
 
-function SafetyRow({ collisions }: { collisions: CollisionSummary }) {
+function SafetyRow({
+  collisions,
+  onPriorityCorridor,
+}: {
+  collisions: CollisionSummary;
+  onPriorityCorridor: boolean;
+}) {
   const { crashes, injured, killed, pedestriansInjured, cyclistsInjured } = collisions;
 
   const vulnerable = [
@@ -94,6 +117,11 @@ function SafetyRow({ collisions }: { collisions: CollisionSummary }) {
               </span>
             )}
           </>
+        )}
+        {onPriorityCorridor && (
+          <span className="font-mono text-[10px] leading-snug text-[var(--color-error)]">
+            On a Vision Zero priority corridor
+          </span>
         )}
       </div>
     </div>

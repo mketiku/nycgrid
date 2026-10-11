@@ -36,6 +36,10 @@ Only the aggregate is fetched. No individual crash rows, addresses or vehicle de
 
 Any non-OK response, timeout or malformed coordinate returns `null`, and the Civic panel renders nothing. The rest of the page is unaffected.
 
+### Priority corridor flag
+
+The safety row also says "On a Vision Zero priority corridor" when a corridor from [VZV Priority Corridors](https://data.cityofnewyork.us/d/36nr-7fbp) (`36nr-7fbp`) passes within about 30 m of the camera. It is one `count(*)` query with `intersects(the_geom, <small box>)`, cached 24 h. (`within_circle` does not work here: on line datasets it only matches lines fully inside the circle.)
+
 ### Privacy
 
 Counts only. The panel is about the street, not the people on it, consistent with the privacy rules in `AGENTS.md`.
@@ -96,3 +100,30 @@ Same as above: NYC Open Data Terms of Use, cached 24 h per camera, one request p
 ### Failure modes
 
 If every needed feed fails, the subway row is omitted. If some feeds fail, the row shows what the working feeds returned. Cameras with no station within 400 m never call MTA.
+
+---
+
+## Map layers — bike lanes, street projects, priority corridors
+
+A **Street layers** toggle on the explore map draws three line layers:
+
+| Layer              | Dataset                                                                                                | Color token      |
+| ------------------ | ------------------------------------------------------------------------------------------------------ | ---------------- |
+| Bike lanes         | [New York City Bike Routes](https://data.cityofnewyork.us/d/mzxg-pwib) (`mzxg-pwib`), status `Current` | `--color-online` |
+| Street projects    | [VZV Street Improvement Projects – Corridor](https://data.cityofnewyork.us/d/if4c-w48d) (`if4c-w48d`)  | `--color-accent` |
+| Priority corridors | [VZV Priority Corridors](https://data.cityofnewyork.us/d/36nr-7fbp) (`36nr-7fbp`)                      | `--color-error`  |
+
+Clicking a line shows its label (lane type, project name and year, or "Vision Zero priority corridor").
+
+**How it loads:** the citywide bike network alone is ~6.5 MB, so the map never loads it whole. Layers only load at zoom 13+. The viewport is split into 0.02° grid cells (~2 km), and the client asks `/api/civic-layers?cell={row}_{col}` for each visible cell (at most 16). Each cell response runs three `intersects(the_geom, <cell polygon>)` queries, rounds coordinates to 5 decimals (~1 m), and is about 140 KB in Midtown. Lines that cross cells come back from each cell; the client de-duplicates them by row id.
+
+Code: `src/features/civic-layers/`, `src/app/api/civic-layers/route.ts`.
+
+### Rate limits and cost
+
+- Cell responses are cached 24 h at the CDN (`s-maxage=86400`) and per Socrata query (`revalidate: 86400`). The NYC bounding box is ~1,000 cells, so the worst case is ~3,000 Socrata requests per day (~125/hr), inside the app-token limit, and real usage only touches the cells people look at.
+- The route is rate-limited to 60 requests/min per IP.
+
+### Failure modes
+
+If one dataset fails, the cell returns the other layers. If all three fail, the route returns 502 and that cell is simply blank; the rest of the map is unaffected.

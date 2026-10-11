@@ -33,3 +33,14 @@ export function withinCircle(lat: number, lon: number, radiusM: number): string 
 export function isoDateDaysAgo(now: Date, days: number): string {
   return new Date(now.getTime() - days * DAY_SECONDS * 1000).toISOString().slice(0, 10);
 }
+
+export function boxPolygon(west: number, south: number, east: number, north: number): string {
+  const ring = [
+    [west, south],
+    [east, south],
+    [east, north],
+    [west, north],
+    [west, south],
+  ];
+  return `POLYGON((${ring.map(([x, y]) => `${Number(x.toFixed(5))} ${Number(y.toFixed(5))}`).join(", ")}))`;
+}

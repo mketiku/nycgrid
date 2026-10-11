@@ -73,6 +73,20 @@ All external data sources used by NycGrid, with their terms of use and usage con
 
 ---
 
+## NYC Open Data (Socrata) — Street Layers
+
+**Datasets**: Bike Routes (`mzxg-pwib`), VZV Street Improvement Projects – Corridor (`if4c-w48d`), VZV Priority Corridors (`36nr-7fbp`)
+**Auth**: Same app token as permitted events.
+**Use**: Line layers on the explore map, plus the priority-corridor flag in the Civic panel. Details in [civic-layers.md](../setup/civic-layers.md).
+
+**Terms**: [NYC Open Data Terms of Use](https://opendata.cityofnewyork.us/overview/#termsofuse).
+**Constraints**:
+
+- Loaded per ~2 km grid cell at zoom 13+, never citywide
+- Cached 24h
+
+---
+
 ## MTA GTFS-realtime Subway Feeds
 
 **Endpoint**: `https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2F{feed}`
