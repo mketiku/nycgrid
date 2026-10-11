@@ -73,6 +73,20 @@ All external data sources used by NycGrid, with their terms of use and usage con
 
 ---
 
+## MTA GTFS-realtime Subway Feeds
+
+**Endpoint**: `https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2F{feed}`
+**Auth**: None.
+**Use**: Next trains at stations near each camera in the Civic panel. Station list snapshotted from data.ny.gov `39hk-dx4f`. Details in [civic-layers.md](../setup/civic-layers.md).
+
+**Terms**: [MTA developer resources](https://new.mta.info/developers). Attributed in the panel; feed terms not yet reviewed in detail.
+**Constraints**:
+
+- Cached 30s per feed, shared across pages
+- Only the feeds serving nearby stations are requested
+
+---
+
 ## 511NY Open Data API — MTA Transit Alerts
 
 **Endpoint**: `https://api.511.org/transit/servicealerts`  
@@ -114,5 +128,6 @@ All external data sources used by NycGrid, with their terms of use and usage con
 | NYC Open Data (events)   | App token                   | No restriction            | Free for lawful use                  | 1K/hr with token |
 | NYC Open Data (crashes)  | App token                   | Aggregates only           | Free for lawful use                  | 1K/hr with token |
 | NYC Open Data (311)      | App token                   | Aggregates only           | Free for lawful use                  | 1K/hr with token |
+| MTA GTFS-rt (subway)     | None                        | No restriction            | Terms not yet reviewed               | ≤2/min per feed  |
 | 511NY (MTA alerts)       | API key                     | No restriction            | Non-commercial                       | ~30/hr actual    |
 | Tyler Tech (if in chain) | N/A                         | **Explicitly prohibited** | No redistribution                    | N/A              |

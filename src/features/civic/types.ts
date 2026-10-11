@@ -10,3 +10,9 @@ export interface ComplaintSummary {
   total: number;
   top: { label: string; count: number }[];
 }
+
+export interface StationArrivals {
+  name: string;
+  distanceM: number;
+  directions: { label: string; arrivals: { route: string; minutes: number }[] }[];
+}

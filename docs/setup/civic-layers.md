@@ -71,3 +71,28 @@ Rows outside the allowlist are also dropped client-side if Socrata ever returns 
 ### Terms, rate limits, failures
 
 Same as above: NYC Open Data Terms of Use, cached 24 h per camera, one request per camera per day at most, 4 s timeout, `null` on failure (the 311 row is omitted; the safety row still renders).
+
+---
+
+## Subway — live arrivals
+
+**Sources:**
+
+- Stations: [MTA Subway Stations](https://data.ny.gov/d/39hk-dx4f) (`39hk-dx4f`) on data.ny.gov, snapshotted into `src/lib/subway/stations.ts` by `bun scripts/fetch-subway-stations.ts`. Rerun by hand when MTA opens or renames a station; it is not on a schedule.
+- Arrivals: [MTA GTFS-realtime subway feeds](https://api.mta.info/#/subwayRealTimeFeeds), e.g. `https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace`. No API key required.
+
+**How it works:** the camera page finds up to two stations within 400 m (platforms that share a station name, like the four at Times Sq-42 St, count as one station). It fetches only the feeds that serve those stations' routes, decodes them with a small built-in protobuf reader (`src/features/civic/lib/gtfs-rt.ts`, no dependency), and shows the next three trains per direction within 30 minutes. Directions labelled "Last Stop" by MTA are skipped, since those trains terminate there.
+
+### Terms of use
+
+[MTA developer resources](https://new.mta.info/developers). The panel credits MTA as the source. The data feed terms have not been reviewed in detail yet; read them before any significant traffic growth.
+
+### Rate limits and cost
+
+- Each feed is cached 30 s (`next: { revalidate: 30 }`) and shared across every camera page, so the app makes at most 2 requests/min per feed regardless of traffic. Eight feeds exist; a single page needs one to three.
+- Feeds are 5–120 KB each.
+- 4 s timeout.
+
+### Failure modes
+
+If every needed feed fails, the subway row is omitted. If some feeds fail, the row shows what the working feeds returned. Cameras with no station within 400 m never call MTA.

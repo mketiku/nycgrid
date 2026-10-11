@@ -119,6 +119,16 @@ NycGrid relies on `localStorage` and `sessionStorage` for persistence. To preven
 
 ---
 
+## MTA GTFS-realtime (Subway Arrivals)
+
+- **Auth**: None
+- **Caching**: 30s per feed (`revalidate: 30`), shared across all camera pages → ≤2 req/min per feed
+- **Scope**: Only feeds serving stations within 400 m of the camera (1–3 of 8)
+- **Timeout**: 4s
+- **Failure mode**: Returns `null` when every feed fails — the subway row is omitted
+
+---
+
 ## NOAA CO-OPS API (Tides)
 
 - **Auth**: None required — public API

@@ -1,26 +1,30 @@
-import { Megaphone, TriangleAlert } from "lucide-react";
+import { Megaphone, TrainFront, TriangleAlert } from "lucide-react";
 import type { Camera } from "@/lib/cameras/types";
 import { fetchCollisions } from "./lib/fetch-collisions";
 import { fetchComplaints } from "./lib/fetch-complaints";
-import type { CollisionSummary, ComplaintSummary } from "./types";
+import { fetchSubwayArrivals } from "./lib/fetch-subway";
+import type { CollisionSummary, ComplaintSummary, StationArrivals } from "./types";
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 export async function CivicPanel({ camera }: { camera: Camera }) {
-  const [collisions, complaints] = await Promise.all([
+  const [collisions, complaints, subway] = await Promise.all([
     fetchCollisions(camera.latitude, camera.longitude),
     fetchComplaints(camera.latitude, camera.longitude),
+    fetchSubwayArrivals(camera.latitude, camera.longitude),
   ]);
-  return <CivicPanelView collisions={collisions} complaints={complaints} />;
+  return <CivicPanelView collisions={collisions} complaints={complaints} subway={subway} />;
 }
 
 interface CivicPanelViewProps {
   collisions: CollisionSummary | null;
   complaints: ComplaintSummary | null;
+  subway: StationArrivals[] | null;
 }
 
-export function CivicPanelView({ collisions, complaints }: CivicPanelViewProps) {
-  if (!collisions && !complaints) return null;
+export function CivicPanelView({ collisions, complaints, subway }: CivicPanelViewProps) {
+  const hasSubway = !!subway && subway.length > 0;
+  if (!collisions && !complaints && !hasSubway) return null;
 
   return (
     <section
@@ -38,6 +42,7 @@ export function CivicPanelView({ collisions, complaints }: CivicPanelViewProps) 
 
       <div className="divide-y divide-[var(--color-border)]">
         {collisions && <SafetyRow collisions={collisions} />}
+        {hasSubway && <SubwayRow stations={subway} />}
         {complaints && <ComplaintsRow complaints={complaints} />}
       </div>
 
@@ -51,6 +56,7 @@ export function CivicPanelView({ collisions, complaints }: CivicPanelViewProps) 
         >
           NYC Open Data
         </a>
+        {hasSubway && " · Subway times from MTA"}
       </p>
     </section>
   );
@@ -89,6 +95,42 @@ function SafetyRow({ collisions }: { collisions: CollisionSummary }) {
             )}
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+function SubwayRow({ stations }: { stations: StationArrivals[] }) {
+  return (
+    <div className="px-4 py-3 flex items-start gap-3">
+      <span className="mt-0.5 text-[var(--color-accent)] shrink-0">
+        <TrainFront className="w-3.5 h-3.5" aria-hidden="true" />
+      </span>
+      <div className="flex flex-col gap-2 min-w-0">
+        <span className="font-mono text-[10px] text-[var(--color-text-muted)] uppercase tracking-widest">
+          Subway · live
+        </span>
+        {stations.map((station) => (
+          <div key={station.name} className="flex flex-col gap-0.5">
+            <span className="font-mono text-xs leading-snug text-[var(--color-text-primary)]">
+              {`${station.name} · ${station.distanceM} m`}
+            </span>
+            {station.directions.length === 0 ? (
+              <span className="font-mono text-[10px] leading-snug text-[var(--color-text-muted)]">
+                No trains in the next 30 min
+              </span>
+            ) : (
+              station.directions.map((d) => (
+                <span
+                  key={d.label}
+                  className="font-mono text-[10px] leading-snug text-[var(--color-text-muted)]"
+                >
+                  {`${d.label}: ${d.arrivals.map((a) => `${a.route} ${a.minutes}m`).join(" · ")}`}
+                </span>
+              ))
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

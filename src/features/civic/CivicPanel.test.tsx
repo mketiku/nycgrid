@@ -12,7 +12,7 @@ const collisions = {
 
 describe("CivicPanelView", () => {
   it("summarises crashes, injuries and deaths", () => {
-    render(<CivicPanelView collisions={collisions} complaints={null} />);
+    render(<CivicPanelView collisions={collisions} complaints={null} subway={null} />);
     expect(screen.getByText("34 crashes · 22 injured · 1 killed")).toBeDefined();
     expect(screen.getByText(/7 pedestrians · 3 cyclists injured/)).toBeDefined();
   });
@@ -28,6 +28,7 @@ describe("CivicPanelView", () => {
           cyclistsInjured: 0,
         }}
         complaints={null}
+        subway={null}
       />
     );
     expect(screen.getByText("1 crash · 1 injured · 1 killed")).toBeDefined();
@@ -45,6 +46,7 @@ describe("CivicPanelView", () => {
           cyclistsInjured: 0,
         }}
         complaints={null}
+        subway={null}
       />
     );
     expect(screen.getByText(/No reported crashes/)).toBeDefined();
@@ -62,6 +64,7 @@ describe("CivicPanelView", () => {
             { label: "Potholes & pavement", count: 9 },
           ],
         }}
+        subway={null}
       />
     );
     expect(screen.getByText("61 street complaints")).toBeDefined();
@@ -72,12 +75,47 @@ describe("CivicPanelView", () => {
   });
 
   it("says when no street complaints were filed", () => {
-    render(<CivicPanelView collisions={null} complaints={{ total: 0, top: [] }} />);
+    render(<CivicPanelView collisions={null} complaints={{ total: 0, top: [] }} subway={null} />);
     expect(screen.getByText(/No street complaints/)).toBeDefined();
   });
 
+  it("shows live subway arrivals per station and direction", () => {
+    render(
+      <CivicPanelView
+        collisions={null}
+        complaints={null}
+        subway={[
+          {
+            name: "42 St-Port Authority Bus Terminal",
+            distanceM: 330,
+            directions: [
+              {
+                label: "Uptown - Queens",
+                arrivals: [
+                  { route: "C", minutes: 2 },
+                  { route: "A", minutes: 9 },
+                ],
+              },
+            ],
+          },
+          { name: "Times Sq-42 St", distanceM: 380, directions: [] },
+        ]}
+      />
+    );
+    expect(screen.getByText("42 St-Port Authority Bus Terminal · 330 m")).toBeDefined();
+    expect(screen.getByText("Uptown - Queens: C 2m · A 9m")).toBeDefined();
+    expect(screen.getByText("No trains in the next 30 min")).toBeDefined();
+  });
+
+  it("omits the subway row when no station is nearby", () => {
+    render(<CivicPanelView collisions={collisions} complaints={null} subway={[]} />);
+    expect(screen.queryByText(/Subway/)).toBeNull();
+  });
+
   it("renders nothing when every civic source is unavailable", () => {
-    const { container } = render(<CivicPanelView collisions={null} complaints={null} />);
+    const { container } = render(
+      <CivicPanelView collisions={null} complaints={null} subway={null} />
+    );
     expect(container.innerHTML).toBe("");
   });
 });

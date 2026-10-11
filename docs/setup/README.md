@@ -17,6 +17,7 @@ Everything you need to get NycGrid running locally and in production.
 | Camera refresh bot     | No — weekly camera refresh  | Free (GitHub App) | [camera-refresh-bot.md](./camera-refresh-bot.md) |
 | NOAA / NWS Weather     | No setup — zero-config      | Free              | —                                                |
 | Citibike GBFS          | No setup — zero-config      | Free              | —                                                |
+| MTA subway realtime    | No setup — zero-config      | Free              | [civic-layers.md](./civic-layers.md)             |
 | NOAA Tides             | No setup — zero-config      | Free              | —                                                |
 | ArcGIS Districts       | No setup — zero-config      | Free              | —                                                |
 
