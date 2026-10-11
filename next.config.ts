@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_APP_VERSION: pkg.version,
     NEXT_PUBLIC_APP_BUILD_SHA: buildSha,
   },
+  experimental: {
+    // `typescript` is aliased to the TS 6 compat package (only ships `tsc6`) so
+    // typescript-eslint keeps a compiler API; check via that API, not `typescript/bin/tsc`.
+    useTypeScriptCli: false,
+  },
   images: {
     localPatterns: [{ pathname: "/api/camera-image/**" }],
     remotePatterns: [

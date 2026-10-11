@@ -59,9 +59,9 @@ jobs:
             exit 0
           fi
 
-          if ! gh pr view "$NUMBER" --json labels --jq '.labels[].name' | grep -qx "automerge"; then
+          if ! gh pr view "$NUMBER" --repo "$REPO" --json labels --jq '.labels[].name' | grep -qx "automerge"; then
             echo "PR #$NUMBER is not labelled automerge, skipping."
             exit 0
           fi
 
-          gh pr merge "$NUMBER" --squash
+          gh pr merge "$NUMBER" --repo "$REPO" --squash

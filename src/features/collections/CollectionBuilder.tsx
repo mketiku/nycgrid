@@ -61,8 +61,7 @@ export function CollectionBuilder({ cameras, initialIds = [] }: CollectionBuilde
     if (collectionUrl) router.push(collectionUrl);
   }, [collectionUrl, router]);
 
-  const shareableUrl = collectionUrl ? `${window.location.origin}${collectionUrl}` : undefined;
-  const { copied, share: handleShare } = useShareUrl(shareableUrl);
+  const { copied, share: handleShare } = useShareUrl(collectionUrl ?? undefined);
 
   const renderCameraRow = useCallback(
     (camera: Camera, showFavouriteBadge = false) => {
@@ -132,7 +131,7 @@ export function CollectionBuilder({ cameras, initialIds = [] }: CollectionBuilde
           placeholder="Search by name or borough…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
+          className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-base text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)]"
         />
 
         <div className="flex-1 min-h-0 overflow-y-auto">
