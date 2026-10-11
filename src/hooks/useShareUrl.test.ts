@@ -66,4 +66,16 @@ describe("useShareUrl", () => {
     expect(promptSpy).toHaveBeenCalled();
     window.prompt = undefined as unknown as typeof window.prompt;
   });
+
+  it("resolves a relative path against the current origin when sharing", async () => {
+    const share = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "share", { value: share, configurable: true, writable: true });
+
+    const { result } = renderHook(() => useShareUrl("/explore?camera=cam-1"));
+    await act(async () => {
+      await result.current.share();
+    });
+
+    expect(share).toHaveBeenCalledWith({ url: `${window.location.origin}/explore?camera=cam-1` });
+  });
 });
