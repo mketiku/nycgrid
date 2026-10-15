@@ -108,6 +108,27 @@ NycGrid relies on `localStorage` and `sessionStorage` for persistence. To preven
 
 ---
 
+## NYC Open Data (Socrata) — Civic Layers
+
+- **Auth**: Same `NYC_OPEN_DATA_APP_TOKEN` as permitted events
+- **Datasets**: Motor Vehicle Collisions (`h9gi-nx95`), 311 Service Requests (`erm2-nwe9`), VZV Priority Corridors (`36nr-7fbp`), Bike Routes (`mzxg-pwib`), VZV Street Improvement Projects (`if4c-w48d`) — see `docs/setup/civic-layers.md`
+- **Caching**: 24h per camera (`revalidate: 86400`)
+- **Scope**: One aggregate query per dataset per camera page, 150 m radius (crashes: 12 months; 311: 30 days). Map layers: three queries per 0.02° cell, zoom 13+ only, ≤16 cells per viewport, CDN-cached 24h
+- **Timeout**: 4s
+- **Failure mode**: Returns `null` — the Civic panel is omitted
+
+---
+
+## MTA GTFS-realtime (Subway Arrivals)
+
+- **Auth**: None
+- **Caching**: 30s per feed (`revalidate: 30`), shared across all camera pages → ≤2 req/min per feed
+- **Scope**: Only feeds serving stations within 400 m of the camera (1–3 of 8)
+- **Timeout**: 4s
+- **Failure mode**: Returns `null` when every feed fails — the subway row is omitted
+
+---
+
 ## NOAA CO-OPS API (Tides)
 
 - **Auth**: None required — public API
