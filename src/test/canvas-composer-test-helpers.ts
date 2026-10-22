@@ -232,6 +232,15 @@ export function installRecordingCanvasContext(): RecordingCanvasContext {
       });
     }),
     measureText: vi.fn(() => ({ width: 80 }) as TextMetrics),
+    clip: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    closePath: vi.fn(),
+    getImageData: vi.fn(
+      (_x: number, _y: number, w: number, h: number) =>
+        ({ width: w, height: h, data: new Uint8ClampedArray(w * h * 4) }) as ImageData
+    ),
+    putImageData: vi.fn(),
   } as unknown as CanvasRenderingContext2D;
 
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(ctx);
