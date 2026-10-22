@@ -34,7 +34,7 @@
     "@sentry/nextjs": "^10.70.0",
     "@tanstack/react-query": "^5.101.4",
     "@turf/area": "^7.4.0",
-    "@turf/boolean-point-in-polygon": "^7.3.5",
+    "@turf/boolean-point-in-polygon": "^7.4.0",
     "@vercel/analytics": "^2.0.1",
     "clsx": "^2.1.1",
     "gifenc": "^1.0.3",
