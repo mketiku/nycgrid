@@ -23,6 +23,16 @@ NycGrid is a guest on every external service it calls. The following rules apply
 - **Cron jobs**: 1 per project (use carefully for Phase 3 CV)
 - **Image optimization**: 1,000 source images/month (use `next/image` judiciously)
 
+### Data Cache billing (from 2027-01-29)
+
+Vercel bills `fetch` caching (`next: { revalidate }`) and `unstable_cache` reads and writes as Runtime Cache from 2027-01-29 ([rates](https://vercel.com/docs/pricing/regional-pricing)). NycGrid is the heaviest user on the team: every external API fetch in `src/features/context/lib/` goes through it.
+
+- **Measured 2026-10-31** (Observability → Runtime Cache → Data Cache, production, 24h): 40K reads / 4.2K writes, 87.8% hit rate. Roughly $1/month at list rates. Not worth optimising at this volume.
+- **Don't disable the Data Cache** to save money: the hit rate is what keeps traffic to NWS, Citi Bike and MTA within the limits below.
+- **If cost grows**, start with the shortest TTLs (`/api/camera-image/[id]` at 10s, buses at 30s). A CDN `Cache-Control: s-maxage` on the response keeps most requests from reaching the function or the Data Cache.
+- **Cache keys are full URLs**, so the dashboard's entry list shows the MTA Bus Time `key=` query param to anyone with project access.
+- The team's Spend Management budget alerts at 50/75/100% of on-demand spend.
+
 ---
 
 ## Client Storage (Browser)
