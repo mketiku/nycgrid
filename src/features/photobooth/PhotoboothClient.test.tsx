@@ -4,6 +4,7 @@ import { PhotoboothClient } from "./PhotoboothClient";
 import type { CapturePhase } from "./useCapture";
 import type { Camera } from "@/lib/cameras/types";
 import { encodeShotToken } from "@/lib/shot/token";
+import { subwayLineFor } from "@/lib/shot/subway-lines";
 
 const mockUseCapture = vi.fn();
 const mockUseMyShots = vi.fn();
@@ -11,6 +12,9 @@ const mockComposeFilmstrip = vi.fn();
 const mockComposePolaroid = vi.fn();
 const mockComposeStrip3 = vi.fn();
 const mockComposeCinema = vi.fn();
+const mockComposeCab = vi.fn();
+const mockComposeSubway = vi.fn();
+const mockComposeReceipt = vi.fn();
 
 vi.mock("next/link", () => ({
   default: ({ href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
@@ -58,6 +62,18 @@ vi.mock("./canvas/strip3", () => ({
 
 vi.mock("./canvas/cinema", () => ({
   composeCinema: (...args: unknown[]) => mockComposeCinema(...args),
+}));
+
+vi.mock("./canvas/cab", () => ({
+  composeCab: (...args: unknown[]) => mockComposeCab(...args),
+}));
+
+vi.mock("./canvas/subway", () => ({
+  composeSubway: (...args: unknown[]) => mockComposeSubway(...args),
+}));
+
+vi.mock("./canvas/receipt", () => ({
+  composeReceipt: (...args: unknown[]) => mockComposeReceipt(...args),
 }));
 
 const camera: Camera = {
@@ -205,6 +221,60 @@ describe("PhotoboothClient", () => {
       showBoroughStamp: true,
       showNycWatermark: true,
     });
+  });
+
+  it("composes the cab, subway and receipt frames", async () => {
+    renderClient();
+    const shot = {} as HTMLImageElement;
+    const lastCompose = () =>
+      shoot.mock.lastCall?.[1] as (shots: HTMLImageElement[]) => Promise<unknown>;
+
+    fireEvent.click(screen.getByRole("button", { name: /yellow cab/i }));
+    fireEvent.click(screen.getByRole("button", { name: /shoot \(1x\)/i }));
+    await lastCompose()([shot]);
+    expect(mockComposeCab).toHaveBeenCalledWith(shot, "Delancey St", "cam-12345678");
+
+    fireEvent.click(screen.getByRole("button", { name: /subway window/i }));
+    fireEvent.click(screen.getByRole("button", { name: /N Q R W line/i }));
+    expect(screen.getByRole("button", { name: /N Q R W line/i })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    fireEvent.click(screen.getByRole("button", { name: /shoot \(1x\)/i }));
+    await lastCompose()([shot]);
+    expect(mockComposeSubway).toHaveBeenCalledWith(shot, "Delancey St", subwayLineFor("NQRW"));
+
+    fireEvent.click(screen.getByRole("button", { name: /bodega receipt/i }));
+    expect(screen.queryByRole("button", { name: /N Q R W line/i })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: /shoot \(1x\)/i }));
+    await lastCompose()([shot]);
+    expect(mockComposeReceipt).toHaveBeenCalledWith(
+      shot,
+      "Delancey St",
+      "Manhattan",
+      "cam-12345678"
+    );
+  });
+
+  it("shares a subway shot with its line in the token", async () => {
+    const share = vi.fn(() => Promise.resolve());
+    Object.defineProperty(navigator, "canShare", { configurable: true, value: vi.fn(() => true) });
+    Object.defineProperty(navigator, "share", { configurable: true, value: share });
+
+    const view = renderClient();
+    fireEvent.click(screen.getByRole("button", { name: /subway window/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^7 line/i }));
+
+    phase = { status: "result", canvas: createResultCanvas() };
+    view.rerender(<PhotoboothClient camera={camera} />);
+    fireEvent.click(screen.getByRole("button", { name: "Share" }));
+
+    await waitFor(() => expect(share).toHaveBeenCalledTimes(1));
+    expect(share).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: expect.stringContaining(`/shot/${encodeShotToken("cam-12345678", "subway", "", "7")}`),
+      })
+    );
   });
 
   it("disables shooting and shows the offline message when the camera is offline", () => {
