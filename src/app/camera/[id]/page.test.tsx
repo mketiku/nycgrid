@@ -59,6 +59,13 @@ vi.mock("@/features/camera-feed/RecommendationsCard", () => ({
   RecommendationsCard: () => <div data-testid="recommendations-card" />,
 }));
 
+vi.mock("@/features/civic", () => ({
+  CivicPanel: ({ camera }: { camera: { id: string } }) => (
+    <div data-testid="civic-panel">{camera.id}</div>
+  ),
+  CivicPanelSkeleton: () => <div data-testid="civic-skeleton" />,
+}));
+
 vi.mock("@/features/context/ContextPanel", () => ({
   ContextPanel: ({
     camera,
@@ -168,6 +175,7 @@ describe("camera/[id] page", () => {
 
     expect(mockFetchCameraContext).not.toHaveBeenCalled();
     expect(screen.queryByTestId("context-panel")).not.toBeInTheDocument();
+    expect(screen.getByTestId("civic-panel")).toHaveTextContent(nonFeaturedCamera.id);
     expect(screen.getByTestId("camera-info-card")).toBeInTheDocument();
     expect(
       screen.queryByRole("navigation", { name: "Featured camera navigation" })

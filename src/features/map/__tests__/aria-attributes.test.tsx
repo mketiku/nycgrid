@@ -81,6 +81,11 @@ vi.mock("@/features/coverage-gap", () => ({
   useCoverageLayer: () => ({ enabled: false, toggle: vi.fn() }),
 }));
 
+vi.mock("@/features/civic-layers", () => ({
+  CivicLayersToggle: () => null,
+  useCivicLayers: () => ({ enabled: false, zoomedOut: false, toggle: vi.fn() }),
+}));
+
 vi.mock("@/features/theme/useThemeStore", () => ({
   THEME_ACCENTS: { street: "#ffde00", light: "#ffde00" },
   useThemeStore: () => ({ theme: "street" }),
