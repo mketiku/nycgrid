@@ -12,9 +12,10 @@ interface ShotClientProps {
   camera: Camera;
   frameType: FrameType;
   caption: string;
+  variant?: string;
 }
 
-export function ShotClient({ camera, frameType, caption }: ShotClientProps) {
+export function ShotClient({ camera, frameType, caption, variant }: ShotClientProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [loaded, setLoaded] = useState(false);
 
@@ -25,9 +26,11 @@ export function ShotClient({ camera, frameType, caption }: ShotClientProps) {
     img.onload = async () => {
       if (cancelled) return;
       const composed = await renderFrame(img, frameType, {
+        id: camera.id,
         name: camera.name,
         area: camera.area,
         caption,
+        variant,
       });
       if (cancelled) return;
       const host = canvasRef.current;
@@ -42,7 +45,7 @@ export function ShotClient({ camera, frameType, caption }: ShotClientProps) {
     return () => {
       cancelled = true;
     };
-  }, [camera.id, camera.name, camera.area, frameType, caption]);
+  }, [camera.id, camera.name, camera.area, frameType, caption, variant]);
 
   return (
     <div className="flex flex-col gap-6 max-w-2xl mx-auto w-full">
