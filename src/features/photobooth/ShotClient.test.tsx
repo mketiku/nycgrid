@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { ShotClient } from "./ShotClient";
+import { renderFrame } from "./canvas/renderFrame";
 import type { Camera } from "@/lib/cameras/types";
 
 vi.mock("./canvas/renderFrame", () => ({
@@ -39,5 +40,29 @@ describe("ShotClient", () => {
     expect(screen.getByText(/offline/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /take your shot/i })).toBeInTheDocument();
     expect(screen.queryByText(/live now/i)).not.toBeInTheDocument();
+  });
+
+  it("recreates the shared frame with the camera id and subway line", async () => {
+    vi.stubGlobal(
+      "Image",
+      class {
+        onload: (() => void) | null = null;
+        crossOrigin = "";
+        set src(_value: string) {
+          queueMicrotask(() => this.onload?.());
+        }
+      }
+    );
+
+    render(<ShotClient camera={camera} frameType="subway" caption="" variant="NQRW" />);
+
+    await waitFor(() =>
+      expect(renderFrame).toHaveBeenCalledWith(
+        expect.anything(),
+        "subway",
+        expect.objectContaining({ id: camera.id, variant: "NQRW" })
+      )
+    );
+    vi.unstubAllGlobals();
   });
 });

@@ -11,13 +11,15 @@ import {
   Share2,
   Clapperboard,
   Images,
+  CarTaxiFront,
+  TrainFront,
+  Receipt,
 } from "lucide-react";
 import { CameraImage } from "@/features/camera-feed/CameraImage";
 import { useCapture, type FrameType } from "./useCapture";
-import { composeFilmstrip } from "./canvas/filmstrip";
-import { composePolaroid } from "./canvas/polaroid";
-import { composeStrip3 } from "./canvas/strip3";
-import { composeCinema } from "./canvas/cinema";
+import { SubwayLinePicker } from "./SubwayLinePicker";
+import { DEFAULT_SUBWAY_LINE } from "@/lib/shot/subway-lines";
+import { composerFor } from "./canvas/composeShot";
 import { useMyShots } from "@/hooks/useMyShots";
 import { trackSelfie } from "@/lib/analytics/session";
 import { capturePhotoTaken } from "@/lib/analytics/posthog";
@@ -36,11 +38,15 @@ const FRAMES: { id: FrameType; label: string; shots: number; icon: React.ReactNo
   { id: "polaroid", label: "Polaroid", shots: 1, icon: <Square className="w-3.5 h-3.5" /> },
   { id: "strip3", label: "Strip", shots: 3, icon: <Film className="w-3.5 h-3.5" /> },
   { id: "cinema", label: "Cinema", shots: 1, icon: <Clapperboard className="w-3.5 h-3.5" /> },
+  { id: "cab", label: "Yellow Cab", shots: 1, icon: <CarTaxiFront className="w-3.5 h-3.5" /> },
+  { id: "subway", label: "Subway Window", shots: 1, icon: <TrainFront className="w-3.5 h-3.5" /> },
+  { id: "receipt", label: "Bodega Receipt", shots: 1, icon: <Receipt className="w-3.5 h-3.5" /> },
 ];
 
 export function PhotoboothClient({ camera, venueEvent }: PhotoboothClientProps) {
   const [frameType, setFrameType] = useState<FrameType>("filmstrip");
   const [caption, setCaption] = useState("");
+  const [subwayLine, setSubwayLine] = useState(DEFAULT_SUBWAY_LINE);
   const [showBoroughStamp, setShowBoroughStamp] = useState(false);
   const [showNycWatermark, setShowNycWatermark] = useState(false);
   const [surveillanceMode, setSurveillanceMode] = useState(false);
@@ -71,22 +77,13 @@ export function PhotoboothClient({ camera, venueEvent }: PhotoboothClientProps) 
   const selectedFrame = FRAMES.find((f) => f.id === frameType)!;
 
   const handleShoot = useCallback(() => {
-    const overlayOptions = { showBoroughStamp, showNycWatermark };
-    let baseCompose: (shots: HTMLImageElement[]) => Promise<HTMLCanvasElement>;
-
-    if (frameType === "filmstrip") {
-      baseCompose = (shots) => composeFilmstrip(shots, camera.name, camera.area);
-    } else if (frameType === "polaroid") {
-      baseCompose = (shots) => composePolaroid(shots[0], caption, camera.name);
-    } else if (frameType === "strip3") {
-      baseCompose = (shots) =>
-        composeStrip3(shots, camera.name, camera.area, {
-          ...overlayOptions,
-          eventStamp: venueEvent ?? null,
-        });
-    } else {
-      baseCompose = (shots) => composeCinema(shots[0], camera.name, camera.area, overlayOptions);
-    }
+    const baseCompose = composerFor(frameType, camera, {
+      caption,
+      subwayLine,
+      showBoroughStamp,
+      showNycWatermark,
+      venueEvent,
+    });
 
     const compose = surveillanceMode
       ? async (shots: HTMLImageElement[]) => {
@@ -101,10 +98,9 @@ export function PhotoboothClient({ camera, venueEvent }: PhotoboothClientProps) 
     shoot,
     frameType,
     selectedFrame.shots,
-    camera.name,
-    camera.area,
-    camera.id,
+    camera,
     caption,
+    subwayLine,
     showBoroughStamp,
     showNycWatermark,
     surveillanceMode,
@@ -136,7 +132,12 @@ export function PhotoboothClient({ camera, venueEvent }: PhotoboothClientProps) 
     if (!blob) return;
     const filename = makeFilename();
     const file = new File([blob], filename, { type: "image/png" });
-    const token = encodeShotToken(camera.id, frameType, caption);
+    const token = encodeShotToken(
+      camera.id,
+      frameType,
+      caption,
+      frameType === "subway" ? subwayLine : undefined
+    );
     if (navigator.canShare?.({ files: [file] })) {
       try {
         await navigator.share({
@@ -160,7 +161,7 @@ export function PhotoboothClient({ camera, venueEvent }: PhotoboothClientProps) 
       trackSelfie();
       capturePhotoTaken(camera.id);
     }
-  }, [phase, makeFilename, camera.name, camera.id, frameType, caption]);
+  }, [phase, makeFilename, camera.name, camera.id, frameType, caption, subwayLine]);
 
   const isActive = phase.status === "countdown";
   const isDone = phase.status === "result";
@@ -187,6 +188,10 @@ export function PhotoboothClient({ camera, venueEvent }: PhotoboothClientProps) 
             </button>
           ))}
         </div>
+      )}
+
+      {phase.status === "idle" && frameType === "subway" && (
+        <SubwayLinePicker value={subwayLine} onChange={setSubwayLine} />
       )}
 
       {/* NYC overlay toggles */}
@@ -237,7 +242,7 @@ export function PhotoboothClient({ camera, venueEvent }: PhotoboothClientProps) 
           onChange={(e) => setCaption(e.target.value)}
           placeholder="Add a caption…"
           maxLength={40}
-          className="font-mono text-sm px-3 py-2 rounded border bg-transparent outline-none"
+          className="font-mono text-base px-3 py-2 rounded border bg-transparent outline-none"
           style={{
             borderColor: "var(--color-border)",
             color: "var(--color-text-primary)",
@@ -298,7 +303,7 @@ export function PhotoboothClient({ camera, venueEvent }: PhotoboothClientProps) 
           maxLength={40}
           placeholder="caption your share link (optional)"
           aria-label="Shot caption"
-          className="font-mono text-xs px-3 min-h-[44px] rounded border border-[var(--color-border)] bg-transparent text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+          className="font-mono text-base px-3 min-h-[44px] rounded border border-[var(--color-border)] bg-transparent text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
         />
       )}
 
