@@ -41,6 +41,7 @@ import { useThemeStore, THEME_ACCENTS } from "@/features/theme/useThemeStore";
 import { ThemeToggle } from "@/features/theme/ThemeToggle";
 import { FEATURED_CAMERAS } from "@/features/context/lib/featured-cameras";
 import { CoverageToggle, useCoverageLayer } from "@/features/coverage-gap";
+import { CivicLayersToggle, useCivicLayers } from "@/features/civic-layers";
 import { YourStats } from "@/features/stats/YourStats";
 import { findNearestCamera } from "@/lib/cameras/geo";
 import { isCameraDead } from "@/lib/cameras/dead-registry";
@@ -303,6 +304,7 @@ export function MapView({
   }, []);
 
   const { enabled: coverageEnabled, toggle: coverageToggle } = useCoverageLayer(mapRef);
+  const civicLayers = useCivicLayers(mapRef);
 
   const sortedCameras = useMemo(
     () =>
@@ -495,6 +497,11 @@ export function MapView({
         className={`absolute bottom-20 z-50 hidden desktop-layout:flex flex-col items-end gap-1 transition-[right] duration-300 ${selectedCamera ? "right-[456px] xl:right-[496px]" : "right-4"}`}
       >
         <CoverageToggle enabled={coverageEnabled} onToggle={coverageToggle} />
+        <CivicLayersToggle
+          enabled={civicLayers.enabled}
+          zoomedOut={civicLayers.zoomedOut}
+          onToggle={civicLayers.toggle}
+        />
         <button
           onClick={handleFindMe}
           disabled={locateState === "locating"}
@@ -594,6 +601,12 @@ export function MapView({
       >
         <ThemeToggle />
         <CoverageToggle enabled={coverageEnabled} onToggle={coverageToggle} showLegend={false} />
+        <CivicLayersToggle
+          enabled={civicLayers.enabled}
+          zoomedOut={civicLayers.zoomedOut}
+          onToggle={civicLayers.toggle}
+          showLegend={false}
+        />
         <div className="flex flex-col">
           <button
             onClick={zoomIn}
