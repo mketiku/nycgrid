@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -8,6 +9,7 @@ import { getCameraLore } from "@/lib/cameras/lore";
 import { FEATURED_CAMERAS } from "@/features/context/lib/featured-cameras";
 import { fetchCameraContext } from "@/features/context/lib/fetch-context";
 import { ContextPanel } from "@/features/context/ContextPanel";
+import { CivicPanel, CivicPanelSkeleton } from "@/features/civic";
 import { CameraInfoCard } from "@/features/camera-feed/CameraInfoCard";
 import { RecommendationsCard } from "@/features/camera-feed/RecommendationsCard";
 import { getRecommendationsForCamera } from "@/lib/recommendations";
@@ -136,6 +138,9 @@ export default async function CameraDetailPage({ params }: PageProps) {
             {featuredCamera && context && (
               <ContextPanel camera={featuredCamera} context={context} />
             )}
+            <Suspense fallback={<CivicPanelSkeleton />}>
+              <CivicPanel camera={camera} />
+            </Suspense>
             <CameraInfoCard
               camera={camera}
               nearbyCameras={nearbyCameras.slice(0, 4)}

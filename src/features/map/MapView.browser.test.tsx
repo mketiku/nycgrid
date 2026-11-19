@@ -46,6 +46,11 @@ vi.mock("@/features/coverage-gap", () => ({
   useCoverageLayer: vi.fn(() => ({ enabled: false, toggle: vi.fn() })),
 }));
 
+vi.mock("@/features/civic-layers", () => ({
+  CivicLayersToggle: () => null,
+  useCivicLayers: vi.fn(() => ({ enabled: false, zoomedOut: false, toggle: vi.fn() })),
+}));
+
 vi.mock("./CameraPanel", () => ({
   CameraPanel: ({ camera }: { camera: Camera | null }) => {
     mockCameraPanel(camera);
