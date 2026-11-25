@@ -1,4 +1,4 @@
-import type { SeverityLevel } from "@sentry/nextjs";
+import type { init, SeverityLevel } from "@sentry/nextjs";
 import { getMonitoringPublicConfig } from "./config";
 
 const SENTRY_FLUSH_TIMEOUT_MS = 2000;
@@ -92,3 +92,13 @@ export async function captureAppError(
 
   return eventId;
 }
+
+type DataCollection = NonNullable<NonNullable<Parameters<typeof init>[0]>["dataCollection"]>;
+
+// Sentry v11 collects user info, cookies, bodies and local variables unless told otherwise.
+export const SENTRY_DATA_COLLECTION: DataCollection = {
+  userInfo: false,
+  cookies: false,
+  httpBodies: [],
+  stackFrameVariables: false,
+};

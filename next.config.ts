@@ -2,7 +2,7 @@ import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 import { SECURITY_HEADERS } from "./src/lib/security/headers";
 
 const pkg = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf-8"));
@@ -73,8 +73,9 @@ export default withSentryConfig(nextConfig, {
     deleteSourcemapsAfterUpload: true,
   },
 
+  applicationKey: "nycgrid",
+
   webpack: {
     treeshake: { removeDebugLogging: true },
-    unstable_sentryWebpackPluginOptions: { applicationKey: "nycgrid" },
   },
 });
