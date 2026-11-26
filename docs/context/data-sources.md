@@ -43,6 +43,64 @@ All external data sources used by NycGrid, with their terms of use and usage con
 
 ---
 
+## NYC Open Data (Socrata) — Motor Vehicle Collisions
+
+**Dataset**: Motor Vehicle Collisions – Crashes (`h9gi-nx95`), published by NYPD
+**URL**: https://data.cityofnewyork.us/d/h9gi-nx95
+**Auth**: Same app token as permitted events.
+**Use**: Aggregate crash and injury counts near each camera in the Civic panel. Details in [civic-layers.md](../setup/civic-layers.md).
+
+**Terms**: [NYC Open Data Terms of Use](https://opendata.cityofnewyork.us/overview/#termsofuse). Publicly available for any lawful purpose.
+**Constraints**:
+
+- Aggregates only; no individual crash rows are fetched or displayed
+- Cached 24h per camera
+
+---
+
+## NYC Open Data (Socrata) — 311 Service Requests
+
+**Dataset**: 311 Service Requests from 2010 to Present (`erm2-nwe9`)
+**URL**: https://data.cityofnewyork.us/d/erm2-nwe9
+**Auth**: Same app token as permitted events.
+**Use**: Counts of street-facing complaint types near each camera in the Civic panel. Details and the exclusion list in [civic-layers.md](../setup/civic-layers.md).
+
+**Terms**: [NYC Open Data Terms of Use](https://opendata.cityofnewyork.us/overview/#termsofuse).
+**Constraints**:
+
+- Aggregates only, allowlisted street types only; complaints about people or homes are never fetched
+- Cached 24h per camera
+
+---
+
+## NYC Open Data (Socrata) — Street Layers
+
+**Datasets**: Bike Routes (`mzxg-pwib`), VZV Street Improvement Projects – Corridor (`if4c-w48d`), VZV Priority Corridors (`36nr-7fbp`)
+**Auth**: Same app token as permitted events.
+**Use**: Line layers on the explore map, plus the priority-corridor flag in the Civic panel. Details in [civic-layers.md](../setup/civic-layers.md).
+
+**Terms**: [NYC Open Data Terms of Use](https://opendata.cityofnewyork.us/overview/#termsofuse).
+**Constraints**:
+
+- Loaded per ~2 km grid cell at zoom 13+, never citywide
+- Cached 24h
+
+---
+
+## MTA GTFS-realtime Subway Feeds
+
+**Endpoint**: `https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2F{feed}`
+**Auth**: None.
+**Use**: Next trains at stations near each camera in the Civic panel. Station list snapshotted from data.ny.gov `39hk-dx4f`. Details in [civic-layers.md](../setup/civic-layers.md).
+
+**Terms**: [MTA developer resources](https://new.mta.info/developers). Attributed in the panel; feed terms not yet reviewed in detail.
+**Constraints**:
+
+- Cached 30s per feed, shared across pages
+- Only the feeds serving nearby stations are requested
+
+---
+
 ## 511NY Open Data API — MTA Transit Alerts
 
 **Endpoint**: `https://api.511.org/transit/servicealerts`  
@@ -82,5 +140,8 @@ All external data sources used by NycGrid, with their terms of use and usage con
 | ------------------------ | --------------------------- | ------------------------- | ------------------------------------ | ---------------- |
 | NYC DOT cameras          | None (img); IP auth (feeds) | Prohibited (self-imposed) | Pass-through proxy is gray area (§6) | ≥15s per camera  |
 | NYC Open Data (events)   | App token                   | No restriction            | Free for lawful use                  | 1K/hr with token |
+| NYC Open Data (crashes)  | App token                   | Aggregates only           | Free for lawful use                  | 1K/hr with token |
+| NYC Open Data (311)      | App token                   | Aggregates only           | Free for lawful use                  | 1K/hr with token |
+| MTA GTFS-rt (subway)     | None                        | No restriction            | Terms not yet reviewed               | ≤2/min per feed  |
 | 511NY (MTA alerts)       | API key                     | No restriction            | Non-commercial                       | ~30/hr actual    |
 | Tyler Tech (if in chain) | N/A                         | **Explicitly prohibited** | No redistribution                    | N/A              |

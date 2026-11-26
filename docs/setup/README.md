@@ -8,6 +8,7 @@ Everything you need to get NycGrid running locally and in production.
 | ---------------------- | --------------------------- | ----------------- | ------------------------------------------------ |
 | Vercel                 | For production              | Free (Hobby plan) | [vercel.md](./vercel.md)                         |
 | NYC Open Data          | No — events panel           | Free (app token)  | [nyc-open-data.md](./nyc-open-data.md)           |
+| Civic layers           | No — civic panel            | Free (same token) | [civic-layers.md](./civic-layers.md)             |
 | 511NY (transit alerts) | No — transit alerts panel   | Free (API key)    | [transit.md](./transit.md)                       |
 | MTA BusTime            | No — bus arrivals panel     | Free (API key)    | [bustime.md](./bustime.md)                       |
 | Ticketmaster           | No — venue events panel     | Free (API key)    | [ticketmaster.md](./ticketmaster.md)             |
@@ -16,6 +17,7 @@ Everything you need to get NycGrid running locally and in production.
 | Camera refresh bot     | No — weekly camera refresh  | Free (GitHub App) | [camera-refresh-bot.md](./camera-refresh-bot.md) |
 | NOAA / NWS Weather     | No setup — zero-config      | Free              | —                                                |
 | Citibike GBFS          | No setup — zero-config      | Free              | —                                                |
+| MTA subway realtime    | No setup — zero-config      | Free              | [civic-layers.md](./civic-layers.md)             |
 | NOAA Tides             | No setup — zero-config      | Free              | —                                                |
 | ArcGIS Districts       | No setup — zero-config      | Free              | —                                                |
 
