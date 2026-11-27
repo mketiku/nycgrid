@@ -37,8 +37,6 @@ export default defineConfig({
   test: {
     projects: [
       {
-        plugins: [react()],
-        resolve: { tsconfigPaths: true },
         test: {
           name: "unit",
           environment: "node",
@@ -56,8 +54,6 @@ export default defineConfig({
         },
       },
       {
-        plugins: [react()],
-        resolve: { tsconfigPaths: true },
         test: {
           name: "component",
           environment: "happy-dom",
@@ -67,8 +63,6 @@ export default defineConfig({
         },
       },
       {
-        plugins: [react()],
-        resolve: { tsconfigPaths: true },
         test: {
           name: "integration",
           environment: "happy-dom",

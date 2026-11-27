@@ -67,4 +67,24 @@ describe("instrumentation-client", () => {
       })
     );
   });
+
+  it("opts out of Sentry v11's collect-everything defaults for user info, cookies and bodies", async () => {
+    mockGetMonitoringPublicConfig.mockReturnValue({
+      enableSentry: true,
+      environment: "production",
+    });
+    vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", "https://example@o0.ingest.sentry.io/0");
+
+    await import("./instrumentation-client");
+
+    expect(mockSentryInit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dataCollection: expect.objectContaining({
+          userInfo: false,
+          cookies: false,
+          httpBodies: [],
+        }),
+      })
+    );
+  });
 });

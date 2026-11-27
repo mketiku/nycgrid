@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
+import { MotionGlobalConfig } from "motion/react";
 import { afterEach, vi } from "vitest";
 
 // Bind happy-dom's localStorage/sessionStorage to globalThis to bypass Node 24+ experimental native storage warnings/errors
@@ -32,6 +33,11 @@ if (typeof window !== "undefined") {
     configurable: true,
   });
 }
+
+// happy-dom's Web Animations support is incomplete: cancel() leaves a rejected `finished` promise in place,
+// so interrupted motion animations surface as unhandled AbortErrors and exits never complete.
+// Component tests assert behaviour, not animation, so skip animations entirely.
+MotionGlobalConfig.skipAnimations = true;
 
 vi.mock("@vercel/analytics/next", () => ({
   Analytics: () => null,
