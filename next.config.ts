@@ -47,8 +47,11 @@ export default withSentryConfig(nextConfig, {
   // Suppress source map uploading logs during build
   silent: !process.env.CI,
 
-  // Sentry-managed same-origin tunnel; avoids ad blockers intercepting client events.
-  tunnelRoute: "/api/sentry-tunnel",
+  // No Sentry tunnel: the browser posts straight to the DSN host. On
+  // @sentry/nextjs 11, leaving this unset generates a /sentry-tunnel function
+  // on Vercel builds, and on oruko each tunnelled request held a function open
+  // until maxDuration.
+  tunnelRoute: false,
 
   org: process.env.SENTRY_ORG ?? "mketiku",
   project: process.env.SENTRY_PROJECT ?? "nycgrid",
