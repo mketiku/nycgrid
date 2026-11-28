@@ -51,6 +51,20 @@ describe("security headers", () => {
     it("allows PostHog asset fetches (surveys, source maps) via connect-src", () => {
       expect(directiveValue(prodCSP, "connect-src")).toContain("https://us-assets.i.posthog.com");
     });
+
+    // No same-origin tunnel: the browser SDK posts straight to the DSN host.
+    it.each(["o123.ingest.sentry.io", "o123.ingest.us.sentry.io"])(
+      "lets the browser reach Sentry ingest at %s",
+      (host) => {
+        const allowed = directiveValue(prodCSP, "connect-src")
+          .split(/\s+/)
+          .some((source) => {
+            const wildcard = /^https:\/\/\*(\.[^/]+)$/.exec(source);
+            return wildcard ? host.endsWith(wildcard[1]) : source === `https://${host}`;
+          });
+        expect(allowed).toBe(true);
+      }
+    );
   });
 
   describe("buildCSP — development", () => {
